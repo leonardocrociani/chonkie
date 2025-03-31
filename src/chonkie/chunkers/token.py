@@ -6,11 +6,9 @@ It uses a tokenizer to count tokens and create chunks of text.
 """
 
 from __future__ import annotations
-import warnings
 from typing import Any, Literal, Sequence
 
 from tqdm import trange
-from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk
 from chonkie.chunkers.base import BaseChunker
 
@@ -49,7 +47,9 @@ class TokenChunker(BaseChunker):
             else int(chunk_overlap * chunk_size)
         )
         self.return_type = return_type
-        self._multiprocessing = False  # Disable multiprocessing for Token chunker
+        self._multiprocessing = (
+            False  # Disable multiprocessing for Token chunker
+        )
 
     def __call__(
         self,
