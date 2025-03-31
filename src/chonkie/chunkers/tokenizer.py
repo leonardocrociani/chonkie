@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections import defaultdict
 import importlib
 import inspect
@@ -282,18 +283,18 @@ class Tokenizer:
         raise ValueError(f"Tokenizer backend {self._backend} not supported.")
 
 
-class CharacterTokenizer:
-    """Character-based tokenizer."""
+class BaseTokenizer(ABC):
+    """Base class for Character and Word tokenizers."""
 
     def __init__(self):
-        """Initialize the CharacterTokenizer."""
+        """Initialize the BaseTokenizer."""
         self.vocab = [" "]  # Default vocabulary with space
         self.token2id = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
 
+    @abstractmethod
     def __repr__(self):
-        """Return a string representation of the CharacterTokenizer."""
-        return f"CharacterTokenizer(vocab_size={len(self.vocab)})"
+        """Return a string representation of the BaseTokenizer."""
 
     def get_vocab(self) -> Sequence[str]:
         """Return the vocabulary."""
@@ -302,6 +303,85 @@ class CharacterTokenizer:
     def get_token2id(self) -> dict:
         """Return token-to-id mapping."""
         return self.token2id
+
+    @abstractmethod
+    def encode(self, text: str) -> Sequence[int]:
+        """Encode the given text into tokens.
+
+        Args:
+            text (str): The text to encode.
+
+        Returns:
+            Encoded sequence
+        """
+        pass
+
+    @abstractmethod
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode the given tokens back into text.
+
+        Args:
+            tokens (Sequence[int]): The tokens to decode.
+
+        Returns:
+            Decoded text
+        """
+        pass
+
+    @abstractmethod
+    def count_tokens(self, text: str) -> int:
+        """Count the number of tokens in the given text.
+
+        Args:
+            text (str): The text to count tokens in.
+
+        Returns:
+            Number of tokens
+        """
+        pass
+
+    def encode_batch(self, texts: Sequence[str]) -> Sequence[Sequence[int]]:
+        """Batch encode a list of texts into tokens.
+
+        Args:
+            texts (Sequence[str]): The texts to encode.
+
+        Returns:
+            List of encoded sequences
+        """
+        return [self.encode(text) for text in texts]
+
+    def decode_batch(
+        self, token_sequences: Sequence[Sequence[int]]
+    ) -> Sequence[str]:
+        """Batch decode a list of tokens back into text.
+
+        Args:
+            token_sequences (Sequence[Sequence[int]]): The tokens to decode.
+
+        Returns:
+            List of decoded texts
+        """
+        return [self.decode(tokens) for tokens in token_sequences]
+
+    def count_tokens_batch(self, texts: Sequence[str]) -> Sequence[int]:
+        """Count the number of tokens in a batch of texts.
+
+        Args:
+            texts (Sequence[str]): The texts to count tokens in.
+
+        Returns:
+            List of token counts
+        """
+        return [self.count_tokens(text) for text in texts]
+
+
+class CharacterTokenizer(BaseTokenizer):
+    """Character-based tokenizer."""
+
+    def __repr__(self):
+        """Return a string representation of the CharacterTokenizer."""
+        return f"CharacterTokenizer(vocab_size={len(self.vocab)})"
 
     def encode(self, text: str) -> Sequence[int]:
         """Encode the given text into tokens.
@@ -329,13 +409,12 @@ class CharacterTokenizer:
         Returns:
             Decoded text
         """
-        decoded = []
-        for token in tokens:
-            if token in self.vocab:
-                decoded.append(self.vocab[token])
-            else:
-                raise ValueError(f"Token {token} not found in vocabulary.")
-        return "".join(decoded)
+        try:
+            return "".join([self.vocab[token] for token in tokens])
+        except Exception as e:
+            raise ValueError(
+                f"Decoding failed. Tokens: {tokens} not found in vocab."
+            ) from e
 
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the given text.
@@ -348,47 +427,58 @@ class CharacterTokenizer:
         """
         return len(text)
 
-    def encode_batch(self, texts: Sequence[str]) -> Sequence[Sequence[int]]:
-        """Batch encode a list of texts into tokens.
 
-        Args:
-            texts (Sequence[str]): The texts to encode.
-
-        Returns:
-            List of encoded sequences
-        """
-        return [self.encode(text) for text in texts]
-
-    def decode_batch(
-        self, token_sequences: Sequence[Sequence[int]]
-    ) -> Sequence[str]:
-        """Batch decode a list of tokens back into text.
-
-        Args:
-            token_sequences (Sequence[Sequence[int]]): The tokens to decode.
-
-        Returns:
-            List of decoded texts
-        """
-        return [self.decode(tokens) for tokens in token_sequences]
-    
-    def count_tokens_batch(self, texts: Sequence[str]) -> Sequence[int]:
-        """Count the number of tokens in a batch of texts.
-
-        Args:
-            texts (Sequence[str]): The texts to count tokens in.
-
-        Returns:
-            List of token counts
-        """
-        return [self.count_tokens(text) for text in texts]
-
-
-class WordTokenizer:
+class WordTokenizer(BaseTokenizer):
     """Word-based tokenizer."""
 
-    def __init__(self):
-        """Initialize the WordTokenizer."""
-        self.vocab = [" "]  # Default vocabulary with space
-        self.token2id = defaultdict(lambda: len(self.vocab))
-        self.token2id[" "]  # Add space to the vocabulary
+    def __repr__(self):
+        """Return a string representation of the WordTokenizer."""
+        return f"WordTokenizer(vocab_size={len(self.vocab)})"
+
+    def tokenize(self, text: str) -> Sequence[str]:
+        """Tokenize the given text into words.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            List of tokens
+        """
+        return text.split(" ")
+
+    def encode(self, text: str) -> Sequence[int]:
+        """Encode the given text into tokens.
+
+        Args:
+            text (str): The text to encode.
+
+        Returns:
+            Encoded sequence
+        """
+        encoded = []
+        for token in self.tokenize(text):
+            id = self.token2id[token]
+            if id >= len(self.vocab):
+                self.vocab.append(token)
+            encoded.append(id)
+        return encoded
+
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode token ids back to text."""
+        try:
+            return " ".join([self.vocab[token] for token in tokens])
+        except Exception as e:
+            raise ValueError(
+                f"Decoding failed. Tokens: {tokens} not found in vocab."
+            ) from e
+        
+    def count_tokens(self, text: str) -> int:
+        """Count the number of tokens in the given text.
+
+        Args:
+            text (str): The text to count tokens in.
+
+        Returns:
+            Number of tokens
+        """
+        return len(self.encode(text))
