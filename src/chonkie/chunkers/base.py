@@ -9,7 +9,7 @@ from typing import Any, Callable, Sequence
 import tqdm
 
 from chonkie.tokenizer import Tokenizer
-from chonkie.types import Chunk
+from chonkie.types.base import Chunk
 
 
 class BaseChunker(ABC):

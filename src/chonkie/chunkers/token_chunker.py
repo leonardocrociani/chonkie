@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any, Literal, Sequence
 
 from tqdm import trange
-from chonkie.types import Chunk
+from chonkie.types.base import Chunk
 from chonkie.chunkers.base import BaseChunker
 
 

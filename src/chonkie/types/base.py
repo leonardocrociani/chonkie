@@ -1,4 +1,4 @@
-"""Custom types for Chonkie"""
+"""Custom base types for Chonkie"""
 
 from dataclasses import dataclass
 from typing import Optional
@@ -128,3 +128,4 @@ class Chunk:
     def copy(self) -> "Chunk":
         """Return a deep copy of the chunk."""
         return Chunk.from_dict(self.to_dict())
+
