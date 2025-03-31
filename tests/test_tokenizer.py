@@ -1,5 +1,5 @@
 import tiktoken
-from chonkie.chunkers.tokenizer import (
+from chonkie.tokenizer import (
     CharacterTokenizer,
     WordTokenizer,
     Tokenizer,

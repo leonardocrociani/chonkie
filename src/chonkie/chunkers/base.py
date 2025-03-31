@@ -1,20 +1,108 @@
 """Base Class for All Chunkers."""
+
+from __future__ import annotations
+import warnings
 from abc import ABC, abstractmethod
+from multiprocessing import Pool, cpu_count
+from typing import Any, Callable, Sequence
+
+import tqdm
+
+from chonkie.tokenizer import Tokenizer
+from chonkie.types import Chunk
+
 
 class BaseChunker(ABC):
     """Base class for all chunkers."""
 
-    def __init__(self, **kwargs):
-        """Initialize the chunker with any necessary parameters."""
-        self.params = kwargs
+    def __init__(
+        self, tokenizer_or_token_counter: str | Callable[[str], int] | Any
+    ):
+        """Initialize the chunker with any necessary parameters.
+
+        Args:
+            tokenizer_or_token_counter (str | Callable[[str], int] | Any): The tokenizer or token counter to use.
+        """
+        self.tokenizer = Tokenizer(tokenizer_or_token_counter)
+        self._multiprocessing = True
+
+    def __repr__(self):
+        """Return a string representation of the chunker."""
+        return f"{self.__class__.__name__}()"
+
+    def __call__(
+        self, text: str | Sequence[str], show_progress: bool = True
+    ) -> Sequence[Chunk] | Sequence[Sequence[Chunk]]:
+        """Call the chunker with the given arguments.
+
+        Args:
+            text (str | Sequence[str]): The text to chunk.
+            show_progress (bool): Whether to show progress.
+        Returns:
+            If the input is a string, return a list of Chunks.
+            If the input is a list of strings, return a list of lists of Chunks.
+        """
+        if isinstance(text, str):
+            return self.chunk(text)
+        elif isinstance(text, Sequence):
+            return self.chunk_batch(text, show_progress)
+        else:
+            raise ValueError("Input must be a string or a list of strings.")
+
+    def _get_optimal_worker_count(self) -> int:
+        """Get the optimal number of workers for parallel processing."""
+        try:
+            cpu_cores = cpu_count()
+            return min(8, max(1, cpu_cores * 3 // 4))
+        except Exception as e:
+            warnings.warn(
+                f"Proceeding with 1 worker. Error calculating optimal worker count: {e}"
+            )
+            return 1
+
+    def _sequential_batch_processing(
+        self, texts: Sequence[str], show_progress
+    ) -> Sequence[Sequence[Chunk]]:
+        """Process a batch of texts sequentially."""
+        return [
+            self.chunk(t)
+            for t in tqdm(
+                texts,
+                desc="🦛",
+                disable=not show_progress,
+                unit="doc",
+                bar_format="{desc} ch{bar:20}nk {percentage:3.0f}% • {n_fmt}/{total_fmt} docs chunked [{elapsed}<{remaining}, {rate_fmt}] 🌱",
+                ascii=" o",
+            )
+        ]
+
+    def _parallel_batch_processing(
+        self, texts: Sequence[str], show_progress: bool = True
+    ) -> Sequence[Sequence[Chunk]]:
+        """Process a batch of texts using multiprocessing."""
+        num_workers = self._get_optimal_worker_count()
+        total = len(texts)
+        chunk_size = max(1, min(total // (num_workers * 16), 10))
+
+        with Pool(processes=num_workers) as pool:
+            results = []
+            with tqdm(
+                total=total,
+                desc="🦛",
+                disable=not show_progress,
+                unit="doc",
+                bar_format="{desc} ch{bar:20}nk {percentage:3.0f}% • {n_fmt}/{total_fmt} docs chunked [{elapsed}<{remaining}, {rate_fmt}] 🌱",
+                ascii=" o",
+            ) as progress_bar:
+                for result in pool.imap(
+                    self.chunk, texts, chunksize=chunk_size
+                ):
+                    results.append(result)
+                    progress_bar.update()
+            return results
 
     @abstractmethod
-    def chunk(self, text: str) -> list:
-        """Chunk the given text into smaller pieces."""
-        pass
-
-    @abstractmethod
-    def chunk(self, text: str) -> list:
+    def chunk(self, text: str) -> Sequence[Chunk]:
         """Chunk the given text.
 
         Args:
@@ -25,3 +113,20 @@ class BaseChunker(ABC):
         """
         pass
 
+    def chunk_batch(
+        self, texts: Sequence[str], show_progress: bool = True
+    ) -> Sequence[Sequence[Chunk]]:
+        """Chunk a batch of texts.
+
+        Args:
+            texts (Sequence[str]): The texts to chunk.
+            show_progress (bool): Whether to show progress.
+        Returns:
+            List of lists of Chunks containing the chunked text and other metadata.
+        """
+        if len(texts) < 2:
+            return [self.chunk(t) for t in texts]
+        elif self._multiprocessing:
+            return self._parallel_batch_processing(texts, show_progress)
+        else:
+            return self._sequential_batch_processing(texts, show_progress)
