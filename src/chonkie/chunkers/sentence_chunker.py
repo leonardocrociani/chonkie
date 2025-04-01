@@ -24,10 +24,10 @@ class SentenceChunker(BaseChunker):
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
-        approximate: bool = True,
+        include_delim: Literal["prev", "next"] | None = "prev",
         delim: str | list[str] = [".", "!", "?", "\n"],
-        include_delim: Literal["start", "end"] | None = "end",
         return_type: Literal["texts", "chunks"] = "chunks",
+        approximate: bool = True,
     ):
         """Initialize the SentenceChunker.
 
@@ -39,7 +39,7 @@ class SentenceChunker(BaseChunker):
             min_characters_per_sentence (int): Minimum number of characters per sentence.
             approximate (bool): Whether to use approximate token counting.
             delim (str | list[str]): Delimiters for sentence splitting.
-            include_delim (Literal["start", "end"] | None): Whether to include delimiters at the end of current chunk, start of next chunk, or not at all.
+            include_delim (Literal["prev", "next"] | None): Whether to include delimiters in the output. If 'prev', include the delimiter before the sentence. If 'next', include it after. If None, do not include.
             return_type (Literal["texts", "chunks"]): The type of output to return.
 
         Raises:
@@ -69,9 +69,9 @@ class SentenceChunker(BaseChunker):
             raise ValueError(
                 "Delim cannot be None. Must be a string or list of strings."
             )
-        if include_delim not in ["end", "start", None]:
+        if include_delim not in ["prev", "next", None]:
             raise ValueError(
-                "Include delim must be either 'end', 'start', or None."
+                "Include delim must be either 'prev', 'next', or None."
             )
         if return_type not in ["texts", "chunks"]:
             raise ValueError("Return type must be either 'texts' or 'chunks'.")
@@ -106,9 +106,9 @@ class SentenceChunker(BaseChunker):
             list[Sentence]: List of Sentence objects.
         """
         for delim in self.delim:
-            if self.include_delim == "start":
+            if self.include_delim == "next":
                 text = text.replace(delim, self.sep + delim)
-            elif self.include_delim == "end":
+            elif self.include_delim == "prev":
                 text = text.replace(delim, delim + self.sep)
             else:
                 text = text.replace(delim, self.sep)
