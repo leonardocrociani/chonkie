@@ -2,42 +2,58 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+from typing import Iterator, Literal
 from chonkie.types.base import Chunk
 
 
 @dataclass
 class RecursiveLevel:
-    """Class to express chunking delimiters at different levels.
+    """
+    RecursiveLevels express the chunking rules at a specific level for the recursive chunker.
 
     Attributes:
-        delimiters (List[str] | str): List of delimiters for the chunking level. **NOTE:** If using whitespace as a delimiter, no other delimiters should be included.
-        include_delim (Literal["prev", "next", None] | None): Whether to include the delimiter in the previous chunk, next chunk, or not at all.
+        whitespace_delimiter (bool): Whether to use whitespace as a delimiter.
+        custom_delimiters (list[str] | str | None): Custom delimiters for chunking.
+        include_delim (Literal["prev", "next"] | None): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
     """
 
-    delimiters: list[str] | str
-    include_delim: Literal["prev", "next", None] | None = None
+    whitespace_delimiter: bool = False
+    custom_delimiters: list[str] | str | None = None
+    include_delim: Literal["prev", "next"] | None = "prev"
 
-    def __post_init__(self):
-        # More than one delimiter with one of them being whitespace
-        if (
-            isinstance(self.delimiters, list)
-            and any(delim.strip() == "" for delim in self.delimiters)
-            and len(self.delimiters) > 1
-        ):
-            raise ValueError(
-                "Cannot combine whitespace with other delimiters. "
-                "Please use only whitespace or a custom list of delimiter."
+    def _validate_fields(self) -> None:
+        """Validate all fields have legal values."""
+        if self.custom_delimiters is not None and self.whitespace_delimiter:
+            raise NotImplementedError(
+                "Cannot use whitespace as a delimiter and also specify custom delimiters."
             )
-        if isinstance(self.delimiters, str) and self.delimiters == "":
-            raise ValueError("Delimiter cannot be an empty string.")
+        if self.custom_delimiters is not None:
+            if (
+                isinstance(self.custom_delimiters, str)
+                and len(self.custom_delimiters) == 0
+            ):
+                raise ValueError("Custom delimiters cannot be an empty string.")
+            if isinstance(self.custom_delimiters, list):
+                if any(
+                    not isinstance(delim, str) or len(delim) == 0
+                    for delim in self.custom_delimiters
+                ):
+                    raise ValueError(
+                        "Custom delimiters cannot be an empty string."
+                    )
+                if any(delim.strip() == "" for delim in self.custom_delimiters):
+                    raise ValueError(
+                        "Custom delimiters cannot be whitespace only. Set whitespace_delimiter to True instead."
+                    )
 
-        if isinstance(self.delimiters, list):
-            for delim in self.delimiters:
-                if not isinstance(delim, str):
-                    raise ValueError("All delimiters must be strings.")
-                elif delim == "":
-                    raise ValueError("Delimiter cannot be an empty string.")
+    def __post_init__(self) -> None:
+        self._validate_fields()
+
+    def __repr__(self) -> str:
+        return (
+            f"RecursiveLevel(delimiters={self.custom_delimiters}, "
+            f"whitespace={self.whitespace}, include_delim={self.include_delim})"
+        )
 
     def to_dict(self) -> dict:
         """Return the RecursiveLevel as a dictionary."""
@@ -45,15 +61,8 @@ class RecursiveLevel:
 
     @classmethod
     def from_dict(cls, data: dict) -> "RecursiveLevel":
-        """Create a RecursiveLevel object from a dictionary."""
+        """Create RecursiveLevel object from a dictionary."""
         return cls(**data)
-
-    def __repr__(self) -> str:
-        """Return a string representation of the RecursiveLevel."""
-        return (
-            f"RecursiveLevel(delimiters={self.delimiters}, "
-            f"include_delim={self.include_delim})"
-        )
 
 
 @dataclass
@@ -64,19 +73,16 @@ class RecursiveRules:
 
     def __post_init__(self):
         if self.levels is None:
-            paragraphs = RecursiveLevel(
-                delimiters=["\n", "\n\n", "\r\n"], include_delim="prev"
-            )
+            paragraphs = RecursiveLevel(custom_delimiters=["\n", "\n\n", "\r\n"])
             sentences = RecursiveLevel(
-                delimiters=[
+                custom_delimiters=[
                     ".",
                     "!",
                     "?",
                 ],
-                include_delim="prev",
             )
             pauses = RecursiveLevel(
-                delimiters=[
+                custom_delimiters=[
                     "{",
                     "}",
                     '"',
@@ -97,16 +103,15 @@ class RecursiveRules:
                     "`",
                     "'",
                 ],
-                include_delim="prev",
             )
-            word = RecursiveLevel(delimiters=" ", include_delim="prev")
-            token = RecursiveLevel(delimiters=None, include_delim="prev")
+            word = RecursiveLevel(whitespace_delimiter=True)
+            token = RecursiveLevel()
             self.levels = [paragraphs, sentences, pauses, word, token]
         elif isinstance(self.levels, RecursiveLevel):
-            self.levels.__post_init__()
+            self.levels._validate_fields()
         elif isinstance(self.levels, list):
             for level in self.levels:
-                level.__post_init__()
+                level._validate_fields()
         else:
             raise ValueError(
                 "Levels must be a RecursiveLevel object or a list of RecursiveLevel objects."
@@ -126,7 +131,7 @@ class RecursiveRules:
             "Levels must be a list of RecursiveLevel objects to use indexing."
         )
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[RecursiveLevel]:
         if isinstance(self.levels, list):
             return iter(self.levels)
         raise TypeError(
