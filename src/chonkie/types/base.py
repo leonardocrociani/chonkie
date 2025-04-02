@@ -1,4 +1,4 @@
-"""Custom base types for Chonkie"""
+"""Custom base types for Chonkie."""
 
 from dataclasses import dataclass
 from typing import Optional
@@ -13,6 +13,7 @@ class Context:
         start_index (Optional[int]): The starting index of the chunk in the original text.
         end_index (Optional[int]): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
+
     """
 
     text: str
@@ -71,6 +72,7 @@ class Chunk:
         start_index (Optional[int]): The starting index of the chunk in the original text.
         end_index (Optional[int]): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
+
     """
 
     text: str
@@ -109,9 +111,7 @@ class Chunk:
     def to_dict(self) -> dict:
         """Return the Chunk as a dictionary."""
         result = self.__dict__.copy()
-        result["context"] = (
-            self.context.to_dict() if self.context else None
-        )
+        result["context"] = self.context.to_dict() if self.context else None
         return result
 
     @classmethod
@@ -120,12 +120,9 @@ class Chunk:
         context_repr = data.pop("context")
         return cls(
             **data,
-            context=Context.from_dict(context_repr)
-            if context_repr
-            else None,
+            context=Context.from_dict(context_repr) if context_repr else None,
         )
 
     def copy(self) -> "Chunk":
         """Return a deep copy of the chunk."""
         return Chunk.from_dict(self.to_dict())
-

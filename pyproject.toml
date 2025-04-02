@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chonkie"
+version = "1.0.0"
+description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+keywords = ["chunking", "rag", 
+            "retrieval-augmented-generation",
+            "chunking-library", "chunking-toolkit", 
+            "chunking-utility", "nlp", 
+            "natural-language-processing", 
+            "text-processing", "text-analysis", 
+            "text-chunking", "chunking-algorithms", 
+            "chunking-techniques", "chunking-methods", 
+            "chunking-approaches", "chunking-strategies", 
+            "chunking-tools", "artificial-intelligence", 
+            "machine-learning"]
+authors = [
+    {name = "Shreyash Nigam", email = "shreyash@chonkie.ai"},
+]
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Information Technology",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Text Processing :: Linguistic"
+]
+dependencies = [
+    "tokenizers>=0.16.0", 
+    "tqdm>=4.64.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/chonkie-inc/chonkie"
+Documentation = "https://docs.chonkie.ai"
+
+[project.optional-dependencies]
+model2vec = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.2"]
+st = ["sentence-transformers>=3.0.0", "numpy>=1.23.0, <2.2"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=1.23.0, <2.2"]
+semantic = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.2"]
+cohere = ["cohere>=5.13.0", "numpy>=1.23.0, <2.2"]
+dev = [
+    "tiktoken>=0.5.0",
+    "datasets>=1.14.0",
+    "transformers>=4.0.0",
+    "pytest>=6.2.0", 
+    "pytest-cov>=4.0.0",
+    "ruff>=0.0.265",
+    "mypy>=1.11.0"
+]
+all = [
+    "sentence-transformers>=3.0.0",
+    "numpy>=1.23.0, <2.2",
+    "openai>=1.0.0",
+    "tiktoken>=0.5.0",
+    "model2vec>=0.3.0",
+    "cohere>=5.13.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = "src"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["chonkie", 
+            "chonkie.chunker",
+            "chonkie.embeddings", 
+            "chonkie.refinery",
+            "chonkie.chef",
+            "chonkie.cloud"]
+
+[tool.ruff]
+exclude = ["*.ipynb"]
+lint.select = ["F", "I", "D", "DOC"]
+lint.ignore = ["D211", "D213", "D203"]
+
+[tool.ruff.format]
+preview = true
+indent-style = "space"
+
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+warn_return_any = true
+show_error_codes = true
