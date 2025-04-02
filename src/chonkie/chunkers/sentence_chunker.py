@@ -4,6 +4,7 @@ Split text into chunks based on sentence boundaries.
 
 from __future__ import annotations
 from bisect import bisect_left
+from functools import lru_cache
 from itertools import accumulate
 from typing import Any, Callable, Literal, Sequence
 import warnings
@@ -13,7 +14,19 @@ from chonkie.types.sentence import Sentence, SentenceChunk
 
 
 class SentenceChunker(BaseChunker):
-    """Split text into chunks based on sentence boundaries and token limits."""
+    """Split text into chunks based on sentence boundaries and token limits.
+
+    Attributes:
+        tokenizer_or_token_counter (str | Any): The tokenizer or token counter to use.
+        chunk_size (int): The maximum number of tokens per chunk.
+        chunk_overlap (int): The number of overlapping tokens between chunks.
+        min_sentences_per_chunk (int): Minimum number of sentences per chunk.
+        min_characters_per_sentence (int): Minimum number of characters per sentence.
+        approximate (bool): Whether to use approximate token counting.
+        delim (str | list[str]): Delimiters for sentence splitting.
+        include_delim (Literal["prev", "next"] | None): Whether to include delimiters in the output. If 'prev', include the delimiter before the sentence. If 'next', include it after. If None, do not include.
+        return_type (Literal["texts", "chunks"]): The type of output to return.
+    """
 
     _CHARS_PER_TOKEN = 6
 
@@ -23,7 +36,7 @@ class SentenceChunker(BaseChunker):
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
-        min_characters_per_sentence: int = 12,
+        min_characters_per_sentence: int = 24,
         include_delim: Literal["prev", "next"] | None = "prev",
         delim: str | list[str] = [".", "!", "?", "\n"],
         return_type: Literal["texts", "chunks"] = "chunks",
@@ -137,6 +150,7 @@ class SentenceChunker(BaseChunker):
 
         return sentences
 
+    @lru_cache(maxsize=2048)
     def _estimate_token_count(self, sentences: str | list[str]) -> int:
         """Estimate the token count of the text.
 
