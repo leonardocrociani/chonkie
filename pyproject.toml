@@ -81,6 +81,7 @@ package-dir = {"" = "src"}
 packages = ["chonkie", 
             "chonkie.chunkers",
             "chonkie.types",
+            "chonkie.embeddings",
         ]
 
 [tool.ruff]

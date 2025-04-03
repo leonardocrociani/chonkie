@@ -1,5 +1,7 @@
 """Tests for the TokenChunker class."""
 
+from __future__ import annotations
+
 from typing import List
 
 import pytest
@@ -346,4 +348,3 @@ def test_token_chunker_return_type(tiktokenizer, sample_text):
     chunks = chunker.chunk(sample_text)
     assert all([type(chunk) is str for chunk in chunks])
     assert all([len(tiktokenizer.encode(chunk)) <= 512 for chunk in chunks])
-    

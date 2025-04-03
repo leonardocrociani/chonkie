@@ -11,6 +11,8 @@ a recursive chunking strategy based on configurable rules. The tests verify:
 - Edge cases and error conditions
 """
 
+from __future__ import annotations
+
 import pytest
 
 from chonkie import (

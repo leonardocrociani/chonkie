@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from chonkie import Chunk
+from chonkie.types.base import Chunk
 
 
 @dataclass

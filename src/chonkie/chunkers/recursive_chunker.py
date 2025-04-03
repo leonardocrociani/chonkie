@@ -10,12 +10,12 @@ from functools import lru_cache
 from itertools import accumulate
 from typing import Any, Callable, Literal, Sequence
 
-from chonkie import (
+from chonkie.chunkers.base import BaseChunker
+from chonkie.types.recurisve import (
     RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
 )
-from chonkie.chunkers.base import BaseChunker
 
 
 class RecursiveChunker(BaseChunker):

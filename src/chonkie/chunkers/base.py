@@ -7,10 +7,10 @@ from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
 from typing import Any, Callable, Sequence
 
-import tqdm
+from tqdm import tqdm
 
-from chonkie import Chunk
 from chonkie.tokenizer import Tokenizer
+from chonkie.types.base import Chunk
 
 
 class BaseChunker(ABC):

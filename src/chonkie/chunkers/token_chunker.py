@@ -5,9 +5,8 @@ from typing import Any, Generator, Literal, Sequence
 
 from tqdm import trange
 
-from chonkie import Chunk
-
-from .base import BaseChunker
+from chonkie.chunkers.base import BaseChunker
+from chonkie.types.base import Chunk
 
 
 class TokenChunker(BaseChunker):

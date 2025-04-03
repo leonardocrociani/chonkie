@@ -1,4 +1,5 @@
 """Sentence chunker."""
+
 from __future__ import annotations
 
 import warnings
@@ -6,7 +7,8 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, Callable, Literal
 
-from chonkie import Chunk, Sentence, SentenceChunk
+from chonkie.types.base import Chunk
+from chonkie.types.sentence import Sentence, SentenceChunk
 
 from .base import BaseChunker
 
