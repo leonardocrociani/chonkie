@@ -1,7 +1,6 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -10,16 +9,16 @@ class Context:
 
     Attributes:
         text (str): The text of the chunk.
-        start_index (Optional[int]): The starting index of the chunk in the original text.
-        end_index (Optional[int]): The ending index of the chunk in the original text.
+        start_index (int | None): The starting index of the chunk in the original text.
+        end_index (int | None): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
 
     """
 
     text: str
-    start_index: Optional[int] = None
-    end_index: Optional[int] = None
     token_count: int
+    start_index: int | None = None
+    end_index: int | None = None
 
     def __post_init__(self):
         """Validate context attributes."""
@@ -69,9 +68,10 @@ class Chunk:
 
     Attributes:
         text (str): The text of the chunk.
-        start_index (Optional[int]): The starting index of the chunk in the original text.
-        end_index (Optional[int]): The ending index of the chunk in the original text.
+        start_index (int): The starting index of the chunk in the original text.
+        end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
+        context (Context | None): Optional context metadata for the chunk.
 
     """
 
@@ -79,7 +79,7 @@ class Chunk:
     start_index: int
     end_index: int
     token_count: int
-    context = Optional[Context] = None
+    context: Context | None = None
 
     def __len__(self):
         """Return the length of the text."""

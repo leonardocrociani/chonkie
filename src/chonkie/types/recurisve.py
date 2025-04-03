@@ -1,20 +1,22 @@
 """Custom types for recursive chunking."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Iterator, Literal
+
 from chonkie.types.base import Chunk
 
 
 @dataclass
 class RecursiveLevel:
-    """
-    RecursiveLevels express the chunking rules at a specific level for the recursive chunker.
+    """RecursiveLevels express the chunking rules at a specific level for the recursive chunker.
 
     Attributes:
         whitespace_delimiter (bool): Whether to use whitespace as a delimiter.
         custom_delimiters (list[str] | str | None): Custom delimiters for chunking.
         include_delim (Literal["prev", "next"] | None): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+
     """
 
     whitespace_delimiter: bool = False
@@ -41,18 +43,20 @@ class RecursiveLevel:
                     raise ValueError(
                         "Custom delimiters cannot be an empty string."
                     )
-                if any(delim.strip() == "" for delim in self.custom_delimiters):
+                if any(delim == " " for delim in self.custom_delimiters):
                     raise ValueError(
                         "Custom delimiters cannot be whitespace only. Set whitespace_delimiter to True instead."
                     )
 
     def __post_init__(self) -> None:
+        """Validate attributes."""
         self._validate_fields()
 
     def __repr__(self) -> str:
+        """Return a string representation of the RecursiveLevel."""
         return (
             f"RecursiveLevel(delimiters={self.custom_delimiters}, "
-            f"whitespace={self.whitespace}, include_delim={self.include_delim})"
+            f"whitespace={self.whitespace_delimiter}, include_delim={self.include_delim})"
         )
 
     def to_dict(self) -> dict:
@@ -72,8 +76,11 @@ class RecursiveRules:
     levels: list[RecursiveLevel] | RecursiveLevel | None = None
 
     def __post_init__(self):
+        """Validate attributes."""
         if self.levels is None:
-            paragraphs = RecursiveLevel(custom_delimiters=["\n", "\n\n", "\r\n"])
+            paragraphs = RecursiveLevel(
+                custom_delimiters=["\n", "\n\n", "\r\n"]
+            )
             sentences = RecursiveLevel(
                 custom_delimiters=[
                     ".",
@@ -122,9 +129,11 @@ class RecursiveRules:
         return f"RecursiveRules(levels={self.levels})"
 
     def __len__(self) -> int:
+        """Return the number of levels."""
         return len(self.levels)
 
     def __getitem__(self, index: int) -> RecursiveLevel:
+        """Return the RecursiveLevel at the specified index."""
         if isinstance(self.levels, list):
             return self.levels[index]
         raise TypeError(
@@ -132,6 +141,7 @@ class RecursiveRules:
         )
 
     def __iter__(self) -> Iterator[RecursiveLevel]:
+        """Return an iterator over the RecursiveLevels."""
         if isinstance(self.levels, list):
             return iter(self.levels)
         raise TypeError(
@@ -173,6 +183,7 @@ class RecursiveChunk(Chunk):
 
     Attributes:
         recursive_level (int | None): The level of recursion for the chunk, if any.
+        
     """
 
     recursive_level: int | None = None

@@ -1,6 +1,7 @@
 """Custom types for Sentence Chunking."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 from chonkie.types.base import Chunk
@@ -15,6 +16,7 @@ class Sentence:
         start_index (int): The starting index of the sentence in the original text.
         end_index (int): The ending index of the sentence in the original text.
         token_count (int): The number of tokens in the sentence.
+
     """
 
     text: str
@@ -62,12 +64,13 @@ class SentenceChunk(Chunk):
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
         sentences (list[Sentence]): List of sentences in the chunk.
+        
     """
 
     sentences: list[Sentence] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        """Returns a string representation of the SentenceChunk."""
+        """Return a string representation of the SentenceChunk."""
         return (
             f"SentenceChunk(text={self.text}, start_index={self.start_index}, "
             f"end_index={self.end_index}, token_count={self.token_count}, "
