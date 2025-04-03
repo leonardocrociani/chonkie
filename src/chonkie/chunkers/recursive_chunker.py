@@ -1,12 +1,15 @@
-"""Chonkie: Recursive Chunker
+"""Chonkie: Recursive Chunker.
+
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
 from __future__ import annotations
+
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
 from typing import Any, Callable, Literal, Sequence
+
 from chonkie.chunkers.base import BaseChunker
 from chonkie.types.recurisve import (
     RecursiveChunk,
@@ -18,13 +21,13 @@ from chonkie.types.recurisve import (
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 
-
     Attributes:
         tokenizer_or_token_counter (str | Callable | Any): Tokenizer or token counter to use
         recursive_rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
         return_type (str): Type of return value, either 'chunks' or 'texts'.
+
     """
 
     _CHARS_PER_TOKEN = 6
@@ -104,9 +107,9 @@ class RecursiveChunker(BaseChunker):
     ) -> list[str]:
         """Split the text into chunks using the delimiters."""
         # At every delimiter, replace it with the sep
-        if recursive_level.whitespace_delimiter:
+        if recursive_level.whitespace:
             splits = text.split(" ")
-        elif recursive_level.custom_delimiters:
+        elif recursive_level.delimiters:
             if recursive_level.include_delim == "prev":
                 for delimiter in recursive_level.delimiters:
                     text = text.replace(delimiter, delimiter + sep)
@@ -153,7 +156,7 @@ class RecursiveChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
-    def _convert_to_chunk(
+    def _make_chunks(
         self,
         text: str,
         token_count: int,
@@ -192,7 +195,6 @@ class RecursiveChunker(BaseChunker):
         combine_whitespace: bool = False,
     ) -> list[str]:
         """Merge short splits."""
-
         if not splits or not token_counts:
             return [], []
 
@@ -265,7 +267,7 @@ class RecursiveChunker(BaseChunker):
                 return [text]
             if self.return_type == "chunks":
                 return [
-                    self._convert_to_chunk(
+                    self._make_chunks(
                         text, self._get_token_count(text), level, full_text
                     )
                 ]
@@ -298,22 +300,26 @@ class RecursiveChunker(BaseChunker):
 
         # Chunk long merged splits
         chunks = []
+        last_chunk_end_index = 0
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
                 chunks.extend(self._chunk_helper(split, level + 1, full_text))
             else:
                 if self.return_type == "chunks":
+                    if chunks:
+                        last_chunk_end_index = chunks[-1].end_index
                     no_delim = (
                         curr_rule.delimiters is None
                         and not curr_rule.whitespace
                     )
                     # **Speedup**: Since there are no delimiters we can just join the "merged" result.
                     chunks.append(
-                        self._convert_to_chunk(
+                        self._make_chunks(
                             split,
                             token_count,
                             level,
                             ("".join(merged) if no_delim else full_text),
+                            last_chunk_end_index,
                         )
                     )
                 elif self.return_type == "texts":
@@ -321,4 +327,10 @@ class RecursiveChunker(BaseChunker):
         return chunks
 
     def chunk(self, text: str) -> Sequence[RecursiveChunk]:
+        """Recursively chunk text.
+
+        Args:
+            text (str): Text to chunk.
+
+        """
         return self._chunk_helper(text=text, level=0, full_text=text)

@@ -13,39 +13,36 @@ class RecursiveLevel:
     """RecursiveLevels express the chunking rules at a specific level for the recursive chunker.
 
     Attributes:
-        whitespace_delimiter (bool): Whether to use whitespace as a delimiter.
-        custom_delimiters (list[str] | str | None): Custom delimiters for chunking.
+        whitespace (bool): Whether to use whitespace as a delimiter.
+        delimiters (list[str] | str | None): Custom delimiters for chunking.
         include_delim (Literal["prev", "next"] | None): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
 
     """
 
-    whitespace_delimiter: bool = False
-    custom_delimiters: list[str] | str | None = None
+    whitespace: bool = False
+    delimiters: list[str] | str | None = None
     include_delim: Literal["prev", "next"] | None = "prev"
 
     def _validate_fields(self) -> None:
         """Validate all fields have legal values."""
-        if self.custom_delimiters is not None and self.whitespace_delimiter:
+        if self.delimiters is not None and self.whitespace:
             raise NotImplementedError(
                 "Cannot use whitespace as a delimiter and also specify custom delimiters."
             )
-        if self.custom_delimiters is not None:
-            if (
-                isinstance(self.custom_delimiters, str)
-                and len(self.custom_delimiters) == 0
-            ):
+        if self.delimiters is not None:
+            if isinstance(self.delimiters, str) and len(self.delimiters) == 0:
                 raise ValueError("Custom delimiters cannot be an empty string.")
-            if isinstance(self.custom_delimiters, list):
+            if isinstance(self.delimiters, list):
                 if any(
                     not isinstance(delim, str) or len(delim) == 0
-                    for delim in self.custom_delimiters
+                    for delim in self.delimiters
                 ):
                     raise ValueError(
                         "Custom delimiters cannot be an empty string."
                     )
-                if any(delim == " " for delim in self.custom_delimiters):
+                if any(delim == " " for delim in self.delimiters):
                     raise ValueError(
-                        "Custom delimiters cannot be whitespace only. Set whitespace_delimiter to True instead."
+                        "Custom delimiters cannot be whitespace only. Set whitespace to True instead."
                     )
 
     def __post_init__(self) -> None:
@@ -55,8 +52,8 @@ class RecursiveLevel:
     def __repr__(self) -> str:
         """Return a string representation of the RecursiveLevel."""
         return (
-            f"RecursiveLevel(delimiters={self.custom_delimiters}, "
-            f"whitespace={self.whitespace_delimiter}, include_delim={self.include_delim})"
+            f"RecursiveLevel(delimiters={self.delimiters}, "
+            f"whitespace={self.whitespace}, include_delim={self.include_delim})"
         )
 
     def to_dict(self) -> dict:
@@ -78,18 +75,16 @@ class RecursiveRules:
     def __post_init__(self):
         """Validate attributes."""
         if self.levels is None:
-            paragraphs = RecursiveLevel(
-                custom_delimiters=["\n", "\n\n", "\r\n"]
-            )
+            paragraphs = RecursiveLevel(delimiters=["\n", "\n\n", "\r\n"])
             sentences = RecursiveLevel(
-                custom_delimiters=[
+                delimiters=[
                     ".",
                     "!",
                     "?",
                 ],
             )
             pauses = RecursiveLevel(
-                custom_delimiters=[
+                delimiters=[
                     "{",
                     "}",
                     '"',
@@ -111,7 +106,7 @@ class RecursiveRules:
                     "'",
                 ],
             )
-            word = RecursiveLevel(whitespace_delimiter=True)
+            word = RecursiveLevel(whitespace=True)
             token = RecursiveLevel()
             self.levels = [paragraphs, sentences, pauses, word, token]
         elif isinstance(self.levels, RecursiveLevel):
@@ -182,18 +177,18 @@ class RecursiveChunk(Chunk):
     """Class to represent recursive chunks.
 
     Attributes:
-        recursive_level (int | None): The level of recursion for the chunk, if any.
-        
+        level (int | None): The level of recursion for the chunk, if any.
+
     """
 
-    recursive_level: int | None = None
+    level: int | None = None
 
     def str_repr(self) -> str:
         """Return a string representation of the RecursiveChunk."""
         return (
             f"RecursiveChunk(text={self.text}, start_index={self.start_index}, "
             f"end_index={self.end_index}, token_count={self.token_count}, "
-            f"recursive_level={self.recursive_level})"
+            f"level={self.level})"
         )
 
     def __repr__(self) -> str:

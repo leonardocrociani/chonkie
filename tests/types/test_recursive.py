@@ -7,34 +7,34 @@ from chonkie.types import RecursiveChunk, RecursiveLevel, RecursiveRules
 
 def test_recursive_level_init():
     """Test RecursiveLevel initialization."""
-    level = RecursiveLevel(custom_delimiters=["\n", "."])
-    assert level.custom_delimiters == ["\n", "."]
-    assert not level.whitespace_delimiter
+    level = RecursiveLevel(delimiters=["\n", "."])
+    assert level.delimiters == ["\n", "."]
+    assert not level.whitespace
     assert level.include_delim == "prev"
 
 
 def test_recursive_level_raises_error():
     """Test RecursiveLevel validation."""
     with pytest.raises(NotImplementedError):
-        RecursiveLevel(whitespace_delimiter=True, custom_delimiters=["."])
+        RecursiveLevel(whitespace=True, delimiters=["."])
 
     with pytest.raises(ValueError):
-        RecursiveLevel(custom_delimiters=[1, 2])
+        RecursiveLevel(delimiters=[1, 2])
 
     with pytest.raises(ValueError):
-        RecursiveLevel(custom_delimiters=[""])
+        RecursiveLevel(delimiters=[""])
 
     with pytest.raises(ValueError):
-        RecursiveLevel(custom_delimiters=[" "])
+        RecursiveLevel(delimiters=[" "])
 
 
 def test_recursive_level_serialization():
     """Test RecursiveLevel serialization and deserialization."""
-    level = RecursiveLevel(custom_delimiters=["\n", "."])
+    level = RecursiveLevel(delimiters=["\n", "."])
     level_dict = level.to_dict()
     reconstructed = RecursiveLevel.from_dict(level_dict)
-    assert reconstructed.custom_delimiters == ["\n", "."]
-    assert not reconstructed.whitespace_delimiter
+    assert reconstructed.delimiters == ["\n", "."]
+    assert not reconstructed.whitespace
     assert reconstructed.include_delim == "prev"
 
 
@@ -49,8 +49,8 @@ def test_recursive_rules_default_init():
 def test_recursive_rules_custom_init():
     """Test RecursiveRules custom initialization."""
     levels = [
-        RecursiveLevel(custom_delimiters=["\n"]),
-        RecursiveLevel(custom_delimiters=["."]),
+        RecursiveLevel(delimiters=["\n"]),
+        RecursiveLevel(delimiters=["."]),
     ]
     rules = RecursiveRules(levels=levels)
     assert len(rules.levels) == 2
@@ -60,8 +60,8 @@ def test_recursive_rules_custom_init():
 def test_recursive_rules_serialization():
     """Test RecursiveRules serialization and deserialization."""
     levels = [
-        RecursiveLevel(custom_delimiters=["\n"]),
-        RecursiveLevel(custom_delimiters=["."]),
+        RecursiveLevel(delimiters=["\n"]),
+        RecursiveLevel(delimiters=["."]),
     ]
     rules = RecursiveRules(levels=levels)
     rules_dict = rules.to_dict()
@@ -80,10 +80,10 @@ def test_recursive_chunk_init():
         start_index=0,
         end_index=10,
         token_count=2,
-        recursive_level=1,
+        level=1,
     )
     assert chunk.text == "test chunk"
-    assert chunk.recursive_level == 1
+    assert chunk.level == 1
 
 
 def test_recursive_chunk_serialization():
@@ -93,9 +93,9 @@ def test_recursive_chunk_serialization():
         start_index=0,
         end_index=10,
         token_count=2,
-        recursive_level=1,
+        level=1,
     )
     chunk_dict = chunk.to_dict()
     reconstructed = RecursiveChunk.from_dict(chunk_dict)
-    assert reconstructed.recursive_level == 1
+    assert reconstructed.level == 1
     assert reconstructed.text == chunk.text
