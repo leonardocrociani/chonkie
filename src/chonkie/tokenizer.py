@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from collections import defaultdict
 import importlib
 import inspect
-from typing import TYPE_CHECKING, Any, Callable, Sequence
 import warnings
+from abc import ABC, abstractmethod
+from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 if TYPE_CHECKING:
     if importlib.util.find_spec("transformers") is not None:
@@ -26,6 +26,7 @@ class Tokenizer:
 
     Raises:
         ImportError: If the specified tokenizer is not available.
+
     """
 
     def __init__(self, tokenizer: str | Callable | Any = "gpt2"):
@@ -35,7 +36,7 @@ class Tokenizer:
         else:
             self.tokenizer = tokenizer
 
-        self._backend = self._get_backend(tokenizer)
+        self._backend = self._get_backend()
 
     def _load_tokenizer(
         self, tokenizer: str
@@ -127,6 +128,7 @@ class Tokenizer:
 
         Returns:
             Encoded sequence
+
         """
         # Supported backends
         if self._backend == "chonkie":
@@ -154,6 +156,7 @@ class Tokenizer:
 
         Returns:
             Decoded text
+
         """
         if self._backend == "callable":
             raise NotImplementedError(
@@ -169,6 +172,7 @@ class Tokenizer:
 
         Returns:
             Number of tokens
+
         """
         if self._backend == "chonkie":
             return self.tokenizer.count_tokens(text)
@@ -193,6 +197,7 @@ class Tokenizer:
 
         Returns:
             List of encoded sequences
+
         """
         if self._backend == "chonkie":
             return self.tokenizer.encode_batch(texts)
@@ -221,10 +226,11 @@ class Tokenizer:
         """Batch decode a list of tokens back into text.
 
         Args:
-            tokens (Sequence[Sequence[int]]): The tokens to decode.
+            token_sequences (Sequence[Sequence[int]]): The tokens to decode.
 
         Returns:
             List of decoded texts
+
         """
         if self._backend == "chonkie":
             return self.tokenizer.decode_batch(token_sequences)
@@ -252,6 +258,7 @@ class Tokenizer:
 
         Returns:
             List of token counts
+
         """
         if self._backend == "chonkie":
             return self.tokenizer.count_tokens_batch(texts)
@@ -288,9 +295,10 @@ class BaseTokenizer(ABC):
 
     def __init__(self):
         """Initialize the BaseTokenizer."""
-        self.vocab = [" "]  # Default vocabulary with space
+        self.vocab = []
         self.token2id = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
+        self.vocab.append(" ")  # Add space to the vocabulary
 
     @abstractmethod
     def __repr__(self):
@@ -313,6 +321,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             Encoded sequence
+
         """
         pass
 
@@ -325,6 +334,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             Decoded text
+
         """
         pass
 
@@ -337,6 +347,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             Number of tokens
+
         """
         pass
 
@@ -348,6 +359,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             List of encoded sequences
+
         """
         return [self.encode(text) for text in texts]
 
@@ -361,6 +373,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             List of decoded texts
+
         """
         return [self.decode(tokens) for tokens in token_sequences]
 
@@ -372,6 +385,7 @@ class BaseTokenizer(ABC):
 
         Returns:
             List of token counts
+
         """
         return [self.count_tokens(text) for text in texts]
 
@@ -391,6 +405,7 @@ class CharacterTokenizer(BaseTokenizer):
 
         Returns:
             Encoded sequence
+
         """
         encoded = []
         for token in text:
@@ -408,6 +423,7 @@ class CharacterTokenizer(BaseTokenizer):
 
         Returns:
             Decoded text
+
         """
         try:
             return "".join([self.vocab[token] for token in tokens])
@@ -424,6 +440,7 @@ class CharacterTokenizer(BaseTokenizer):
 
         Returns:
             Number of tokens
+
         """
         return len(text)
 
@@ -443,6 +460,7 @@ class WordTokenizer(BaseTokenizer):
 
         Returns:
             List of tokens
+
         """
         return text.split(" ")
 
@@ -454,6 +472,7 @@ class WordTokenizer(BaseTokenizer):
 
         Returns:
             Encoded sequence
+
         """
         encoded = []
         for token in self.tokenize(text):
@@ -471,7 +490,7 @@ class WordTokenizer(BaseTokenizer):
             raise ValueError(
                 f"Decoding failed. Tokens: {tokens} not found in vocab."
             ) from e
-        
+
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the given text.
 
@@ -480,5 +499,6 @@ class WordTokenizer(BaseTokenizer):
 
         Returns:
             Number of tokens
+
         """
         return len(self.encode(text))

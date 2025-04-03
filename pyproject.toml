@@ -50,11 +50,11 @@ Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 
 [project.optional-dependencies]
-model2vec = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.2"]
-st = ["sentence-transformers>=3.0.0", "numpy>=1.23.0, <2.2"]
-openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=1.23.0, <2.2"]
-semantic = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.2"]
-cohere = ["cohere>=5.13.0", "numpy>=1.23.0, <2.2"]
+model2vec = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.0"]
+st = ["sentence-transformers>=3.0.0", "numpy>=1.23.0, <2.0"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=1.23.0, <2.0"]
+semantic = ["model2vec>=0.3.0", "numpy>=1.23.0, <2.0"]
+cohere = ["cohere>=5.13.0", "numpy>=1.23.0, <2.0"]
 dev = [
     "tiktoken>=0.5.0",
     "datasets>=1.14.0",
@@ -66,7 +66,7 @@ dev = [
 ]
 all = [
     "sentence-transformers>=3.0.0",
-    "numpy>=1.23.0, <2.2",
+    "numpy>=1.23.0, <2.0",
     "openai>=1.0.0",
     "tiktoken>=0.5.0",
     "model2vec>=0.3.0",
@@ -79,11 +79,9 @@ pythonpath = "src"
 [tool.setuptools]
 package-dir = {"" = "src"}
 packages = ["chonkie", 
-            "chonkie.chunker",
-            "chonkie.embeddings", 
-            "chonkie.refinery",
-            "chonkie.chef",
-            "chonkie.cloud"]
+            "chonkie.chunkers",
+            "chonkie.types",
+        ]
 
 [tool.ruff]
 exclude = ["*.ipynb"]
