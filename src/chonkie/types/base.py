@@ -1,5 +1,7 @@
 """Custom base types for Chonkie."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 
 

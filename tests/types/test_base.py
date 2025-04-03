@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from chonkie.types import Chunk, Context
+from chonkie import Chunk, Context
 
 
 def test_context_init():

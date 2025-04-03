@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from chonkie.types.base import Chunk
+from chonkie import Chunk
 
 
 @dataclass
@@ -22,7 +22,7 @@ class Sentence:
     text: str
     start_index: int
     end_index: int
-    token_count: int
+    token_count: int | float
 
     def __post_init__(self):
         """Validate attributes."""
@@ -34,7 +34,13 @@ class Sentence:
             raise ValueError("End index must be a non-negative integer.")
         if self.start_index > self.end_index:
             raise ValueError("Start index must be less than end index.")
-        if not isinstance(self.token_count, int) or self.token_count < 0:
+        if (
+            not (
+                isinstance(self.token_count, int)
+                or isinstance(self.token_count, float)
+            )
+            or self.token_count < 0
+        ):
             raise ValueError("Token count must be a non-negative integer.")
 
     def __repr__(self) -> str:
@@ -64,7 +70,7 @@ class SentenceChunk(Chunk):
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
         sentences (list[Sentence]): List of sentences in the chunk.
-        
+
     """
 
     sentences: list[Sentence] = field(default_factory=list)

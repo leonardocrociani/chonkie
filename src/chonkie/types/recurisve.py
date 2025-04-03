@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterator, Literal
 
-from chonkie.types.base import Chunk
+from chonkie import Chunk
 
 
 @dataclass

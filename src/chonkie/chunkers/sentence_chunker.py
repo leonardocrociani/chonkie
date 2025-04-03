@@ -1,34 +1,34 @@
-"""Chonkie: Sentence Chunker
-Split text into chunks based on sentence boundaries.
-"""
-
+"""Sentence chunker."""
 from __future__ import annotations
-from bisect import bisect_left
-from functools import lru_cache
-from itertools import accumulate
-from typing import Any, Callable, Literal, Sequence
+
 import warnings
-from chonkie.chunkers.base import BaseChunker
-from chonkie.types.base import Chunk
-from chonkie.types.sentence import Sentence, SentenceChunk
+from bisect import bisect_left
+from itertools import accumulate
+from typing import Any, Callable, Literal
+
+from chonkie import Chunk, Sentence, SentenceChunk
+
+from .base import BaseChunker
 
 
 class SentenceChunker(BaseChunker):
-    """Split text into chunks based on sentence boundaries and token limits.
+    """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
-    Attributes:
-        tokenizer_or_token_counter (str | Any): The tokenizer or token counter to use.
-        chunk_size (int): The maximum number of tokens per chunk.
-        chunk_overlap (int): The number of overlapping tokens between chunks.
-        min_sentences_per_chunk (int): Minimum number of sentences per chunk.
-        min_characters_per_sentence (int): Minimum number of characters per sentence.
-        approximate (bool): Whether to use approximate token counting.
-        delim (str | list[str]): Delimiters for sentence splitting.
-        include_delim (Literal["prev", "next"] | None): Whether to include delimiters in the output. If 'prev', include the delimiter before the sentence. If 'next', include it after. If None, do not include.
-        return_type (Literal["texts", "chunks"]): The type of output to return.
+    Args:
+        tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding
+        chunk_size: Maximum number of tokens per chunk
+        chunk_overlap: Number of tokens to overlap between chunks
+        min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
+        min_characters_per_sentence: Minimum number of characters per sentence
+        approximate: Whether to use approximate token counting (defaults to True)
+        delim: Delimiters to split sentences on
+        include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
+        return_type: Whether to return chunks or texts
+
+    Raises:
+        ValueError: If parameters are invalid
+
     """
-
-    _CHARS_PER_TOKEN = 6
 
     def __init__(
         self,
@@ -36,59 +36,58 @@ class SentenceChunker(BaseChunker):
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
-        min_characters_per_sentence: int = 24,
-        include_delim: Literal["prev", "next"] | None = "prev",
-        delim: str | list[str] = [".", "!", "?", "\n"],
-        return_type: Literal["texts", "chunks"] = "chunks",
+        min_characters_per_sentence: int = 12,
         approximate: bool = True,
+        delim: str | list[str] = [".", "!", "?", "\n"],
+        include_delim: Literal["prev", "next"] | None = "prev",
+        return_type: Literal["chunks", "texts"] = "chunks",
     ):
-        """Initialize the SentenceChunker.
+        """Initialize the SentenceChunker with configuration parameters.
+
+        SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
         Args:
-            tokenizer_or_token_counter (str | Any): The tokenizer or token counter to use.
-            chunk_size (int): The maximum number of tokens per chunk.
-            chunk_overlap (int): The number of overlapping tokens between chunks.
-            min_sentences_per_chunk (int): Minimum number of sentences per chunk.
-            min_characters_per_sentence (int): Minimum number of characters per sentence.
-            approximate (bool): Whether to use approximate token counting.
-            delim (str | list[str]): Delimiters for sentence splitting.
-            include_delim (Literal["prev", "next"] | None): Whether to include delimiters in the output. If 'prev', include the delimiter before the sentence. If 'next', include it after. If None, do not include.
-            return_type (Literal["texts", "chunks"]): The type of output to return.
+            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "gpt2")
+            chunk_size: Maximum number of tokens per chunk (defaults to 512)
+            chunk_overlap: Number of tokens to overlap between chunks (defaults to 0)
+            min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
+            min_characters_per_sentence: Minimum number of characters per sentence (defaults to 12)
+            approximate: Whether to use approximate token counting (defaults to True)
+            delim: Delimiters to split sentences on (defaults to [".", "!", "?", "newline"])
+            include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
+            return_type: Whether to return chunks or texts (defaults to "chunks")
 
         Raises:
-            ValueError: if chunk_size is less than or equal to 0.
-            ValueError: if chunk_overlap is negative.
-            ValueError: if chunk_overlap is greater than or equal to chunk_size.
-            ValueError: if min_sentences_per_chunk is less than 1.
-            ValueError: if min_characters_per_sentence is less than 1.
-            ValueError: if delim is not a string or list of strings.
-            ValueError: if include_delim is not 'start', 'end', or None.
-            ValueError: if return_type is not 'texts' or 'chunks'.
-        """
-        super().__init__(tokenizer_or_token_counter)
-        if chunk_size <= 0:
-            raise ValueError("Chunk size must be greater than 0.")
-        if chunk_overlap < 0:
-            raise ValueError("Chunk overlap must be non-negative.")
-        if isinstance(chunk_overlap, int) and chunk_overlap >= chunk_size:
-            raise ValueError("Chunk overlap must be less than chunk size.")
-        if min_sentences_per_chunk < 1:
-            raise ValueError("Minimum sentences per chunk must be at least 1.")
-        if min_characters_per_sentence < 1:
-            raise ValueError(
-                "Minimum characters per sentence must be at least 1."
-            )
-        if delim is None:
-            raise ValueError(
-                "Delim cannot be None. Must be a string or list of strings."
-            )
-        if include_delim not in ["prev", "next", None]:
-            raise ValueError(
-                "Include delim must be either 'prev', 'next', or None."
-            )
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
+            ValueError: If parameters are invalid
 
+        """
+        super().__init__(tokenizer_or_token_counter=tokenizer_or_token_counter)
+
+        if chunk_size <= 0:
+            raise ValueError("chunk_size must be positive")
+        if chunk_overlap >= chunk_size:
+            raise ValueError("chunk_overlap must be less than chunk_size")
+        if min_sentences_per_chunk < 1:
+            raise ValueError("min_sentences_per_chunk must be at least 1")
+        if min_characters_per_sentence < 1:
+            raise ValueError("min_characters_per_sentence must be at least 1")
+        if delim is None:
+            raise ValueError("delim must be a list of strings or a string")
+        if include_delim not in ["prev", "next", None]:
+            raise ValueError("include_delim must be 'prev', 'next' or None")
+        if return_type not in ["chunks", "texts"]:
+            raise ValueError(
+                "Invalid return_type. Must be either 'chunks' or 'texts'."
+            )
+
+        # Add chunk_overlap deprecation warning
+        if chunk_overlap > 0:
+            warnings.warn(
+                "chunk_overlap is getting deprecated in v0.6.0. "
+                + "🦛 Chonkie advises you to use OverlapRefinery instead which is more flexible and powerful!",
+                DeprecationWarning,
+            )
+        # Assign the values if they make sense
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.min_sentences_per_chunk = min_sentences_per_chunk
@@ -96,225 +95,258 @@ class SentenceChunker(BaseChunker):
         self.approximate = approximate
         self.delim = delim
         self.include_delim = include_delim
+        self.sep = "🦛"
         self.return_type = return_type
-        self.separator = "<!!CHONKIE_SENTENCE_SEPARATOR_INTERNAL!!>"
 
-    def __repr__(self):
-        """Return a string representation of the SentenceChunker."""
-        return (
-            f"SentenceChunker(tokenizer={self.tokenizer}, chunk_size={self.chunk_size}, "
-            f"chunk_overlap={self.chunk_overlap}, min_sentences_per_chunk={self.min_sentences_per_chunk}, "
-            f"min_characters_per_sentence={self.min_characters_per_sentence}, "
-            f"approximate={self.approximate}, delim={self.delim}, "
-            f"include_delim='{self.include_delim}', return_type='{self.return_type}')"
-        )
+    def _split_sentences(self, text: str) -> list[str]:
+        """Fast sentence splitting while maintaining accuracy.
 
-    def _split(self, text: str) -> list[Sentence]:
-        """Split text into sentences based on delimiters.
+        This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
 
         Args:
-            text (str): The text to split.
+            text: Input text to be split into sentences
 
         Returns:
-            list[Sentence]: List of Sentence objects.
+            List of sentences
+
         """
-        for delim in self.delim:
-            if self.include_delim == "next":
-                text = text.replace(delim, self.sep + delim)
-            elif self.include_delim == "prev":
-                text = text.replace(delim, delim + self.sep)
+        t = text
+        for c in self.delim:
+            if self.include_delim == "prev":
+                t = t.replace(c, c + self.sep)
+            elif self.include_delim == "next":
+                t = t.replace(c, self.sep + c)
             else:
-                text = text.replace(delim, self.sep)
+                t = t.replace(c, self.sep)
 
-        splits = list(filter(None, text.split(self.sep)))
+        # Initial split
+        splits = [s for s in t.split(self.sep) if s != ""]
 
-        # Combine short splits with the sentence before it.
+        # Combine short splits with previous sentence
         current = ""
         sentences = []
-        for split in splits:
-            if current:
-                current += split
+        for s in splits:
+            # If the split is short, add to current and if long add to sentences
+            if len(s) < self.min_characters_per_sentence:
+                current += s
+            elif current:
+                current += s
                 sentences.append(current)
                 current = ""
-            elif len(split) < self.min_characters_per_sentence:
-                current += split
             else:
-                sentences.append(split)
+                sentences.append(s)
 
+            # At any point if the current sentence is longer than the min_characters_per_sentence,
+            # add it to the sentences
             if len(current) >= self.min_characters_per_sentence:
                 sentences.append(current)
                 current = ""
 
+        # If there is a current split, add it to the sentences
         if current:
             sentences.append(current)
 
         return sentences
 
-    @lru_cache(maxsize=2048)
-    def _estimate_token_count(self, sentences: str | list[str]) -> int:
-        """Estimate the token count of the text.
+    def _estimate_token_counts(self, sentences: str | list[str]) -> int:
+        """Estimate token count using character length."""
+        CHARS_PER_TOKEN = 6.0  # Avg. char per token for llama3 is b/w 6-7
+        if type(sentences) is str:
+            return max(1, len(sentences) // CHARS_PER_TOKEN)
+        elif type(sentences) is list and type(sentences[0]) is str:
+            return [max(1, len(t) // CHARS_PER_TOKEN) for t in sentences]
+        else:
+            raise ValueError(
+                f"Unknown type passed to _estimate_token_count: {type(sentences)}"
+            )
+
+    def _get_feedback(self, estimate: int, actual: int) -> float:
+        """Validate against the actual token counts and correct the estimates."""
+        estimate, actual = max(1, estimate), max(1, actual)
+        feedback = max(0.01, 1 - ((estimate - actual) / estimate))
+        return feedback
+
+    def _prepare_sentences(self, text: str) -> list[Sentence]:
+        """Split text into sentences and calculate token counts for each sentence.
 
         Args:
-            text (str): The text to estimate tokens for.
+            text: Input text to be split into sentences
 
         Returns:
-            int: Estimated token count.
+            List of Sentence objects
+
         """
-        if isinstance(sentences, str):
-            return max(1, len(sentences) // self._CHARS_PER_TOKEN)
-        elif isinstance(sentences, list):
-            return [
-                max(1, len(sentence) // self._CHARS_PER_TOKEN)
-                for sentence in sentences
-            ]
-        raise ValueError(
-            f"Invalid type for sentences: {type(sentences)}. Expected str or list[str]."
-        )
-
-    def _prepare_sentences(self, text: str) -> Sequence[Sentence]:
-        """Convert text into a list of Sentence objects with position and token count information."""
-
-        sentences = self._split(text)
-        if not sentences:
+        # Split text into sentences
+        sentence_texts = self._split_sentences(text)
+        if not sentence_texts:
             return []
 
-        # Calculate positions and lengths in a single pass
+        # Calculate positions once
         positions = []
-        current_position = 0
+        current_pos = 0
+        for sent in sentence_texts:
+            positions.append(current_pos)
+            current_pos += len(
+                sent
+            )  # No +1 space because sentences are already separated by spaces
 
-        for sentence in sentences:
-            positions.append(current_position)
-            current_position += len(sentence)
-
-        # Determine token counts based on configuration
-        if self.approximate:
-            token_counts = self._estimate_token_count(sentences)
+        if not self.approximate:
+            # Get accurate token counts in batch
+            token_counts = self.tokenizer.count_tokens_batch(sentence_texts)
         else:
-            token_counts = self.tokenizer.count_tokens_batch(sentences)
+            # Estimate token counts using character length
+            token_counts = self._estimate_token_counts(sentence_texts)
 
-        # Construct Sentence objects using zip
+        # Create sentence objects
         return [
             Sentence(
-                text=sentence,
-                start_index=position,
-                end_index=position + len(sentence),
-                token_count=token_count,
+                text=sent,
+                start_index=pos,
+                end_index=pos + len(sent),
+                token_count=count,
             )
-            for sentence, position, token_count in zip(
-                sentences, positions, token_counts
-            )
+            for sent, pos, count in zip(sentence_texts, positions, token_counts)
         ]
 
-    def _return_chunk(
-        self, sentences: Sequence[Sentence], token_count: int
-    ) -> SentenceChunk | str:
-        """Return a SentenceChunk object with the given sentences and text."""
-        text = "".join([sentence.text for sentence in sentences])
-        if self.return_type == "chunks":
+    def _create_chunk(
+        self, sentences: list[Sentence], token_count: int
+    ) -> Chunk:
+        """Create a chunk from a list of sentences.
+
+        Args:
+            sentences: List of sentences to create chunk from
+            token_count: Total token count for the chunk
+
+        Returns:
+            Chunk object
+
+        """
+        chunk_text = "".join([sentence.text for sentence in sentences])
+        if self.return_type == "texts":
+            return chunk_text
+        else:
             return SentenceChunk(
-                text=text,
+                text=chunk_text,
                 start_index=sentences[0].start_index,
                 end_index=sentences[-1].end_index,
                 token_count=token_count,
                 sentences=sentences,
             )
-        elif self.return_type == "texts":
-            return text
-        raise ValueError(
-            f"Invalid return type: {self.return_type}. Expected 'texts' or 'chunks'."
-        )
 
     def chunk(self, text: str) -> list[Chunk]:
-        """Chunk the text into smaller pieces based on sentence boundaries.
+        """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:
-            text (str): The text to chunk.
+            text: Input text to be chunked
 
         Returns:
-            list[Chunk]: List of SentenceChunk objects.
+            List of Chunk objects containing the chunked text and metadata
+
         """
-        if not text or not text.strip():
+        if not text.strip():
             return []
 
-        sentences = self._prepare_sentences(text)
+        # Get prepared sentences with token counts
+        sentences = self._prepare_sentences(text)  # 28mus
         if not sentences:
             return []
 
-        chunks: list[SentenceChunk] = []
-        feedback = 1.0
-        position = 0
-        token_sum = list(
-            accumulate((s.token_count for s in sentences), initial=0)
+        # Pre-calculate cumulative token counts for bisect
+        # Add 1 token for spaces between sentences
+        token_sums = list(
+            accumulate(
+                [s.token_count for s in sentences],
+                lambda a, b: a + b,
+                initial=0,
+            )
         )
 
-        while position < len(sentences):
-            token_sum = [int(s * feedback) for s in token_sum]
+        chunks = []
+        feedback = 1.0
+        pos = 0
 
-            # break by bisect left
-            target_tokens = token_sum[position] + self.chunk_size
-            break_index = max(
-                min(bisect_left(token_sum, target_tokens) - 1, len(sentences)),
-                position + 1,
-            )
+        while pos < len(sentences):
+            # use updated feedback on the token sums
+            token_sums = [int(s * feedback) for s in token_sums]
+
+            # Use bisect_left to find initial split point
+            target_tokens = token_sums[pos] + self.chunk_size
+            split_idx = bisect_left(token_sums, target_tokens) - 1
+            split_idx = min(split_idx, len(sentences))
+
+            # Ensure we include at least one sentence beyond pos
+            split_idx = max(split_idx, pos + 1)
 
             # Handle minimum sentences requirement
-            if break_index - position < self.min_sentences_per_chunk:
-                # If we can't meet the minimum_sentences requirement, we need to warn the user
-                if position + self.min_sentences_per_chunk <= len(sentences):
-                    break_index = position + self.min_sentences_per_chunk
+            if split_idx - pos < self.min_sentences_per_chunk:
+                # If the minimum sentences per chunk can be met, set the split index to the minimum sentences per chunk
+                # Otherwise, warn the user that the minimum sentences per chunk could not be met for all chunks
+                if pos + self.min_sentences_per_chunk <= len(sentences):
+                    split_idx = pos + self.min_sentences_per_chunk
                 else:
                     warnings.warn(
-                        f"min_sentneces_per_chunk {self.min_sentences_per_chunk} could not be satisfied for all chunks."
-                        + f"{len(sentences) - position} sentences in the last chunk."
-                        + "Either decrease the min_sentences_per_chunk or increase the chunk_size."
+                        f"Minimum sentences per chunk as {self.min_sentences_per_chunk} could not be met for all chunks. "
+                        + f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
+                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk."
                     )
-                    break_index = len(sentences)
+                    split_idx = len(sentences)
 
-            # Estimate token count for the chunk
-            estimate = max(1, token_sum[break_index] - token_sum[position])
+            # Get the estimated token count
+            estimate = token_sums[split_idx] - token_sums[pos]
 
-            # Get candidate sentences and verify token count
-            chunk_sentences = sentences[position:break_index]
+            # Get candidate sentences and verify actual token count
+            chunk_sentences = sentences[pos:split_idx]
             chunk_text = "".join(s.text for s in chunk_sentences)
-            actual = max(1, self.tokenizer.count_tokens(chunk_text))
+            actual = self.tokenizer.count_tokens(chunk_text)
 
-            # Adjust feedback based on the difference between estimated and actual token count
-            feedback = max(0.01, 1 - ((estimate - actual) / estimate))
+            # Given the actual token_count and the estimate, get a feedback value for the next loop
+            feedback = self._get_feedback(estimate, actual)
+            # print(f"Estimate: {estimate} Actual: {actual} feedback: {feedback}")
 
-            # Backoff if the actual token count exceeds the chunk size
+            # Back off one sentence at a time if we exceeded chunk size
             while (
                 actual > self.chunk_size
                 and len(chunk_sentences) > self.min_sentences_per_chunk
             ):
-                break_index -= 1
-                chunk_sentences = sentences[position:break_index]
+                split_idx -= 1
+                chunk_sentences = sentences[pos:split_idx]
                 chunk_text = "".join(s.text for s in chunk_sentences)
                 actual = self.tokenizer.count_tokens(chunk_text)
 
             chunks.append(self._create_chunk(chunk_sentences, actual))
 
-            if self.chunk_overlap > 0 and break_index < len(sentences):
+            # Calculate next position with overlap
+            if self.chunk_overlap > 0 and split_idx < len(sentences):
+                # Calculate how many sentences we need for overlap
                 overlap_tokens = 0
-                overlap_index = break_index - 1
+                overlap_idx = split_idx - 1
 
-                while (
-                    overlap_index > position
-                    and overlap_tokens < self.chunk_overlap
-                ):
-                    sent = sentences[overlap_index]
+                while overlap_idx > pos and overlap_tokens < self.chunk_overlap:
+                    sent = sentences[overlap_idx]
                     next_tokens = (
-                        overlap_tokens
-                        + sent.token_count
-                        + 1  # +1 for the space
-                    )
+                        overlap_tokens + sent.token_count + 1
+                    )  # +1 for space
                     if next_tokens > self.chunk_overlap:
                         break
                     overlap_tokens = next_tokens
-                    overlap_index -= 1
+                    overlap_idx -= 1
 
                 # Move position to after the overlap
-                position = overlap_index + 1
+                pos = overlap_idx + 1
             else:
-                position = break_index
+                pos = split_idx
 
         return chunks
+
+    def __repr__(self) -> str:
+        """Return a string representation of the SentenceChunker."""
+        return (
+            f"SentenceChunker(tokenizer={self.tokenizer}, "
+            f"chunk_size={self.chunk_size}, "
+            f"chunk_overlap={self.chunk_overlap}, "
+            f"min_sentences_per_chunk={self.min_sentences_per_chunk}, "
+            f"min_characters_per_sentence={self.min_characters_per_sentence}, "
+            f"approximate={self.approximate}, delim={self.delim}, "
+            f"include_delim={self.include_delim}, "
+            f"return_type={self.return_type})"
+        )

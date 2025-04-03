@@ -2,7 +2,7 @@
 
 import pytest
 
-from chonkie.types import Sentence, SentenceChunk
+from chonkie import Sentence, SentenceChunk
 
 
 def test_sentence_init():

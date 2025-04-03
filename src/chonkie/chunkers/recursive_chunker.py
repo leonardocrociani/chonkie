@@ -10,12 +10,12 @@ from functools import lru_cache
 from itertools import accumulate
 from typing import Any, Callable, Literal, Sequence
 
-from chonkie.chunkers.base import BaseChunker
-from chonkie.types.recurisve import (
+from chonkie import (
     RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
 )
+from chonkie.chunkers.base import BaseChunker
 
 
 class RecursiveChunker(BaseChunker):
@@ -23,7 +23,7 @@ class RecursiveChunker(BaseChunker):
 
     Attributes:
         tokenizer_or_token_counter (str | Callable | Any): Tokenizer or token counter to use
-        recursive_rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
+        rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
         return_type (str): Type of return value, either 'chunks' or 'texts'.
@@ -35,7 +35,7 @@ class RecursiveChunker(BaseChunker):
     def __init__(
         self,
         tokenizer_or_token_counter: str | Callable | Any = "gpt2",
-        recursive_rules: RecursiveRules = RecursiveRules(),
+        rules: RecursiveRules = RecursiveRules(),
         chunk_size: int = 512,
         min_characters_per_chunk: int = 24,
         return_type: Literal["texts", "chunks"] = "chunks",
@@ -44,7 +44,7 @@ class RecursiveChunker(BaseChunker):
 
         Args:
             tokenizer_or_token_counter (str | Callable | Any): Tokenizer or token counter to use
-            recursive_rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
+            rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
             chunk_size (int): Maximum size of each chunk.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
             return_type (str): Type of return value, either 'chunks' or 'texts'.
@@ -66,18 +66,18 @@ class RecursiveChunker(BaseChunker):
             raise ValueError(
                 f"return_type {return_type} is invalid. Must be 'chunks' or 'texts'."
             )
-        if not isinstance(recursive_rules, RecursiveRules):
+        if not isinstance(rules, RecursiveRules):
             raise ValueError("recursive_rules must be a RecursiveRules object.")
 
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
         self.return_type = return_type
-        self.recursive_rules = recursive_rules
+        self.rules = rules
 
     def toStr(self) -> str:
         """Get a string representation of the recursive chunker."""
         return (
-            f"RecursiveChunker(recursive_rules={self.recursive_rules}, chunk_size={self.chunk_size}, "
+            f"RecursiveChunker(recursive_rules={self.rules}, chunk_size={self.chunk_size}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk}, "
             f"return_type={self.return_type})"
         )
@@ -268,7 +268,7 @@ class RecursiveChunker(BaseChunker):
             if self.return_type == "chunks":
                 return [
                     self._make_chunks(
-                        text, self._get_token_count(text), level, full_text
+                        text, self._estimate_token_count(text), level, full_text
                     )
                 ]
             raise ValueError(
@@ -278,7 +278,7 @@ class RecursiveChunker(BaseChunker):
         if full_text is None:
             full_text = text
 
-        curr_rule = self.recursive_rules[level]
+        curr_rule = self.rules[level]
         splits = self._split(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 

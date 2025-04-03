@@ -2,7 +2,7 @@
 
 import pytest
 
-from chonkie.types import RecursiveChunk, RecursiveLevel, RecursiveRules
+from chonkie import RecursiveChunk, RecursiveLevel, RecursiveRules
 
 
 def test_recursive_level_init():

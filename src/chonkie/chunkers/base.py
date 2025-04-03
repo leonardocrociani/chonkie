@@ -1,6 +1,7 @@
 """Base Class for All Chunkers."""
 
 from __future__ import annotations
+
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
@@ -8,8 +9,8 @@ from typing import Any, Callable, Sequence
 
 import tqdm
 
+from chonkie import Chunk
 from chonkie.tokenizer import Tokenizer
-from chonkie.types.base import Chunk
 
 
 class BaseChunker(ABC):
@@ -22,6 +23,7 @@ class BaseChunker(ABC):
 
         Args:
             tokenizer_or_token_counter (str | Callable[[str], int] | Any): The tokenizer or token counter to use.
+
         """
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
         self._multiprocessing = True
@@ -38,9 +40,11 @@ class BaseChunker(ABC):
         Args:
             text (str | Sequence[str]): The text to chunk.
             show_progress (bool): Whether to show progress.
+
         Returns:
             If the input is a string, return a list of Chunks.
             If the input is a list of strings, return a list of lists of Chunks.
+
         """
         if isinstance(text, str):
             return self.chunk(text)
@@ -107,6 +111,7 @@ class BaseChunker(ABC):
 
         Args:
             text (str): The text to chunk.
+
         Returns:
             List of Chunks containing the chunked text and other metadata.
 
@@ -121,8 +126,10 @@ class BaseChunker(ABC):
         Args:
             texts (Sequence[str]): The texts to chunk.
             show_progress (bool): Whether to show progress.
+
         Returns:
             List of lists of Chunks containing the chunked text and other metadata.
+
         """
         if len(texts) < 2:
             return [self.chunk(t) for t in texts]
