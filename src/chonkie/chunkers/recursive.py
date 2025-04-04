@@ -6,7 +6,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, Literal, Sequence, Union
+from typing import Any, Callable, Literal, Optional, Sequence, Union
 
 from chonkie.chunkers.base import BaseChunker
 from chonkie.types.recurisve import (
@@ -20,7 +20,7 @@ class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 
     Attributes:
-        tokenizer_or_token_counter (str | Callable | Any): Tokenizer or token counter to use
+        tokenizer_or_token_counter (Union[str, Callable, Any]): Tokenizer or token counter to use
         rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
@@ -39,7 +39,7 @@ class RecursiveChunker(BaseChunker):
         """Create a RecursiveChunker object.
 
         Args:
-            tokenizer_or_token_counter (str | Callable | Any): Tokenizer or token counter to use
+            tokenizer_or_token_counter (Union[str, Callable, Any]): Tokenizer or token counter to use
             rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
             chunk_size (int): Maximum size of each chunk.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
@@ -139,7 +139,7 @@ class RecursiveChunker(BaseChunker):
         text: str,
         token_count: int,
         level: int,
-        full_text: str | None = None,
+        full_text: Optional[str] = None,
         last_chunk_end_index: int = 0,
     ) -> RecursiveChunk:
         """Form and return a RecursiveChunk object."""
@@ -233,7 +233,7 @@ class RecursiveChunker(BaseChunker):
         return merged, combined_token_counts
 
     def _chunk_helper(
-        self, text: str, level: int = 0, full_text: str | None = None
+        self, text: str, level: int = 0, full_text: Optional[str] = None
     ) -> Sequence[RecursiveChunk]:
         """Recursive helper for core chunking."""
         if not text:

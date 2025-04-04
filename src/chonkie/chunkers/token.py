@@ -216,7 +216,7 @@ class TokenChunker(BaseChunker):
         text: Union[str, List[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Sequence[Chunk] | Sequence[Sequence[Chunk]]:
+    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
         """Make the TokenChunker callable directly.
 
         Args:

@@ -32,7 +32,7 @@ class BaseChunker(ABC):
 
     def __call__(
         self, text: Union[str, Sequence[str]], show_progress: bool = True
-    ) -> Sequence[Chunk] | Sequence[Sequence[Chunk]]:
+    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
         """Call the chunker with the given arguments.
 
         Args:

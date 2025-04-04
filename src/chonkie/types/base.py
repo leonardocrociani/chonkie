@@ -10,8 +10,8 @@ class Context:
 
     Attributes:
         text (str): The text of the chunk.
-        start_index (int | None): The starting index of the chunk in the original text.
-        end_index (int | None): The ending index of the chunk in the original text.
+        start_index (Optional[int]): The starting index of the chunk in the original text.
+        end_index (Optional[int]): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
 
     """
@@ -72,7 +72,7 @@ class Chunk:
         start_index (int): The starting index of the chunk in the original text.
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
-        context (Context | None): Optional context metadata for the chunk.
+        context (Optional[Context]): Optional context metadata for the chunk.
 
     """
 

@@ -1,7 +1,5 @@
 """Custom types for recursive chunking."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Iterator, List, Literal, Optional, Union
 
@@ -14,8 +12,8 @@ class RecursiveLevel:
 
     Attributes:
         whitespace (bool): Whether to use whitespace as a delimiter.
-        delimiters (list[str] | str | None): Custom delimiters for chunking.
-        include_delim (Literal["prev", "next"] | None): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+        delimiters (Optional[Union[str, List[str]]]): Custom delimiters for chunking.
+        include_delim (Optional[Literal["prev", "next"]]): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
 
     """
 
@@ -171,7 +169,7 @@ class RecursiveChunk(Chunk):
     """Class to represent recursive chunks.
 
     Attributes:
-        level (int | None): The level of recursion for the chunk, if any.
+        level (Optional[int]): The level of recursion for the chunk, if any.
 
     """
 
@@ -198,6 +196,6 @@ class RecursiveChunk(Chunk):
         return self.__dict__.copy()
 
     @classmethod
-    def from_dict(cls, data: dict) -> RecursiveChunk:
+    def from_dict(cls, data: dict) -> "RecursiveChunk":
         """Create a RecursiveChunk object from a dictionary."""
         return cls(**data)
