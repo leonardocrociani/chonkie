@@ -1,7 +1,5 @@
 """Base Class for All Chunkers."""
 
-from __future__ import annotations
-
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
@@ -22,7 +20,7 @@ class BaseChunker(ABC):
         """Initialize the chunker with any necessary parameters.
 
         Args:
-            tokenizer_or_token_counter (str | Callable[[str], int] | Any): The tokenizer or token counter to use.
+            tokenizer_or_token_counter (Union[str, Callable[[str], int], Any]): The tokenizer or token counter to use.
 
         """
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
@@ -33,12 +31,12 @@ class BaseChunker(ABC):
         return f"{self.__class__.__name__}()"
 
     def __call__(
-        self, text: str | Sequence[str], show_progress: bool = True
+        self, text: Union[str, Sequence[str]], show_progress: bool = True
     ) -> Sequence[Chunk] | Sequence[Sequence[Chunk]]:
         """Call the chunker with the given arguments.
 
         Args:
-            text (str | Sequence[str]): The text to chunk.
+            text (Union[str, Sequence[str]]): The text to chunk.
             show_progress (bool): Whether to show progress.
 
         Returns:
