@@ -1,0 +1,62 @@
+name: Python Automated Testing
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the project
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install pytest pytest-cov coverage
+          uv sync --all-extras --dev
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest --cov=chonkie --cov-branch --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
+        env:
+          CHONKIE_API_KEY: ${{ secrets.CHONKIE_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: chonkie-ai/chonkie
+          # Only upload coverage from the latest Python version
+          fail_ci_if_error: false
+          verbose: true
+          override_commit: ${{ github.sha }}
+          flags: python-${{ matrix.python-version }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+          verbose: true
