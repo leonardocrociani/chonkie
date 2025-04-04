@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterator, Literal
+from typing import Iterator, List, Literal, Optional, Union
 
 from chonkie.types.base import Chunk
 
@@ -20,8 +20,8 @@ class RecursiveLevel:
     """
 
     whitespace: bool = False
-    delimiters: list[str] | str | None = None
-    include_delim: Literal["prev", "next"] | None = "prev"
+    delimiters: Optional[Union[str, List[str]]] = None
+    include_delim: Optional[Literal["prev", "next"]] = "prev"
 
     def _validate_fields(self) -> None:
         """Validate all fields have legal values."""
@@ -37,9 +37,7 @@ class RecursiveLevel:
                     not isinstance(delim, str) or len(delim) == 0
                     for delim in self.delimiters
                 ):
-                    raise ValueError(
-                        "Custom delimiters cannot be an empty string."
-                    )
+                    raise ValueError("Custom delimiters cannot be an empty string.")
                 if any(delim == " " for delim in self.delimiters):
                     raise ValueError(
                         "Custom delimiters cannot be whitespace only. Set whitespace to True instead."
@@ -70,18 +68,14 @@ class RecursiveLevel:
 class RecursiveRules:
     """Expression rules for recursive chunking."""
 
-    levels: list[RecursiveLevel] | RecursiveLevel | None = None
+    levels: Optional[RecursiveLevel, List[RecursiveLevel]] = None
 
     def __post_init__(self):
         """Validate attributes."""
         if self.levels is None:
-            paragraphs = RecursiveLevel(delimiters=["\n", "\n\n", "\r\n"])
+            paragraphs = RecursiveLevel(delimiters=["\n\n", "\r\n", "\n", "\r"])
             sentences = RecursiveLevel(
-                delimiters=[
-                    ".",
-                    "!",
-                    "?",
-                ],
+                delimiters=".!?",
             )
             pauses = RecursiveLevel(
                 delimiters=[
@@ -181,7 +175,7 @@ class RecursiveChunk(Chunk):
 
     """
 
-    level: int | None = None
+    level: Optional[int] = None
 
     def str_repr(self) -> str:
         """Return a string representation of the RecursiveChunk."""

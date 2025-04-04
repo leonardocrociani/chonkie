@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
-from __future__ import annotations
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -18,8 +18,8 @@ class Context:
 
     text: str
     token_count: int
-    start_index: int | None = None
-    end_index: int | None = None
+    start_index: Optional[int] = None
+    end_index: Optional[int] = None
 
     def __post_init__(self):
         """Validate context attributes."""
@@ -80,7 +80,7 @@ class Chunk:
     start_index: int
     end_index: int
     token_count: int
-    context: Context | None = None
+    context: Optional[Context] = None
 
     def __len__(self):
         """Return the length of the text."""
