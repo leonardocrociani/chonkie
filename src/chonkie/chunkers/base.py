@@ -24,7 +24,7 @@ class BaseChunker(ABC):
 
         """
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
-        self._multiprocessing = True
+        self._use_multiprocessing = True
 
     def __repr__(self):
         """Return a string representation of the chunker."""
@@ -127,9 +127,14 @@ class BaseChunker(ABC):
             List of lists of Chunks containing the chunked text and other metadata.
 
         """
-        if len(texts) < 2:
-            return [self.chunk(t) for t in texts]
-        elif self._multiprocessing:
+        # simple handles of empty and single text cases
+        if len(texts) == 0:
+            return []
+        if len(texts) == 1:
+            return [self.chunk(texts[0])]
+
+        # Now for the remaining, check the self._multiprocessing bool flag
+        if self._use_multiprocessing:
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
