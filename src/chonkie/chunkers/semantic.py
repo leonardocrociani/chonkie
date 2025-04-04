@@ -36,9 +36,7 @@ class SemanticChunker(BaseChunker):
 
     def __init__(
         self,
-        embedding_model: Union[
-            str, BaseEmbeddings
-        ] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         chunk_size: int = 512,
@@ -93,17 +91,13 @@ class SemanticChunker(BaseChunker):
         if type(delim) not in [str, list]:
             raise ValueError("delim must be a string or list of strings")
         elif type(threshold) == str and threshold not in ["auto"]:
-            raise ValueError(
-                "threshold must be 'auto', 'smart', or 'percentile'"
-            )
+            raise ValueError("threshold must be 'auto', 'smart', or 'percentile'")
         elif type(threshold) == float and (threshold < 0 or threshold > 1):
             raise ValueError("threshold (float) must be between 0 and 1")
         elif type(threshold) == int and (threshold < 1 or threshold > 100):
             raise ValueError("threshold (int) must be between 1 and 100")
         if return_type not in ["chunks", "texts"]:
-            raise ValueError(
-                "Invalid return_type. Must be either 'chunks' or 'texts'."
-            )
+            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
 
         # Lazy import dependencies to avoid importing them when not needed
         self._import_dependencies()
@@ -118,7 +112,7 @@ class SemanticChunker(BaseChunker):
         self.threshold_step = threshold_step
         self.delim = delim
         self.include_delim = include_delim
-        self.sep = "🦛"
+        self.sep = "✄"
         self.return_type = return_type
 
         if isinstance(threshold, float):
@@ -140,9 +134,7 @@ class SemanticChunker(BaseChunker):
                 embedding_model, **kwargs
             )
         else:
-            raise ValueError(
-                f"{embedding_model} is not a valid embedding model"
-            )
+            raise ValueError(f"{embedding_model} is not a valid embedding model")
 
         # Probably the dependency is not installed
         if self.embedding_model is None:
@@ -213,16 +205,12 @@ class SemanticChunker(BaseChunker):
 
         return sentences
 
-    def _compute_similarity_threshold(
-        self, all_similarities: List[float]
-    ) -> float:
+    def _compute_similarity_threshold(self, all_similarities: List[float]) -> float:
         """Compute similarity threshold based on percentile if specified."""
         if self.similarity_threshold is not None:
             return self.similarity_threshold
         else:
-            return float(
-                np.percentile(all_similarities, self.similarity_percentile)
-            )
+            return float(np.percentile(all_similarities, self.similarity_percentile))
 
     def _prepare_sentences(self, text: str) -> List[SemanticSentence]:
         """Prepare sentences with precomputed information.
@@ -256,9 +244,7 @@ class SemanticChunker(BaseChunker):
         for i in range(len(raw_sentences)):
             group = []
             # similarity window should consider before and after the current sentence
-            for j in range(
-                i - self.similarity_window, i + self.similarity_window + 1
-            ):
+            for j in range(i - self.similarity_window, i + self.similarity_window + 1):
                 if j >= 0 and j < len(raw_sentences):
                     group.append(raw_sentences[j])
             sentence_groups.append("".join(group))
@@ -323,9 +309,7 @@ class SemanticChunker(BaseChunker):
         window_embedding = sentences[0].embedding
         for i in range(1, len(sentences)):
             similarities.append(
-                self._get_semantic_similarity(
-                    window_embedding, sentences[i].embedding
-                )
+                self._get_semantic_similarity(window_embedding, sentences[i].embedding)
             )
 
             # Update the window embedding
@@ -418,11 +402,7 @@ class SemanticChunker(BaseChunker):
             #     high = threshold - self.threshold_step
 
             # check if all the split token counts are between the min and max chunk size
-            if (
-                self.min_chunk_size
-                <= all(split_token_counts)
-                <= self.chunk_size
-            ):
+            if self.min_chunk_size <= all(split_token_counts) <= self.chunk_size:
                 break
             # check if any of the split token counts are greater than the max chunk size
             elif any(split_token_counts) > self.chunk_size:
@@ -448,9 +428,7 @@ class SemanticChunker(BaseChunker):
         # Compute all pairwise similarities, since the embeddings are already computed
         # The embeddings are computed assuming a similarity window is applied
         all_similarities = self._compute_window_similarities(sentences)
-        return float(
-            np.percentile(all_similarities, 100 - self.similarity_percentile)
-        )
+        return float(np.percentile(all_similarities, 100 - self.similarity_percentile))
 
     def _calculate_similarity_threshold(
         self, sentences: List[SemanticSentence]
@@ -510,18 +488,14 @@ class SemanticChunker(BaseChunker):
         similarities = self._compute_window_similarities(
             sentences
         )  # NOTE: This is calculating pairwise, but not window.
-        split_indices = self._get_split_indices(
-            similarities, self.similarity_threshold
-        )
+        split_indices = self._get_split_indices(similarities, self.similarity_threshold)
         groups = [
             sentences[split_indices[i] : split_indices[i + 1]]
             for i in range(len(split_indices) - 1)
         ]
         return groups
 
-    def _group_sentences(
-        self, sentences: List[Sentence]
-    ) -> List[List[Sentence]]:
+    def _group_sentences(self, sentences: List[Sentence]) -> List[List[Sentence]]:
         """Group sentences based on semantic similarity, either cumulatively or by window."""
         if self.mode == "cumulative":
             return self._group_sentences_cumulative(sentences)
@@ -546,9 +520,7 @@ class SemanticChunker(BaseChunker):
         elif self.return_type == "texts":
             return "".join(sent.text for sent in sentences)
         else:
-            raise ValueError(
-                "Invalid return_type. Must be either 'chunks' or 'texts'."
-            )
+            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
 
     def _split_chunks(
         self, sentence_groups: List[List[SemanticSentence]]
@@ -582,9 +554,7 @@ class SemanticChunker(BaseChunker):
                 else:
                     # Create chunk if we have sentences
                     if current_chunk_sentences:
-                        chunks.append(
-                            self._create_chunk(current_chunk_sentences)
-                        )
+                        chunks.append(self._create_chunk(current_chunk_sentences))
 
                     # Start new chunk with current sentence
                     current_chunk_sentences = [sentence]
@@ -618,9 +588,7 @@ class SemanticChunker(BaseChunker):
             return [self._create_chunk(sentences)]
 
         # Calculate similarity threshold
-        self.similarity_threshold = self._calculate_similarity_threshold(
-            sentences
-        )
+        self.similarity_threshold = self._calculate_similarity_threshold(sentences)
 
         # First pass: Group sentences by semantic similarity
         sentence_groups = self._group_sentences(sentences)

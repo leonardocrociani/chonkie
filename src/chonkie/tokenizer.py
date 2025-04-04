@@ -10,12 +10,22 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Callable, Sequence
 
 if TYPE_CHECKING:
-    if importlib.util.find_spec("transformers") is not None:
-        import transformers
-    if importlib.util.find_spec("tokenizers") is not None:
-        import tokenizers
-    if importlib.util.find_spec("tiktoken") is not None:
+    # check if we can import tiktoken
+    try:
         import tiktoken
+    except ImportError:
+        tiktoken = Any  # fallback to Any
+    #  check if we can import tokenizers
+    try:
+        import tokenizers
+    except ImportError:
+        tokenizers = Any  # fallback to Any
+
+    # check if we can import transformers
+    try:
+        import transformers
+    except ImportError:
+        transformers = Any  # fallback to Any
 
 
 class Tokenizer:
@@ -43,10 +53,10 @@ class Tokenizer:
     ) -> (
         CharacterTokenizer
         | WordTokenizer
-        | tokenizers.Tokenizer
-        | tiktoken.Encoding
-        | transformers.PreTrainedTokenizer
-        | transformers.PreTrainedTokenizerFast
+        | "tokenizers.Tokenizer"
+        | "tiktoken.Encoding"
+        | "transformers.PreTrainedTokenizer"
+        | "transformers.PreTrainedTokenizerFast"
         | Callable[[str], int]
     ):
         """Load the tokenizer based on the identifier."""
@@ -66,9 +76,7 @@ class Tokenizer:
                     "Could not find 'tokenizers'. Falling back to 'tiktoken'."
                 )
         else:
-            warnings.warn(
-                "Could not find 'tokenizers'. Falling back to 'tiktoken'."
-            )
+            warnings.warn("Could not find 'tokenizers'. Falling back to 'tiktoken'.")
 
         # Try tiktoken
         if importlib.util.find_spec("tiktoken") is not None:
@@ -81,9 +89,7 @@ class Tokenizer:
                     "Could not find 'tiktoken'. Falling back to 'transformers'."
                 )
         else:
-            warnings.warn(
-                "Could not find 'tiktoken'. Falling back to 'transformers'."
-            )
+            warnings.warn("Could not find 'tiktoken'. Falling back to 'transformers'.")
 
         # Try transformers as last resort
         if importlib.util.find_spec("transformers") is not None:
@@ -95,9 +101,7 @@ class Tokenizer:
                 raise ValueError(
                     "Tokenizer not found in transformers, tokenizers, or tiktoken"
                 )
-        raise ValueError(
-            "Tokenizer not found in transformers, tokenizers, or tiktoken"
-        )
+        raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
 
     def _get_backend(self):
         """Get the tokenizer instance based on the identifier."""
@@ -116,9 +120,7 @@ class Tokenizer:
             or inspect.ismethod(self.tokenizer)
         ):
             return "callable"
-        raise ValueError(
-            f"Unsupported tokenizer backend: {type(self.tokenizer)}"
-        )
+        raise ValueError(f"Unsupported tokenizer backend: {type(self.tokenizer)}")
 
     def encode(self, text: str) -> Sequence[int]:
         """Encode the text into tokens.
@@ -181,9 +183,7 @@ class Tokenizer:
         elif self._backend == "transformers":
             return len(self.tokenizer.encode(text, add_special_tokens=False))
         elif self._backend == "tokenizers":
-            return len(
-                self.tokenizer.encode(text, add_special_tokens=False).ids
-            )
+            return len(self.tokenizer.encode(text, add_special_tokens=False).ids)
         elif self._backend == "callable":
             return self.tokenizer(text)
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
@@ -204,15 +204,13 @@ class Tokenizer:
         elif self._backend == "tiktoken":
             return self.tokenizer.encode_batch(texts)
         elif self._backend == "transformers":
-            return self.tokenizer.batch_encode_plus(
-                texts, add_special_tokens=False
-            )["input_ids"]
+            return self.tokenizer.batch_encode_plus(texts, add_special_tokens=False)[
+                "input_ids"
+            ]
         elif self._backend == "tokenizers":
             return [
                 x.ids
-                for x in self.tokenizer.encode_batch(
-                    texts, add_special_tokens=False
-                )
+                for x in self.tokenizer.encode_batch(texts, add_special_tokens=False)
             ]
         if self._backend == "callable":
             raise NotImplementedError(
@@ -220,9 +218,7 @@ class Tokenizer:
             )
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
-    def decode_batch(
-        self, token_sequences: Sequence[Sequence[int]]
-    ) -> Sequence[str]:
+    def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> Sequence[str]:
         """Batch decode a list of tokens back into text.
 
         Args:
@@ -264,8 +260,7 @@ class Tokenizer:
             return self.tokenizer.count_tokens_batch(texts)
         elif self._backend == "tiktoken":
             return [
-                len(token_list)
-                for token_list in self.tokenizer.encode_batch(texts)
+                len(token_list) for token_list in self.tokenizer.encode_batch(texts)
             ]
         elif self._backend == "transformers":
             return [
@@ -363,9 +358,7 @@ class BaseTokenizer(ABC):
         """
         return [self.encode(text) for text in texts]
 
-    def decode_batch(
-        self, token_sequences: Sequence[Sequence[int]]
-    ) -> Sequence[str]:
+    def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> Sequence[str]:
         """Batch decode a list of tokens back into text.
 
         Args:

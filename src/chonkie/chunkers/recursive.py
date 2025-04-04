@@ -3,12 +3,10 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
-from __future__ import annotations
-
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, Literal, Sequence
+from typing import Any, Callable, Literal, Sequence, Union
 
 from chonkie.chunkers.base import BaseChunker
 from chonkie.types.recurisve import (
@@ -30,11 +28,9 @@ class RecursiveChunker(BaseChunker):
 
     """
 
-    _CHARS_PER_TOKEN = 6
-
     def __init__(
         self,
-        tokenizer_or_token_counter: str | Callable | Any = "gpt2",
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
         rules: RecursiveRules = RecursiveRules(),
         chunk_size: int = 512,
         min_characters_per_chunk: int = 24,
@@ -69,42 +65,24 @@ class RecursiveChunker(BaseChunker):
         if not isinstance(rules, RecursiveRules):
             raise ValueError("recursive_rules must be a RecursiveRules object.")
 
+        # Initialize the internal values
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
         self.return_type = return_type
         self.rules = rules
+        self.sep = "✄"
+        self._CHARS_PER_TOKEN = 6
 
-    def toStr(self) -> str:
-        """Get a string representation of the recursive chunker."""
-        return (
-            f"RecursiveChunker(recursive_rules={self.rules}, chunk_size={self.chunk_size}, "
-            f"min_characters_per_chunk={self.min_characters_per_chunk}, "
-            f"return_type={self.return_type})"
-        )
-
-    def __repr__(self) -> str:
-        """Get a string representation of the recursive chunker."""
-        return self.toStr()
-
-    def __str__(self) -> str:
-        """Get a string representation of the recursive chunker."""
-        return self.toStr()
-
-    @lru_cache(maxsize=2048)
+    @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
         estimate = max(1, len(text) // self._CHARS_PER_TOKEN)
         return (
-            float("inf")
+            self.chunk_size + 1
             if estimate > self.chunk_size
             else self.tokenizer.count_tokens(text)
         )
 
-    def _split(
-        self,
-        text: str,
-        recursive_level: RecursiveLevel,
-        sep: str = "<=CHONKIE_INTERNAL_SEP=>",
-    ) -> list[str]:
+    def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         # At every delimiter, replace it with the sep
         if recursive_level.whitespace:
@@ -112,15 +90,15 @@ class RecursiveChunker(BaseChunker):
         elif recursive_level.delimiters:
             if recursive_level.include_delim == "prev":
                 for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, delimiter + sep)
+                    text = text.replace(delimiter, delimiter + self.sep)
             elif recursive_level.include_delim == "next":
                 for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, sep + delimiter)
+                    text = text.replace(delimiter, self.sep + delimiter)
             else:
                 for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, sep)
+                    text = text.replace(delimiter, self.sep)
 
-            splits = [split for split in text.split(sep) if split != ""]
+            splits = [split for split in text.split(self.sep) if split != ""]
 
             # Merge short splits
             current = ""
@@ -168,9 +146,9 @@ class RecursiveChunker(BaseChunker):
         if full_text is None:
             full_text = text
         try:
-            start_index = last_chunk_end_index + full_text[
-                last_chunk_end_index:
-            ].index(text)
+            start_index = last_chunk_end_index + full_text[last_chunk_end_index:].index(
+                text
+            )
             end_index = start_index + len(text)
         except Exception as e:
             print(
@@ -248,8 +226,7 @@ class RecursiveChunker(BaseChunker):
 
             # Adjust token count
             combined_token_counts.append(
-                cumulative_token_counts[min(index, len(splits))]
-                - current_token_count
+                cumulative_token_counts[min(index, len(splits))] - current_token_count
             )
             current_index = index
 
@@ -279,7 +256,7 @@ class RecursiveChunker(BaseChunker):
             full_text = text
 
         curr_rule = self.rules[level]
-        splits = self._split(text, curr_rule)
+        splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
         # Merge splits
@@ -308,10 +285,7 @@ class RecursiveChunker(BaseChunker):
                 if self.return_type == "chunks":
                     if chunks:
                         last_chunk_end_index = chunks[-1].end_index
-                    no_delim = (
-                        curr_rule.delimiters is None
-                        and not curr_rule.whitespace
-                    )
+                    no_delim = curr_rule.delimiters is None and not curr_rule.whitespace
                     # **Speedup**: Since there are no delimiters we can just join the "merged" result.
                     chunks.append(
                         self._make_chunks(
@@ -334,3 +308,12 @@ class RecursiveChunker(BaseChunker):
 
         """
         return self._chunk_helper(text=text, level=0, full_text=text)
+
+    def __repr__(self) -> str:
+        """Get a string representation of the recursive chunker."""
+        return (
+            f"RecursiveChunker(tokenizer_or_token_counter={self.tokenizer_or_token_counter},"
+            f" rules={self.rules}, chunk_size={self.chunk_size}, "
+            f"min_characters_per_chunk={self.min_characters_per_chunk}, "
+            f"return_type={self.return_type})"
+        )

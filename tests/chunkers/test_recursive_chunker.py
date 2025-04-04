@@ -48,9 +48,7 @@ def paragraph_rules():
 @pytest.fixture
 def sentence_rules():
     """Return a sentence set of rules."""
-    sentence_level = RecursiveLevel(
-        delimiters=[".", "?", "!"], whitespace=False
-    )
+    sentence_level = RecursiveLevel(delimiters=[".", "?", "!"], whitespace=False)
     return RecursiveRules(levels=[sentence_level])
 
 
@@ -118,9 +116,7 @@ def test_recursive_chunker_chunking(sample_text, default_rules):
     assert all(chunk.level is not None for chunk in chunks)
 
 
-def test_recursive_chunker_token_count_default_rules(
-    sample_text, default_rules
-):
+def test_recursive_chunker_token_count_default_rules(sample_text, default_rules):
     """Test that the RecursiveChunker can chunk a sample text with default rules."""
     chunker = RecursiveChunker(
         rules=default_rules, chunk_size=512, min_characters_per_chunk=12
@@ -132,9 +128,7 @@ def test_recursive_chunker_token_count_default_rules(
     assert all(len(chunk.text) >= 12 for chunk in chunks)
 
 
-def test_recursive_chunker_reconstruction_default_rules(
-    sample_text, default_rules
-):
+def test_recursive_chunker_reconstruction_default_rules(sample_text, default_rules):
     """Test that the RecursiveChunker can reconstruct a sample text with default rules."""
     chunker = RecursiveChunker(
         rules=default_rules, chunk_size=512, min_characters_per_chunk=12
@@ -160,9 +154,7 @@ def test_recursive_chunker_indices_default_rules(sample_text, default_rules):
     )
 
 
-def test_recursive_chunker_token_count_paragraph_rules(
-    sample_text, paragraph_rules
-):
+def test_recursive_chunker_token_count_paragraph_rules(sample_text, paragraph_rules):
     """Test that the RecursiveChunker can chunk a sample text with paragraph rules."""
     chunker = RecursiveChunker(
         rules=paragraph_rules, chunk_size=512, min_characters_per_chunk=12
@@ -174,9 +166,7 @@ def test_recursive_chunker_token_count_paragraph_rules(
     assert all(len(chunk.text) >= 12 for chunk in chunks)
 
 
-def test_recursive_chunker_reconstruction_paragraph_rules(
-    sample_text, paragraph_rules
-):
+def test_recursive_chunker_reconstruction_paragraph_rules(sample_text, paragraph_rules):
     """Test that the RecursiveChunker can reconstruct a sample text with paragraph rules."""
     chunker = RecursiveChunker(
         rules=paragraph_rules, chunk_size=512, min_characters_per_chunk=12
@@ -186,9 +176,7 @@ def test_recursive_chunker_reconstruction_paragraph_rules(
     assert sample_text == "".join(chunk.text for chunk in chunks)
 
 
-def test_recursive_chunker_indices_paragraph_rules(
-    sample_text, paragraph_rules
-):
+def test_recursive_chunker_indices_paragraph_rules(sample_text, paragraph_rules):
     """Test that the RecursiveChunker can reconstruct a sample text with paragraph rules."""
     chunker = RecursiveChunker(
         rules=paragraph_rules, chunk_size=512, min_characters_per_chunk=12
@@ -204,9 +192,7 @@ def test_recursive_chunker_indices_paragraph_rules(
     )
 
 
-def test_recursive_chunker_token_count_sentence_rules(
-    sample_text, sentence_rules
-):
+def test_recursive_chunker_token_count_sentence_rules(sample_text, sentence_rules):
     """Test that the RecursiveChunker can chunk a sample text with sentence rules."""
     chunker = RecursiveChunker(
         rules=sentence_rules, chunk_size=512, min_characters_per_chunk=12
@@ -218,9 +204,7 @@ def test_recursive_chunker_token_count_sentence_rules(
     assert all(len(chunk.text) >= 12 for chunk in chunks)
 
 
-def test_recursive_chunker_reconstruction_sentence_rules(
-    sample_text, sentence_rules
-):
+def test_recursive_chunker_reconstruction_sentence_rules(sample_text, sentence_rules):
     """Test that the RecursiveChunker can reconstruct a sample text with sentence rules."""
     chunker = RecursiveChunker(
         rules=sentence_rules, chunk_size=512, min_characters_per_chunk=12
@@ -272,9 +256,7 @@ def test_recursive_chunker_reconstruction_subsentence_rules(
     assert sample_text == "".join(chunk.text for chunk in chunks)
 
 
-def test_recursive_chunker_indices_subsentence_rules(
-    sample_text, subsentence_rules
-):
+def test_recursive_chunker_indices_subsentence_rules(sample_text, subsentence_rules):
     """Test that the RecursiveChunker can reconstruct a sample text with subsentence rules."""
     chunker = RecursiveChunker(
         rules=subsentence_rules, chunk_size=512, min_characters_per_chunk=12
@@ -352,8 +334,14 @@ def test_recursive_chunker_token_count_token_rules(sample_text, token_rules):
     chunks = chunker.chunk(sample_text)
     assert len(chunks) > 0
     assert all(isinstance(chunk, Chunk) for chunk in chunks)
-    assert all(chunk.token_count <= 512 for chunk in chunks)
-    assert all(len(chunk.text) >= 12 for chunk in chunks)
+    for chunk in chunks:
+        assert chunk.token_count <= 512, (
+            f"Chunk {chunk} has token count {chunk.token_count}"
+        )
+    for chunk in chunks:
+        assert len(chunk.text) >= 12, (
+            f"Chunk {chunk} has character count {chunk.token_count}"
+        )
 
 
 def test_recursive_chunker_reconstruction_token_rules(sample_text, token_rules):
