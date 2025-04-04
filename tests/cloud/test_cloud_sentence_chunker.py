@@ -15,34 +15,65 @@ def test_cloud_sentence_chunker_initialization() -> None:
     """Test that the sentence chunker can be initialized."""
     # Check if the chunk_size < 0 raises an error
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1, chunk_overlap=0)
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2", chunk_size=-1, chunk_overlap=0
+        )
 
     # Check if the chunk_overlap < 0 raises an error
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=-1)
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=-1
+        )
 
     # Check if the min_sentences_per_chunk < 1 raises an error
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, min_sentences_per_chunk=-1)
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            min_sentences_per_chunk=-1,
+        )
 
     # Check if the min_characters_per_sentence < 1 raises an error
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, min_characters_per_sentence=-1)
-    
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            min_characters_per_sentence=-1,
+        )
+
     # Check if the approximate is not a boolean
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, approximate="not_a_boolean")
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            approximate="not_a_boolean",
+        )
 
     # Check if the include_delim is not a string
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, include_delim="not_a_string")
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            include_delim="not_a_string",
+        )
 
     # Check if the return_type is not a string
     with pytest.raises(ValueError):
-        SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, return_type="not_a_string")
+        SentenceChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            return_type="not_a_string",
+        )
 
     # Finally, check if the attributes are set correctly
-    chunker = SentenceChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0)
+    chunker = SentenceChunker(
+        tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0
+    )
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.chunk_overlap == 0
@@ -53,6 +84,11 @@ def test_cloud_sentence_chunker_initialization() -> None:
     assert chunker.include_delim == "prev"
     assert chunker.return_type == "chunks"
 
+
+@pytest.skipif(
+    "CHONKIE_API_KEY" not in os.environ,
+    reason="CHONKIE_API_KEY is not set",
+)
 def test_cloud_sentence_chunker_simple() -> None:
     """Test that the sentence chunker works."""
     sentence_chunker = SentenceChunker(
@@ -92,6 +128,7 @@ def test_cloud_sentence_chunker_multiple_sentences() -> None:
     assert all(isinstance(item["token_count"], int) for item in result)
     assert all(isinstance(item["start_index"], int) for item in result)
     assert all(isinstance(item["end_index"], int) for item in result)
+
 
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
