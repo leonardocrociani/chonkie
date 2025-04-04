@@ -85,7 +85,7 @@ def test_cloud_sentence_chunker_initialization() -> None:
     assert chunker.return_type == "chunks"
 
 
-@pytest.skipif(
+@pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
     reason="CHONKIE_API_KEY is not set",
 )
