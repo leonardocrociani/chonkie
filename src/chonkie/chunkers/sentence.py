@@ -1,11 +1,9 @@
 """Sentence chunker."""
 
-from __future__ import annotations
-
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, Literal
+from typing import Any, Callable, List, Literal, Union
 
 from chonkie.types.base import Chunk
 from chonkie.types.sentence import Sentence, SentenceChunk
@@ -34,13 +32,13 @@ class SentenceChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str | Callable | Any = "gpt2",
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = True,
-        delim: str | list[str] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
         include_delim: Literal["prev", "next"] | None = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
     ):
@@ -78,17 +76,8 @@ class SentenceChunker(BaseChunker):
         if include_delim not in ["prev", "next", None]:
             raise ValueError("include_delim must be 'prev', 'next' or None")
         if return_type not in ["chunks", "texts"]:
-            raise ValueError(
-                "Invalid return_type. Must be either 'chunks' or 'texts'."
-            )
+            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
 
-        # Add chunk_overlap deprecation warning
-        if chunk_overlap > 0:
-            warnings.warn(
-                "chunk_overlap is getting deprecated in v0.6.0. "
-                + "🦛 Chonkie advises you to use OverlapRefinery instead which is more flexible and powerful!",
-                DeprecationWarning,
-            )
         # Assign the values if they make sense
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -97,10 +86,10 @@ class SentenceChunker(BaseChunker):
         self.approximate = approximate
         self.delim = delim
         self.include_delim = include_delim
-        self.sep = "🦛"
+        self.sep = "✄"
         self.return_type = return_type
 
-    def _split_sentences(self, text: str) -> list[str]:
+    def _split_sentences(self, text: str) -> List[str]:
         """Fast sentence splitting while maintaining accuracy.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
@@ -150,7 +139,7 @@ class SentenceChunker(BaseChunker):
 
         return sentences
 
-    def _estimate_token_counts(self, sentences: str | list[str]) -> int:
+    def _estimate_token_counts(self, sentences: Union[str, List[str]]) -> int:
         """Estimate token count using character length."""
         CHARS_PER_TOKEN = 6.0  # Avg. char per token for llama3 is b/w 6-7
         if type(sentences) is str:
@@ -168,7 +157,7 @@ class SentenceChunker(BaseChunker):
         feedback = max(0.01, 1 - ((estimate - actual) / estimate))
         return feedback
 
-    def _prepare_sentences(self, text: str) -> list[Sentence]:
+    def _prepare_sentences(self, text: str) -> List[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
 
         Args:
@@ -210,9 +199,7 @@ class SentenceChunker(BaseChunker):
             for sent, pos, count in zip(sentence_texts, positions, token_counts)
         ]
 
-    def _create_chunk(
-        self, sentences: list[Sentence], token_count: int
-    ) -> Chunk:
+    def _create_chunk(self, sentences: List[Sentence], token_count: int) -> Chunk:
         """Create a chunk from a list of sentences.
 
         Args:
@@ -235,7 +222,7 @@ class SentenceChunker(BaseChunker):
                 sentences=sentences,
             )
 
-    def chunk(self, text: str) -> list[Chunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:
@@ -325,9 +312,7 @@ class SentenceChunker(BaseChunker):
 
                 while overlap_idx > pos and overlap_tokens < self.chunk_overlap:
                     sent = sentences[overlap_idx]
-                    next_tokens = (
-                        overlap_tokens + sent.token_count + 1
-                    )  # +1 for space
+                    next_tokens = overlap_tokens + sent.token_count + 1  # +1 for space
                     if next_tokens > self.chunk_overlap:
                         break
                     overlap_tokens = next_tokens

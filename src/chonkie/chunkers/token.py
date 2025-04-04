@@ -4,7 +4,7 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Generator, Literal, Sequence
+from typing import Any, Generator, List, Literal, Sequence, Union
 
 from tqdm import trange
 
@@ -25,9 +25,9 @@ class TokenChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: str | Any = "gpt2",
+        tokenizer: Union[str, Any] = "gpt2",
         chunk_size: int = 512,
-        chunk_overlap: int | float = 0,
+        chunk_overlap: Union[int, float] = 0,
         return_type: Literal["chunks", "texts"] = "chunks",
     ) -> None:
         """Initialize the TokenChunker with configuration parameters.
@@ -63,9 +63,9 @@ class TokenChunker(BaseChunker):
 
     def _create_chunks(
         self,
-        chunk_texts: list[str],
-        token_groups: list[list[int]],
-        token_counts: list[int],
+        chunk_texts: List[str],
+        token_groups: List[List[int]],
+        token_counts: List[int],
     ) -> Sequence[Chunk]:
         """Create chunks from a list of texts."""
         # Find the overlap lengths for index calculation
@@ -103,8 +103,8 @@ class TokenChunker(BaseChunker):
         return chunks
 
     def _token_group_generator(
-        self, tokens: list[int]
-    ) -> Generator[list[int], None, None]:
+        self, tokens: List[int]
+    ) -> Generator[List[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
@@ -146,7 +146,7 @@ class TokenChunker(BaseChunker):
         elif self.return_type == "texts":
             return self.tokenizer.decode_batch(token_groups)
 
-    def _process_batch(self, texts: list[str]) -> Sequence[Sequence[Chunk]]:
+    def _process_batch(self, texts: List[str]) -> Sequence[Sequence[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
@@ -181,7 +181,7 @@ class TokenChunker(BaseChunker):
 
     def chunk_batch(
         self,
-        texts: list[str],
+        texts: List[str],
         batch_size: int = 1,
         show_progress_bar: bool = True,
     ) -> Sequence[Sequence[Chunk]]:
@@ -213,7 +213,7 @@ class TokenChunker(BaseChunker):
 
     def __call__(
         self,
-        text: str | list[str],
+        text: Union[str, List[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
     ) -> Sequence[Chunk] | Sequence[Sequence[Chunk]]:
