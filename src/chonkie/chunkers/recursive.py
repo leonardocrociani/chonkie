@@ -31,8 +31,8 @@ class RecursiveChunker(BaseChunker):
     def __init__(
         self,
         tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-        rules: RecursiveRules = RecursiveRules(),
         chunk_size: int = 512,
+        rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
         return_type: Literal["texts", "chunks"] = "chunks",
     ) -> None:
@@ -71,7 +71,7 @@ class RecursiveChunker(BaseChunker):
         self.return_type = return_type
         self.rules = rules
         self.sep = "✄"
-        self._CHARS_PER_TOKEN = 6
+        self._CHARS_PER_TOKEN = 6.5
 
     @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
