@@ -9,7 +9,7 @@ from itertools import accumulate
 from typing import Any, Callable, Literal, Optional, Sequence, Union
 
 from chonkie.chunkers.base import BaseChunker
-from chonkie.types.recursive import (
+from chonkie.types import (
     RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
