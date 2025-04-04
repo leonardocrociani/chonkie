@@ -260,15 +260,15 @@ class Tokenizer:
 
     def _load_tokenizer(
         self, tokenizer: str
-    ) -> (
-        CharacterTokenizer
-        | WordTokenizer
-        | "tokenizers.Tokenizer"
-        | "tiktoken.Encoding"
-        | "transformers.PreTrainedTokenizer"
-        | "transformers.PreTrainedTokenizerFast"
-        | Callable[[str], int]
-    ):
+    ) -> Union[
+        CharacterTokenizer,
+        WordTokenizer,
+        "tokenizers.Tokenizer",
+        "tiktoken.Encoding",
+        "transformers.PreTrainedTokenizer",
+        "transformers.PreTrainedTokenizerFast",
+        Callable[[str], int],
+    ]:
         """Load the tokenizer based on the identifier."""
         if tokenizer == "character":
             return CharacterTokenizer()
