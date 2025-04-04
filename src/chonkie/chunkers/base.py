@@ -5,7 +5,7 @@ from __future__ import annotations
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Sequence, Union
 
 from tqdm import tqdm
 
@@ -16,7 +16,9 @@ from chonkie.types.base import Chunk
 class BaseChunker(ABC):
     """Base class for all chunkers."""
 
-    def __init__(self, tokenizer_or_token_counter: str | Callable[[str], int] | Any):
+    def __init__(
+        self, tokenizer_or_token_counter: Union[str, Callable[[str], int], Any]
+    ):
         """Initialize the chunker with any necessary parameters.
 
         Args:

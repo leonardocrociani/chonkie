@@ -3,7 +3,7 @@
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Literal, Union
+from typing import Any, Callable, List, Literal, Optional, Union
 
 from chonkie.types.base import Chunk
 from chonkie.types.sentence import Sentence, SentenceChunk
@@ -39,7 +39,7 @@ class SentenceChunker(BaseChunker):
         min_characters_per_sentence: int = 12,
         approximate: bool = True,
         delim: Union[str, List[str]] = [".", "!", "?", "\n"],
-        include_delim: Literal["prev", "next"] | None = "prev",
+        include_delim: Optional[Literal["prev", "next"]] = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
     ):
         """Initialize the SentenceChunker with configuration parameters.
