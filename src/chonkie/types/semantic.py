@@ -1,8 +1,7 @@
 """Semantic types for Chonkie."""
-from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from chonkie.types.sentence import Sentence, SentenceChunk
 
@@ -25,7 +24,7 @@ class SemanticSentence(Sentence):
 
     """
 
-    embedding: "np.ndarray" | None = field(default=None)
+    embedding: Optional["np.ndarray"] = field(default=None)
 
     def to_dict(self) -> dict:
         """Return the SemanticSentence as a dictionary."""
@@ -66,14 +65,12 @@ class SemanticChunk(SentenceChunk):
 
     """
 
-    sentences: list[SemanticSentence] = field(default_factory=list)
+    sentences: List[SemanticSentence] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return the SemanticChunk as a dictionary."""
         result = super().to_dict()
-        result["sentences"] = [
-            sentence.to_dict() for sentence in self.sentences
-        ]
+        result["sentences"] = [sentence.to_dict() for sentence in self.sentences]
         return result
 
     @classmethod

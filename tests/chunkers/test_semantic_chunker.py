@@ -7,7 +7,7 @@ from typing import List
 
 import pytest
 
-from chonkie.chunkers.semantic_chunker import SemanticChunker
+from chonkie import SemanticChunker
 from chonkie.embeddings import (
     CohereEmbeddings,
     Model2VecEmbeddings,
@@ -76,7 +76,7 @@ def sample_complex_markdown_text():
 
     """
     text = """# Heading 1
-    This is a paragraph with some **bold text** and _italic text_. 
+    This is a paragraph with some **bold text** and _italic text_.
     ## Heading 2
     - Bullet point 1
     - Bullet point 2 with `inline code`
@@ -316,9 +316,7 @@ def test_semantic_chunker_token_counts(embedding_model, sample_text):
         "All chunks must have a token count less than or equal to 512"
     )
 
-    token_counts = [
-        chunker.tokenizer.count_tokens(chunk.text) for chunk in chunks
-    ]
+    token_counts = [chunker.tokenizer.count_tokens(chunk.text) for chunk in chunks]
     for i, (chunk, token_count) in enumerate(zip(chunks, token_counts)):
         assert chunk.token_count == token_count, (
             f"Chunk {i} has a token count of {chunk.token_count} but the encoded text length is {token_count}"
@@ -342,9 +340,7 @@ def test_semantic_chunker_reconstruction_complex_md(
         embedding_model=embedding_model, chunk_size=512, threshold=0.5
     )
     chunks = chunker.chunk(sample_complex_markdown_text)
-    assert sample_complex_markdown_text == "".join([
-        chunk.text for chunk in chunks
-    ])
+    assert sample_complex_markdown_text == "".join([chunk.text for chunk in chunks])
 
 
 def test_semantic_chunker_reconstruction_batch(embedding_model, sample_text):
