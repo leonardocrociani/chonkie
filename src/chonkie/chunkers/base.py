@@ -16,9 +16,7 @@ from chonkie.types.base import Chunk
 class BaseChunker(ABC):
     """Base class for all chunkers."""
 
-    def __init__(
-        self, tokenizer_or_token_counter: str | Callable[[str], int] | Any
-    ):
+    def __init__(self, tokenizer_or_token_counter: str | Callable[[str], int] | Any):
         """Initialize the chunker with any necessary parameters.
 
         Args:
@@ -98,9 +96,7 @@ class BaseChunker(ABC):
                 bar_format="{desc} ch{bar:20}nk {percentage:3.0f}% • {n_fmt}/{total_fmt} docs chunked [{elapsed}<{remaining}, {rate_fmt}] 🌱",
                 ascii=" o",
             ) as progress_bar:
-                for result in pool.imap(
-                    self.chunk, texts, chunksize=chunk_size
-                ):
+                for result in pool.imap(self.chunk, texts, chunksize=chunk_size):
                     results.append(result)
                     progress_bar.update()
             return results

@@ -8,20 +8,31 @@ version = "1.0.0"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
-license = {file = "LICENSE"}
-keywords = ["chunking", "rag", 
-            "retrieval-augmented-generation",
-            "chunking-library", "chunking-toolkit", 
-            "chunking-utility", "nlp", 
-            "natural-language-processing", 
-            "text-processing", "text-analysis", 
-            "text-chunking", "chunking-algorithms", 
-            "chunking-techniques", "chunking-methods", 
-            "chunking-approaches", "chunking-strategies", 
-            "chunking-tools", "artificial-intelligence", 
-            "machine-learning"]
+license = { file = "LICENSE" }
+keywords = [
+    "chunking",
+    "rag",
+    "retrieval-augmented-generation",
+    "chunking-library",
+    "chunking-toolkit",
+    "chunking-utility",
+    "nlp",
+    "natural-language-processing",
+    "text-processing",
+    "text-analysis",
+    "text-chunking",
+    "chunking-algorithms",
+    "chunking-techniques",
+    "chunking-methods",
+    "chunking-approaches",
+    "chunking-strategies",
+    "chunking-tools",
+    "artificial-intelligence",
+    "machine-learning",
+]
 authors = [
-    {name = "Shreyash Nigam", email = "shreyash@chonkie.ai"},
+    { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
+    { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
 ]
 
 classifiers = [
@@ -38,12 +49,9 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Text Processing :: Linguistic"
+    "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = [
-    "tokenizers>=0.16.0", 
-    "tqdm>=4.64.0"
-]
+dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
@@ -59,10 +67,10 @@ dev = [
     "tiktoken>=0.5.0",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
-    "pytest>=6.2.0", 
+    "pytest>=6.2.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.0.265",
-    "mypy>=1.11.0"
+    "mypy>=1.11.0",
 ]
 all = [
     "sentence-transformers>=3.0.0",
@@ -70,19 +78,20 @@ all = [
     "openai>=1.0.0",
     "tiktoken>=0.5.0",
     "model2vec>=0.3.0",
-    "cohere>=5.13.0"
+    "cohere>=5.13.0",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
-packages = ["chonkie", 
-            "chonkie.chunkers",
-            "chonkie.types",
-            "chonkie.embeddings",
-        ]
+package-dir = { "" = "src" }
+packages = [
+    "chonkie",
+    "chonkie.chunkers",
+    "chonkie.types",
+    "chonkie.embeddings",
+]
 
 [tool.ruff]
 exclude = ["*.ipynb"]
