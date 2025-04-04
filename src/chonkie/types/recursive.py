@@ -66,7 +66,7 @@ class RecursiveLevel:
 class RecursiveRules:
     """Expression rules for recursive chunking."""
 
-    levels: Optional[RecursiveLevel, List[RecursiveLevel]] = None
+    levels: Optional[Union[RecursiveLevel, List[RecursiveLevel]]] = None
 
     def __post_init__(self):
         """Validate attributes."""
