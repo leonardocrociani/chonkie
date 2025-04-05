@@ -1,6 +1,6 @@
 """Main package for Chonkie."""
 
-from .chunkers import (
+from .chunker import (
     BaseChunker,
     RecursiveChunker,
     SDPMChunker,

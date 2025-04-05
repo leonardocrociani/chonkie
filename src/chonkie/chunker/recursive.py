@@ -8,7 +8,7 @@ from functools import lru_cache
 from itertools import accumulate
 from typing import Any, Callable, Literal, Optional, Sequence, Union
 
-from chonkie.chunkers.base import BaseChunker
+from chonkie.chunker.base import BaseChunker
 from chonkie.types import (
     RecursiveChunk,
     RecursiveLevel,

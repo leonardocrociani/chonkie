@@ -7,8 +7,8 @@ This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 from typing import List, Literal, Optional, Union
 
 from chonkie.chunker.semantic import SemanticChunker
-from chonkie.embedddings import BaseEmbeddings
-from chonkie.types import SemanticChunk
+from chonkie.embeddings import BaseEmbeddings
+from chonkie.types import SemanticChunk, Sentence
 
 
 class SDPMChunker(SemanticChunker):
