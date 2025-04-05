@@ -34,9 +34,6 @@ class LateChunk(Chunk):
 
     """
 
-    start_token: int = 0
-    end_token: int = 0
-    sentences: list[LateSentence] = field(default_factory=list)
     embedding: Optional["np.ndarray"] = field(default=None)
 
     def to_dict(self) -> dict:
@@ -51,8 +48,9 @@ class LateChunk(Chunk):
     def __repr__(self) -> str:
         """Return a string representation of the LateChunk."""
         return (
-            f"LateChunk(start_token={self.start_token}, "
-            f"end_token={self.end_token}, "
-            f"sentence_count={len(self.sentences)}, "
+            f"LateChunk(text={self.text}, "
+            f"start_index={self.start_index}, "
+            f"end_index={self.end_index}, "
+            f"token_count={self.token_count}, "
             f"embedding={self.embedding})"
         )

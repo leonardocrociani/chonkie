@@ -19,7 +19,7 @@ from chonkie.types import (
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 
-    Attributes:
+    Args:
         tokenizer_or_token_counter (Union[str, Callable, Any]): Tokenizer or token counter to use
         rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
@@ -235,10 +235,7 @@ class RecursiveChunker(BaseChunker):
 
         return merged, combined_token_counts
 
-    # TODO: rename _chunk_helper -> _recursive_chunk() since it is being inherited from by
-    # other chunkers which need name distinguishing. Also, see if we can completely remove the
-    # full_text requirement.
-    def _chunk_helper(
+    def _recursive_chunk(
         self, text: str, level: int = 0, full_text: Optional[str] = None
     ) -> Sequence[RecursiveChunk]:
         """Recursive helper for core chunking."""
@@ -313,7 +310,7 @@ class RecursiveChunker(BaseChunker):
             text (str): Text to chunk.
 
         """
-        return self._chunk_helper(text=text, level=0, full_text=text)
+        return self._recursive_chunk(text=text, level=0, full_text=text)
 
     def __repr__(self) -> str:
         """Get a string representation of the recursive chunker."""
