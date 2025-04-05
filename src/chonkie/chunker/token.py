@@ -8,7 +8,7 @@ from typing import Any, Generator, List, Literal, Sequence, Union
 
 from tqdm import trange
 
-from chonkie.chunkers.base import BaseChunker
+from chonkie.chunker.base import BaseChunker
 from chonkie.types.base import Chunk
 
 

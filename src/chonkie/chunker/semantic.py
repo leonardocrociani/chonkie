@@ -4,7 +4,7 @@ import importlib.util as importutil
 import warnings
 from typing import TYPE_CHECKING, List, Literal, Union
 
-from chonkie.chunkers.base import BaseChunker
+from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
 from chonkie.types.semantic import SemanticChunk, SemanticSentence, Sentence
 

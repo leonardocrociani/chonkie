@@ -80,7 +80,7 @@ pythonpath = "src"
 package-dir = { "" = "src" }
 packages = [
     "chonkie",
-    "chonkie.chunkers",
+    "chonkie.chunker",
     "chonkie.types",
     "chonkie.embeddings",
     "chonkie.cloud",

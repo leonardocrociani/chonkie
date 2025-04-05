@@ -1,8 +1,10 @@
 """Main package for Chonkie."""
 
-from .chunkers import (
+from .chunker import (
     BaseChunker,
+    LateChunker,
     RecursiveChunker,
+    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     TokenChunker,
@@ -67,7 +69,9 @@ __all__ += [
     "TokenChunker",
     "SentenceChunker",
     "SemanticChunker",
+    "SDPMChunker",
     "RecursiveChunker",
+    "LateChunker",
 ]
 
 # Add all embeddings classes to __all__
