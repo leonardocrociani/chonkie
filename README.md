@@ -6,6 +6,15 @@
 
 _A lightweight, fast, and no-nonsense Chunking library. CHONK your texts with Chonkie!_
 
+[![PyPI version](https://img.shields.io/pypi/v/chonkie.svg)](https://pypi.org/project/chonkie/)
+[![License](https://img.shields.io/github/license/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/docs-chonkie.ai-blue.svg)](https://docs.chonkie.ai)
+![Package size](https://img.shields.io/badge/size-15MB-blue)
+[![codecov](https://codecov.io/gh/chonkie-inc/chonkie/graph/badge.svg?token=V4EWIJWREZ)](https://codecov.io/gh/chonkie-inc/chonkie)
+[![Downloads](https://static.pepy.tech/badge/chonkie)](https://pepy.tech/project/chonkie)
+[![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/rYYp6DC4cv?style=flat)](https://discord.gg/rYYp6DC4cv)
+[![GitHub stars](https://img.shields.io/github/stars/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/stargazers)
+
 </div>
 
 Tired of making best effort chunkers? Sick of the overhead of large libraries? Want to chunk your texts quickly and efficiently? Chonkie the mighty hippo is here to help!
@@ -29,9 +38,9 @@ To install chonkie, run:
 pip install chonkie
 ```
 
-Chonkie follows the rule of minimum installs. 
+Chonkie follows the rule of minimum installs.
 Have a favorite chunker? Read our [docs](https://docs.chonkie.ai) to install only what you need
-Don't want to think about it? Simply install `all` (not recommended! Hippos can grow very big!!).
+Don't want to think about it? Simply install `all` (Not recommended for production environments)
 
 ```bash
 pip install chonkie[all]
@@ -42,7 +51,7 @@ pip install chonkie[all]
 Here's a basic example to get you started:
 
 ```python
-# First import the chunker you want from Chonkie 
+# First import the chunker you want from Chonkie
 from chonkie import RecursiveChunker
 
 # Initialize the chunker
@@ -92,11 +101,11 @@ And of course, special thanks to [Moto Moto](https://www.youtube.com/watch?v=I0z
 If you use Chonkie in your research, please cite it as follows:
 
 ```bibtex
-@misc{chonkie2024,
+@software{chonkie2025,
   author = {Minhas, Bhavnick AND Nigam, Shreyash},
-  title = {Chonkie: A Fast Feature-full Chunking Library for RAG Bots},
-  year = {2024},
+  title = {Chonkie: A no-nonsense fast, lightweight, and efficient text chunking library},
+  year = {2025},
   publisher = {GitHub},
-  howpublished = {\url{https://github.com/bhavnick/chonkie}},
+  howpublished = {\url{https://github.com/chonkie-inc/chonkie}},
 }
 ```
