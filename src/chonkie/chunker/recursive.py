@@ -134,6 +134,9 @@ class RecursiveChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
+    # TODO: Remove the make chunks function and calculate the start_index and end_index
+    # based on the text lengths --> which would be faster and more accurate indexing than
+    # the current approach
     def _make_chunks(
         self,
         text: str,
@@ -232,6 +235,9 @@ class RecursiveChunker(BaseChunker):
 
         return merged, combined_token_counts
 
+    # TODO: rename _chunk_helper -> _recursive_chunk() since it is being inherited from by
+    # other chunkers which need name distinguishing. Also, see if we can completely remove the
+    # full_text requirement.
     def _chunk_helper(
         self, text: str, level: int = 0, full_text: Optional[str] = None
     ) -> Sequence[RecursiveChunk]:

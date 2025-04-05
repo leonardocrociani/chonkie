@@ -3,6 +3,7 @@
 from .chunkers import (
     BaseChunker,
     RecursiveChunker,
+    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     TokenChunker,
@@ -67,6 +68,7 @@ __all__ += [
     "TokenChunker",
     "SentenceChunker",
     "SemanticChunker",
+    "SDPMChunker",
     "RecursiveChunker",
 ]
 
