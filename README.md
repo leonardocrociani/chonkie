@@ -4,7 +4,7 @@
 
 # 🦛 Chonkie ✨
 
-_A lightweight, fast, and no-nonsense chunking library. CHONK your texts with Chonkie!_
+_The no-nonsense ultra-light and lightning-fast chunking library that's ready to CHONK your texts!_
 
 [![PyPI version](https://img.shields.io/pypi/v/chonkie.svg)](https://pypi.org/project/chonkie/)
 [![License](https://img.shields.io/github/license/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/blob/main/LICENSE)
