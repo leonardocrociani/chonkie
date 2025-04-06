@@ -315,7 +315,7 @@ class RecursiveChunker(BaseChunker):
     def __repr__(self) -> str:
         """Get a string representation of the recursive chunker."""
         return (
-            f"RecursiveChunker(tokenizer_or_token_counter={self.tokenizer_or_token_counter},"
+            f"RecursiveChunker(tokenizer_or_token_counter={self.tokenizer},"
             f" rules={self.rules}, chunk_size={self.chunk_size}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk}, "
             f"return_type={self.return_type})"
