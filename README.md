@@ -17,7 +17,7 @@ _A lightweight, fast, and no-nonsense chunking library. CHONK your texts with Ch
 
 </div>
 
-Tired of making best effort chunkers? Sick of the overhead of large libraries? Want to chunk your texts quickly and efficiently? Chonkie the mighty hippo is here to help!
+Tired of making your gazillionth chunker? Sick of the overhead of large libraries? Want to chunk your texts quickly and efficiently? Chonkie the mighty hippo is here to help!
 
 **🚀 Feature-rich**: All the CHONKs you'd ever need </br>
 **✨ Easy to use**: Install, Import, CHONK </br>
@@ -80,6 +80,25 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 - **LateChunker**: Embeds text and then splits it to have better chunk embeddings.
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
+
+# Benchmarks 🏃‍♂️
+
+> "I may be smol hippo, but I pack a big punch!" 🦛
+
+Chonkie is not just cute, it's also fast and efficient! Here's how it stacks up against the competition:
+
+**Size**📦
+
+- **Default Install:** 15MB (vs 80-171MB for alternatives)
+- **With Semantic:** Still 10x lighter than the closest competition!
+
+**Speed**⚡
+
+- **Token Chunking:** 33x faster than the slowest alternative
+- **Sentence Chunking:** Almost 2x faster than competitors
+- **Semantic Chunking:** Up to 2.5x faster than others
+
+Check out our detailed [benchmarks](BENCHMARKS.md) to see how Chonkie races past the competition! 🏃‍♂️💨
 
 # Contributing
 
