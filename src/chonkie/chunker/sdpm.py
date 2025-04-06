@@ -131,7 +131,7 @@ class SDPMChunker(SemanticChunker):
 
             if similarity >= similarity_threshold:
                 # Merge groups from 0 to skip_index (inclusive)
-                merged = self._merge_groups(groups[: skip_index + 1])
+                merged = self._merge_sentence_groups(groups[: skip_index + 1])
 
                 # Remove the merged groups
                 for _ in range(skip_index + 1):
