@@ -104,16 +104,18 @@ class LateChunker(RecursiveChunker):
             raise ValueError(
                 "The sum of token counts exceeds the number of tokens in the text"
             )
+        # Diff would always be positive now~ which it should be considering token_counts
+        # doesn't have any special tokens added
         if sum(token_counts) < token_embeddings.shape[0]:
             # Use a little trick to ensure that the token counts get properly adjusted
             diff = token_embeddings.shape[0] - sum(token_counts)
-            token_counts[0], token_counts[-1] = (
-                token_counts[0] + diff // 2,
-                token_counts[-1] + (diff - diff // 2),
-            )
+            token_counts[0] = token_counts[0] + diff // 2
+            token_counts[-1] = token_counts[-1] + (diff - diff // 2)
+
         if sum(token_counts) != token_embeddings.shape[0]:
             raise ValueError(
-                "The sum of token counts does not match the number of tokens in the text"
+                "The sum of token counts does not match the number of tokens in the text",
+                f"Expected {token_embeddings.shape[0]}, got {sum(token_counts)}",
             )
 
         # Split the token embeddings into chunks based on the token counts

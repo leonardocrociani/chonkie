@@ -17,8 +17,8 @@ class RecursiveLevel:
 
     """
 
-    whitespace: bool = False
     delimiters: Optional[Union[str, List[str]]] = None
+    whitespace: bool = False
     include_delim: Optional[Literal["prev", "next"]] = "prev"
 
     def _validate_fields(self) -> None:
