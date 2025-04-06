@@ -37,9 +37,9 @@ class SDPMChunker(SemanticChunker):
     def __init__(
         self,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        chunk_size: int = 512,
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
-        chunk_size: int = 512,
         similarity_window: int = 1,
         min_sentences: int = 1,
         min_chunk_size: int = 2,
@@ -186,10 +186,10 @@ class SDPMChunker(SemanticChunker):
     def __repr__(self):
         """Return a string representation of the SDPMChunker object."""
         return (
-            f"SDPMChunker(embedding={self.embedding}, "
+            f"SDPMChunker(model={self.embedding_model}, "
+            f"chunk_size={self.chunk_size}, "
             f"mode={self.mode}, "
             f"threshold={self.threshold}, "
-            f"chunk_size={self.chunk_size}, "
             f"similarity_window={self.similarity_window}, "
             f"min_sentences={self.min_sentences}, "
             f"min_chunk_size={self.min_chunk_size}, "
