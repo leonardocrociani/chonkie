@@ -187,7 +187,7 @@ def test_semantic_chunker_single_sentence(embedding_model):
     assert len(chunks[0].sentences) == 1
 
 
-def test_semantic_chunker_repr(embedding_model):
+def test_sdpm_chunker_repr(embedding_model):
     """Test that the SemanticChunker has a string representation."""
     chunker = SDPMChunker(
         embedding_model=embedding_model,
@@ -196,13 +196,18 @@ def test_semantic_chunker_repr(embedding_model):
     )
 
     expected = (
-        f"SemanticChunker(model={chunker.embedding_model}, "
+        f"SDPMChunker(model={chunker.embedding_model}, "
         f"chunk_size={chunker.chunk_size}, "
         f"mode={chunker.mode}, "
         f"threshold={chunker.threshold}, "
         f"similarity_window={chunker.similarity_window}, "
         f"min_sentences={chunker.min_sentences}, "
         f"min_chunk_size={chunker.min_chunk_size}, "
+        f"min_characters_per_sentence={chunker.min_characters_per_sentence}, "
+        f"threshold_step={chunker.threshold_step}, "
+        f"delim={chunker.delim}, "
+        f"include_delim={chunker.include_delim}, "
+        f"skip_window={chunker.skip_window}, "
         f"return_type={chunker.return_type})"
     )
     assert repr(chunker) == expected
