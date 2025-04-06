@@ -21,6 +21,7 @@ from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
     Chunk,
     Context,
+    LateChunk,
     RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,

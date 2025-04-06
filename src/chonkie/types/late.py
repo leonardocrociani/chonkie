@@ -4,18 +4,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, Optional
 
 from .base import Chunk
-from .sentence import Sentence
 
 if TYPE_CHECKING:
     import numpy as np
-
-
-@dataclass
-class LateSentence(Sentence):
-    """Class to represent the late sentence."""
-
-    start_token: int
-    end_token: int
 
 
 @dataclass
@@ -38,7 +29,7 @@ class LateChunk(Chunk):
 
     def to_dict(self) -> dict:
         """Return the LateChunk as a dictionary."""
-        return self.__dict__()
+        return self.__dict__
 
     @classmethod
     def from_dict(cls, data: Dict) -> "LateChunk":

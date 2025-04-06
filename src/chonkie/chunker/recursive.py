@@ -63,7 +63,8 @@ class RecursiveChunker(BaseChunker):
                 f"return_type {return_type} is invalid. Must be 'chunks' or 'texts'."
             )
         if not isinstance(rules, RecursiveRules):
-            raise ValueError("Rules must be a RecursiveRules object.")
+            raise ValueError("`rules` must be a RecursiveRules object.")
+
 
         # Initialize the internal values
         self.chunk_size = chunk_size
