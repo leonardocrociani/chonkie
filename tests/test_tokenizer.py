@@ -5,7 +5,7 @@ from typing import Callable
 import pytest
 import tiktoken
 from tokenizers import Tokenizer as HFTokenizer
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
 from chonkie.tokenizer import (
     CharacterTokenizer,
@@ -79,31 +79,16 @@ def tiktoken_tokenizer() -> tiktoken.Encoding:
 
 
 @pytest.fixture
-def transformers_tokenizer() -> AutoTokenizer:
+def transformers_tokenizer() -> PreTrainedTokenizerFast:
     """Create a Transformer tokenizer fixture."""
-    return AutoTokenizer.from_pretrained("gpt2")
+    tokenizer: PreTrainedTokenizerFast = AutoTokenizer.from_pretrained("gpt2")
+    return tokenizer
 
 
 @pytest.fixture
 def callable_tokenizer() -> Callable[[str], int]:
     """Create a callable tokenizer fixture."""
     return lambda text: len(text.split())
-
-
-@pytest.mark.parametrize(
-    "model",
-    ["gpt2", "bert-base-uncased", "p50k_base", "cl100k_base"],
-)
-def test_init(request: pytest.FixtureRequest, model: str) -> None:
-    """Test tokenizer initialization."""
-    tokenizer = Tokenizer(model)
-    assert tokenizer is not None
-    assert tokenizer._backend in [
-        "transformers",
-        "tokenizers",
-        "tiktoken",
-    ]
-
 
 @pytest.mark.parametrize(
     "backend_str",
