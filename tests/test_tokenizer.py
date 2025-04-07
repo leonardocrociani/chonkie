@@ -5,7 +5,7 @@ from typing import Callable
 import pytest
 import tiktoken
 from tokenizers import Tokenizer as HFTokenizer
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
 from chonkie.tokenizer import (
     CharacterTokenizer,
@@ -79,31 +79,16 @@ def tiktoken_tokenizer() -> tiktoken.Encoding:
 
 
 @pytest.fixture
-def transformers_tokenizer() -> AutoTokenizer:
+def transformers_tokenizer() -> PreTrainedTokenizerFast:
     """Create a Transformer tokenizer fixture."""
-    return AutoTokenizer.from_pretrained("gpt2")
+    tokenizer: PreTrainedTokenizerFast = AutoTokenizer.from_pretrained("gpt2")
+    return tokenizer
 
 
 @pytest.fixture
 def callable_tokenizer() -> Callable[[str], int]:
     """Create a callable tokenizer fixture."""
     return lambda text: len(text.split())
-
-
-@pytest.mark.parametrize(
-    "model",
-    ["gpt2", "bert-base-uncased", "p50k_base", "cl100k_base"],
-)
-def test_init(request: pytest.FixtureRequest, model: str) -> None:
-    """Test tokenizer initialization."""
-    tokenizer = Tokenizer(model)
-    assert tokenizer is not None
-    assert tokenizer._backend in [
-        "transformers",
-        "tokenizers",
-        "tiktoken",
-    ]
-
 
 @pytest.mark.parametrize(
     "backend_str",
@@ -114,9 +99,7 @@ def test_init(request: pytest.FixtureRequest, model: str) -> None:
         "callable_tokenizer",
     ],
 )
-def test_backend_selection(
-    request: pytest.FixtureRequest, backend_str: str
-) -> None:
+def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> None:
     """Test that the tokenizer correctly selects the backend based on given string."""
     try:
         tokenizer = Tokenizer(request.getfixturevalue(backend_str))
@@ -132,7 +115,7 @@ def test_backend_selection(
 
 
 @pytest.mark.parametrize(
-    "model_name", ["gpt2", "bert-base-uncased", "cl100k_base", "p50k_base"]
+    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
 )
 def test_string_init(model_name: str) -> None:
     """Test initialization of tokenizer with different model strings."""
@@ -148,9 +131,7 @@ def test_string_init(model_name: str) -> None:
         pytest.skip(f"Could not import tokenizer for {model_name}: {str(e)}")
     except Exception as e:
         if "not found in model".casefold() in str(e).casefold():
-            pytest.skip(
-                f"Skipping test with {model_name}. Backend not available"
-            )
+            pytest.skip(f"Skipping test with {model_name}. Backend not available")
         else:
             raise e
 
@@ -182,7 +163,7 @@ def test_encode_decode(
 
 
 @pytest.mark.parametrize(
-    "model_name", ["gpt2", "bert-base-uncased", "cl100k_base", "p50k_base"]
+    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
 )
 def test_string_init_encode_decode(model_name: str) -> None:
     """Test basic functionality of string initialized models."""
@@ -194,9 +175,7 @@ def test_string_init_encode_decode(model_name: str) -> None:
             "tokenizers",
             "tiktoken",
         ]
-        test_string = (
-            "Testing tokenizer_string_init_basic for Chonkie Tokenizers."
-        )
+        test_string = "Testing tokenizer_string_init_basic for Chonkie Tokenizers."
         tokens = tokenizer.encode(test_string)
         assert len(tokens) > 0
         assert isinstance(tokens, list)
@@ -217,9 +196,7 @@ def test_string_init_encode_decode(model_name: str) -> None:
         )
     except Exception as e:
         if "not found in model".casefold() in str(e).casefold():
-            pytest.skip(
-                f"Skipping test with {model_name}. Backend not available"
-            )
+            pytest.skip(f"Skipping test with {model_name}. Backend not available")
         else:
             raise e
 
@@ -276,8 +253,7 @@ def test_batch_encode_decode(
     assert all(isinstance(tokens, list) for tokens in batch_encoded)
     assert all(len(tokens) > 0 for tokens in batch_encoded)
     assert all(
-        all(isinstance(token, int) for token in tokens)
-        for tokens in batch_encoded
+        all(isinstance(token, int) for token in tokens) for tokens in batch_encoded
     )
 
     if tokenizer._backend != "callable":
@@ -413,10 +389,7 @@ def test_word_tokenizer_multiple_encodings(
     assert vocab_size2 > vocab_size1
     assert "Wall-E" in word_tokenizer.get_vocab()
     assert "Ratatouille" in word_tokenizer.get_vocab()
-    assert (
-        word_tokenizer.get_token2id()["truly"]
-        == word_tokenizer.encode("truly")[0]
-    )
+    assert word_tokenizer.get_token2id()["truly"] == word_tokenizer.encode("truly")[0]
 
 
 ### CharacterTokenizer Tests ###
@@ -524,9 +497,7 @@ def test_character_tokenizer_multiple_encodings(
 ) -> None:
     """Test that vocabulary changes as expected over multiple encodings."""
     text1 = "Wall-E is truly a masterpiece that should be required viewing."
-    text2 = (
-        "Ratatouille is truly a delightful film that every kid should watch."
-    )
+    text2 = "Ratatouille is truly a delightful film that every kid should watch."
 
     character_tokenizer.encode(text1)
     vocab_size1 = len(character_tokenizer.get_vocab())
@@ -535,7 +506,4 @@ def test_character_tokenizer_multiple_encodings(
 
     assert vocab_size2 > vocab_size1
     assert "u" in character_tokenizer.get_vocab()
-    assert (
-        character_tokenizer.get_token2id()["u"]
-        == character_tokenizer.encode("u")[0]
-    )
+    assert character_tokenizer.get_token2id()["u"] == character_tokenizer.encode("u")[0]

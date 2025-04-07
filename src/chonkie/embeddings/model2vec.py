@@ -9,8 +9,8 @@ if TYPE_CHECKING:
     import numpy as np
     from model2vec import StaticModel
 
-class Model2VecEmbeddings(BaseEmbeddings):
 
+class Model2VecEmbeddings(BaseEmbeddings):
     """Class for model2vec embeddings.
 
     This class provides an interface for the model2vec library, which provides a variety
@@ -80,7 +80,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
     def is_available(cls) -> bool:
         """Check if model2vec is available."""
         return importutil.find_spec("model2vec") is not None
-    
+
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazy import dependencies for the embeddings implementation.
@@ -96,7 +96,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             raise ImportError(
                 "model2vec is not available. Please install it via `pip install chonkie[model2vec]`"
             )
-        
+
     def __repr__(self) -> str:
         """Representation of the Model2VecEmbeddings instance."""
         return f"Model2VecEmbeddings(model_name_or_path={self.model_name_or_path})"

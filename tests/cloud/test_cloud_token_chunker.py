@@ -20,10 +20,15 @@ def test_cloud_token_chunker_initialization() -> None:
     # Check if the chunk_overlap < 0 raises an error
     with pytest.raises(ValueError):
         TokenChunker(tokenizer="gpt2", chunk_size=512, chunk_overlap=-1)
-    
+
     # Check if the return_type is not "texts" or "chunks" raises an error
     with pytest.raises(ValueError):
-        TokenChunker(tokenizer="gpt2", chunk_size=512, chunk_overlap=0, return_type="bad_return_type")
+        TokenChunker(
+            tokenizer="gpt2",
+            chunk_size=512,
+            chunk_overlap=0,
+            return_type="bad_return_type",
+        )
 
     # Finally, check if the attributes are set correctly
     chunker = TokenChunker(tokenizer="gpt2", chunk_size=512, chunk_overlap=0)
@@ -31,6 +36,7 @@ def test_cloud_token_chunker_initialization() -> None:
     assert chunker.chunk_size == 512
     assert chunker.chunk_overlap == 0
     assert chunker.return_type == "chunks"
+
 
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
@@ -51,6 +57,7 @@ def test_cloud_token_chunker_simple() -> None:
     assert result[0]["token_count"] == 4
     assert result[0]["start_index"] == 0
     assert result[0]["end_index"] == 13
+
 
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
@@ -75,6 +82,7 @@ def test_cloud_token_chunker_multiple_sentences() -> None:
     assert all(isinstance(item["start_index"], int) for item in result)
     assert all(isinstance(item["end_index"], int) for item in result)
 
+
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
     reason="CHONKIE_API_KEY is not set",
@@ -92,18 +100,24 @@ def test_cloud_token_chunker_batch() -> None:
     # Check the result
     assert len(result) == len(texts)
     assert isinstance(result, list)
-    assert all(isinstance(item, list) for item in result), \
+    assert all(isinstance(item, list) for item in result), (
         f"Expected a list of lists, got {type(result)}"
-    assert all(isinstance(item, dict) for item in result[0]), \
+    )
+    assert all(isinstance(item, dict) for item in result[0]), (
         f"Expected a list of dictionaries, got {type(result[0])}"
-    assert all(isinstance(item["text"], str) for item in result[0]), \
+    )
+    assert all(isinstance(item["text"], str) for item in result[0]), (
         f"Expected a list of dictionaries with a 'text' key, got {type(result[0])}"
-    assert all(isinstance(item["token_count"], int) for item in result[0]), \
+    )
+    assert all(isinstance(item["token_count"], int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'token_count' key, got {type(result[0])}"
-    assert all(isinstance(item["start_index"], int) for item in result[0]), \
+    )
+    assert all(isinstance(item["start_index"], int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'start_index' key, got {type(result[0])}"
-    assert all(isinstance(item["end_index"], int) for item in result[0]), \
+    )
+    assert all(isinstance(item["end_index"], int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'end_index' key, got {type(result[0])}"
+    )
 
 
 @pytest.mark.skipif(

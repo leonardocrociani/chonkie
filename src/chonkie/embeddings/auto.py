@@ -8,7 +8,6 @@ from .registry import EmbeddingsRegistry
 
 
 class AutoEmbeddings:
-
     """Factory class for automatically loading embeddings.
 
     This class provides a factory interface for loading embeddings based on an
@@ -77,7 +76,9 @@ class AutoEmbeddings:
                         )
                         return embeddings_cls(**kwargs)
             except Exception as error:
-                warnings.warn(f"Failed to load embeddings via registry: {error}. Falling back to SentenceTransformerEmbeddings.")
+                warnings.warn(
+                    f"Failed to load embeddings via registry: {error}. Falling back to SentenceTransformerEmbeddings."
+                )
                 # Fall back to SentenceTransformerEmbeddings if no matching implementation is found
                 from .sentence_transformer import SentenceTransformerEmbeddings
 

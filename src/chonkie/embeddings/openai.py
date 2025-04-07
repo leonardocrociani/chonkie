@@ -10,8 +10,8 @@ from .base import BaseEmbeddings
 if TYPE_CHECKING:
     import numpy as np
 
-class OpenAIEmbeddings(BaseEmbeddings):
 
+class OpenAIEmbeddings(BaseEmbeddings):
     """OpenAI embeddings implementation using their API."""
 
     AVAILABLE_MODELS = {
@@ -183,9 +183,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
             from openai import OpenAI
         else:
             raise ImportError(
-                "One (or more) of the following packages is not available: openai, numpy, tiktoken. Please install it via `pip install \"chonkie[openai]\"`"
+                'One (or more) of the following packages is not available: openai, numpy, tiktoken. Please install it via `pip install "chonkie[openai]"`'
             )
-        
+
     def __repr__(self) -> str:
         """Representation of the OpenAIEmbeddings instance."""
         return f"OpenAIEmbeddings(model={self.model})"

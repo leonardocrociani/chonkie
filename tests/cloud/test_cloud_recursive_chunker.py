@@ -20,12 +20,20 @@ def test_cloud_recursive_chunker_initialization() -> None:
 
     # Check if the min_characters_per_chunk < 1 raises an error
     with pytest.raises(ValueError):
-        RecursiveChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, min_characters_per_chunk=-1)
+        RecursiveChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            min_characters_per_chunk=-1,
+        )
 
     # Check if the return_type is not "texts" or "chunks" raises an error
     with pytest.raises(ValueError):
-        RecursiveChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, return_type="not_a_string")
-    
+        RecursiveChunker(
+            tokenizer_or_token_counter="gpt2",
+            chunk_size=512,
+            return_type="not_a_string",
+        )
+
     # Finally, check if the attributes are set correctly
     chunker = RecursiveChunker(tokenizer_or_token_counter="gpt2", chunk_size=512)
     assert chunker.tokenizer_or_token_counter == "gpt2"
@@ -33,6 +41,7 @@ def test_cloud_recursive_chunker_initialization() -> None:
     assert chunker.min_characters_per_chunk == 12
     assert chunker.return_type == "chunks"
     assert isinstance(chunker.rules, RecursiveRules)
+
 
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
@@ -64,7 +73,11 @@ def test_cloud_recursive_chunker_batch() -> None:
         chunk_size=512,
     )
 
-    result = recursive_chunker(["Hello, world!", "This is another sentence.", "This is a third sentence."])
+    result = recursive_chunker([
+        "Hello, world!",
+        "This is another sentence.",
+        "This is a third sentence.",
+    ])
     assert len(result) == 3
     assert result[0][0]["text"] == "Hello, world!"
     assert result[0][0]["token_count"] == 4

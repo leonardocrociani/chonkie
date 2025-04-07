@@ -13,7 +13,6 @@ from .sentence_transformer import SentenceTransformerEmbeddings
 
 @dataclass
 class RegistryEntry:
-
     """Registry entry containing the embeddings class and optional pattern."""
 
     embeddings_cls: Type[BaseEmbeddings]
@@ -22,7 +21,6 @@ class RegistryEntry:
 
 
 class EmbeddingsRegistry:
-
     """Registry for embedding implementations with pattern matching support."""
 
     _registry: Dict[str, RegistryEntry] = {}

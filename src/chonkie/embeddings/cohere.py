@@ -15,7 +15,6 @@ from .base import BaseEmbeddings
 
 
 class CohereEmbeddings(BaseEmbeddings):
-
     """Cohere embeddings implementation using their API."""
 
     AVAILABLE_MODELS = {
@@ -232,7 +231,7 @@ class CohereEmbeddings(BaseEmbeddings):
     def is_available(cls) -> bool:
         """Check if the Cohere package is available."""
         return importlib.util.find_spec("cohere") is not None
-    
+
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazy import dependencies for the embeddings implementation.
@@ -250,7 +249,7 @@ class CohereEmbeddings(BaseEmbeddings):
             raise ImportError(
                 "cohere is not available. Please install it via `pip install chonkie[cohere]`"
             )
-        
+
     def __repr__(self) -> str:
         """Return a string representation of the CohereEmbeddings object."""
         return f"CohereEmbeddings(model={self.model})"

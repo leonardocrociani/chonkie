@@ -65,7 +65,6 @@ class RecursiveChunker(BaseChunker):
         if not isinstance(rules, RecursiveRules):
             raise ValueError("`rules` must be a RecursiveRules object.")
 
-
         # Initialize the internal values
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
@@ -284,7 +283,7 @@ class RecursiveChunker(BaseChunker):
         last_chunk_end_index = 0
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
-                chunks.extend(self._chunk_helper(split, level + 1, full_text))
+                chunks.extend(self._recursive_chunk(split, level + 1, full_text))
             else:
                 if self.return_type == "chunks":
                     if chunks:

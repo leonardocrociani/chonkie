@@ -19,6 +19,10 @@ coverage.xml
 *.cover
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
+.ropeproject/
+.ipynb_checkpoints/
+.vscode/
 
 # Environments
 .env

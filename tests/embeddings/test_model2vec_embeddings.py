@@ -37,7 +37,9 @@ def test_initialization_with_model_name(embedding_model: Model2VecEmbeddings) ->
     assert embedding_model.model is not None
 
 
-def test_initialization_with_model_instance(embedding_model: Model2VecEmbeddings) -> None:
+def test_initialization_with_model_instance(
+    embedding_model: Model2VecEmbeddings,
+) -> None:
     """Test that the Model2VecEmbeddings instance is initialized correctly with a model instance."""
     model = StaticModel.from_pretrained("minishlab/potion-base-8M")
     embeddings = Model2VecEmbeddings(model)
@@ -45,14 +47,18 @@ def test_initialization_with_model_instance(embedding_model: Model2VecEmbeddings
     assert embeddings.model is model
 
 
-def test_embed_single_text(embedding_model: Model2VecEmbeddings, sample_text: str) -> None:
+def test_embed_single_text(
+    embedding_model: Model2VecEmbeddings, sample_text: str
+) -> None:
     """Test that the embed method returns a numpy array of the correct shape."""
     embedding = embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
 
 
-def test_count_tokens_batch_texts(embedding_model: Model2VecEmbeddings, sample_texts: List[str]) -> None:
+def test_count_tokens_batch_texts(
+    embedding_model: Model2VecEmbeddings, sample_texts: List[str]
+) -> None:
     """Test that the count_tokens_batch method returns a list of token counts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
     assert isinstance(token_counts, list)
@@ -61,7 +67,9 @@ def test_count_tokens_batch_texts(embedding_model: Model2VecEmbeddings, sample_t
     assert all(count > 0 for count in token_counts)
 
 
-def test_similarity(embedding_model: Model2VecEmbeddings, sample_texts: List[str]) -> None:
+def test_similarity(
+    embedding_model: Model2VecEmbeddings, sample_texts: List[str]
+) -> None:
     """Test that the similarity method returns a float between 0 and 1."""
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])

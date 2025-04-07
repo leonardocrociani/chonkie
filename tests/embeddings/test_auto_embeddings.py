@@ -52,7 +52,9 @@ def test_auto_embeddings_model2vec(model2vec_identifier: str) -> None:
     assert embeddings.model_name_or_path == model2vec_identifier
 
 
-def test_auto_embeddings_sentence_transformer(sentence_transformer_identifier: str) -> None:
+def test_auto_embeddings_sentence_transformer(
+    sentence_transformer_identifier: str,
+) -> None:
     """Test that the AutoEmbeddings class can get sentence transformer embeddings."""
     embeddings = AutoEmbeddings.get_embeddings(sentence_transformer_identifier)
     assert isinstance(embeddings, SentenceTransformerEmbeddings)
