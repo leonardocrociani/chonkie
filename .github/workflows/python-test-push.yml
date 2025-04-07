@@ -33,7 +33,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          slug: chonkie-ai/chonkie
+          slug: chonkie-inc/chonkie
           # Only upload coverage from the latest Python version
           fail_ci_if_error: false
           verbose: true
