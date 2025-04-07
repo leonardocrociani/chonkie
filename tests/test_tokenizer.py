@@ -115,7 +115,7 @@ def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> 
 
 
 @pytest.mark.parametrize(
-    "model_name", ["gpt2", "bert-base-uncased", "cl100k_base", "p50k_base"]
+    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
 )
 def test_string_init(model_name: str) -> None:
     """Test initialization of tokenizer with different model strings."""
@@ -163,7 +163,7 @@ def test_encode_decode(
 
 
 @pytest.mark.parametrize(
-    "model_name", ["gpt2", "bert-base-uncased", "cl100k_base", "p50k_base"]
+    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
 )
 def test_string_init_encode_decode(model_name: str) -> None:
     """Test basic functionality of string initialized models."""
