@@ -65,7 +65,6 @@ class RecursiveChunker(BaseChunker):
         if not isinstance(rules, RecursiveRules):
             raise ValueError("`rules` must be a RecursiveRules object.")
 
-
         # Initialize the internal values
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk

@@ -185,9 +185,7 @@ def test_sentence_chunker_indices(tokenizer, sample_text):
     verify_chunk_indices(chunks, sample_text)
 
 
-def test_sentence_chunker_indices_complex_md(
-    tokenizer, sample_complex_markdown_text
-):
+def test_sentence_chunker_indices_complex_md(tokenizer, sample_complex_markdown_text):
     """Test that the SentenceChunker correctly maps chunk indices to the original text."""
     chunker = SentenceChunker(
         tokenizer_or_token_counter=tokenizer, chunk_size=512, chunk_overlap=128
@@ -213,9 +211,7 @@ def test_sentence_chunker_token_counts(tokenizer, sample_text):
     assert all([
         chunk.token_count == token_count
         for chunk, token_count in zip(chunks, token_counts)
-    ]), (
-        "All chunks must have a token count equal to the length of the encoded text"
-    )
+    ]), "All chunks must have a token count equal to the length of the encoded text"
 
 
 def test_sentence_chunker_return_type(tokenizer, sample_text):

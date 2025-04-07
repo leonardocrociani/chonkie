@@ -59,7 +59,9 @@ def test_embed_single_text(embedding_model: CohereEmbeddings, sample_text: str) 
     "COHERE_API_KEY" not in os.environ,
     reason="Skipping test because COHERE_API_KEY is not defined",
 )
-def test_embed_batch_texts(embedding_model: CohereEmbeddings, sample_texts: List[str]) -> None:
+def test_embed_batch_texts(
+    embedding_model: CohereEmbeddings, sample_texts: List[str]
+) -> None:
     """Test embedding a batch of texts."""
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
@@ -74,7 +76,9 @@ def test_embed_batch_texts(embedding_model: CohereEmbeddings, sample_texts: List
     "COHERE_API_KEY" not in os.environ,
     reason="Skipping test because COHERE_API_KEY is not defined",
 )
-def test_count_tokens_single_text(embedding_model: CohereEmbeddings, sample_text: str) -> None:
+def test_count_tokens_single_text(
+    embedding_model: CohereEmbeddings, sample_text: str
+) -> None:
     """Test counting tokens for a single text."""
     token_count = embedding_model.count_tokens(sample_text)
     assert isinstance(token_count, int)
@@ -85,7 +89,9 @@ def test_count_tokens_single_text(embedding_model: CohereEmbeddings, sample_text
     "COHERE_API_KEY" not in os.environ,
     reason="Skipping test because COHERE_API_KEY is not defined",
 )
-def test_count_tokens_batch_texts(embedding_model: CohereEmbeddings, sample_texts: List[str]) -> None:
+def test_count_tokens_batch_texts(
+    embedding_model: CohereEmbeddings, sample_texts: List[str]
+) -> None:
     """Test counting tokens for a batch of texts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
     assert isinstance(token_counts, list)

@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any, Callable, List, Union
 if TYPE_CHECKING:
     import numpy as np
 
-class BaseEmbeddings(ABC):
 
+class BaseEmbeddings(ABC):
     """Abstract base class for all embeddings implementations.
 
     All embeddings implementations should inherit from this class and implement
@@ -90,7 +90,7 @@ class BaseEmbeddings(ABC):
 
         """
         return [self.count_tokens(text) for text in texts]
-    
+
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazy import dependencies for the embeddings implementation.
@@ -104,8 +104,8 @@ class BaseEmbeddings(ABC):
         else:
             raise ImportError(
                 "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            ) 
-        
+            )
+
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> float:
         """Compute the similarity between two embeddings.
 
@@ -139,7 +139,7 @@ class BaseEmbeddings(ABC):
 
         """
         raise NotImplementedError
-    
+
     @classmethod
     def is_available(cls) -> bool:
         """Check if this embeddings implementation is available (dependencies installed).
@@ -151,7 +151,7 @@ class BaseEmbeddings(ABC):
 
         """
         return importutil.find_spec("numpy") is not None
-    
+
     def get_tokenizer_or_token_counter(self) -> Union[Any, Callable[[str], int]]:
         """Return the tokenizer or token counter object.
 

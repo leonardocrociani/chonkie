@@ -31,13 +31,17 @@ def sample_texts() -> List[str]:
     ]
 
 
-def test_initialization_with_model_name(embedding_model: SentenceTransformerEmbeddings) -> None:
+def test_initialization_with_model_name(
+    embedding_model: SentenceTransformerEmbeddings,
+) -> None:
     """Test the initialization with a model name."""
     assert embedding_model.model_name_or_path == "all-MiniLM-L6-v2"
     assert embedding_model.model is not None
 
 
-def test_initialization_with_model_instance(embedding_model: SentenceTransformerEmbeddings) -> None:
+def test_initialization_with_model_instance(
+    embedding_model: SentenceTransformerEmbeddings,
+) -> None:
     """Test the initialization with a model instance."""
     model = SentenceTransformer("all-MiniLM-L6-v2")
     embeddings = SentenceTransformerEmbeddings(model)
@@ -45,14 +49,18 @@ def test_initialization_with_model_instance(embedding_model: SentenceTransformer
     assert embeddings.model is model
 
 
-def test_embed_single_text(embedding_model: SentenceTransformerEmbeddings, sample_text: str) -> None:
+def test_embed_single_text(
+    embedding_model: SentenceTransformerEmbeddings, sample_text: str
+) -> None:
     """Test the embed method with a single text."""
     embedding = embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
 
 
-def test_embed_batch_texts(embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]) -> None:
+def test_embed_batch_texts(
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+) -> None:
     """Test the embed_batch method with a list of texts."""
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, np.ndarray)
@@ -63,14 +71,18 @@ def test_embed_batch_texts(embedding_model: SentenceTransformerEmbeddings, sampl
     )
 
 
-def test_count_tokens_single_text(embedding_model: SentenceTransformerEmbeddings, sample_text: str) -> None:
+def test_count_tokens_single_text(
+    embedding_model: SentenceTransformerEmbeddings, sample_text: str
+) -> None:
     """Test the count_tokens method with a single text."""
     token_count = embedding_model.count_tokens(sample_text)
     assert isinstance(token_count, int)
     assert token_count > 0
 
 
-def test_count_tokens_batch_texts(embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]) -> None:
+def test_count_tokens_batch_texts(
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+) -> None:
     """Test the count_tokens_batch method with a list of texts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
     assert isinstance(token_counts, list)
@@ -79,7 +91,9 @@ def test_count_tokens_batch_texts(embedding_model: SentenceTransformerEmbeddings
     assert all(count > 0 for count in token_counts)
 
 
-def test_similarity(embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]) -> None:
+def test_similarity(
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+) -> None:
     """Test the similarity method."""
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])

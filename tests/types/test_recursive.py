@@ -67,9 +67,7 @@ def test_recursive_rules_serialization():
     rules_dict = rules.to_dict()
     reconstructed = RecursiveRules.from_dict(rules_dict)
     assert len(reconstructed.levels) == 2
-    assert all(
-        isinstance(level, RecursiveLevel) for level in reconstructed.levels
-    )
+    assert all(isinstance(level, RecursiveLevel) for level in reconstructed.levels)
 
 
 # RecursiveChunk Tests

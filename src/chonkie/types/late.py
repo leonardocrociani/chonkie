@@ -34,7 +34,9 @@ class LateChunk(Chunk):
             "start_index": self.start_index,
             "end_index": self.end_index,
             "token_count": self.token_count,
-            "embedding": self.embedding.tolist() if self.embedding is not None else None,
+            "embedding": self.embedding.tolist()
+            if self.embedding is not None
+            else None,
         }
 
     @classmethod

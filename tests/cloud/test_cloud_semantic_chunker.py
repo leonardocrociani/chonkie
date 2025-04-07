@@ -28,7 +28,7 @@ def test_cloud_semantic_chunker_initialization() -> None:
     # Check if the threshold is a number but not between 0 and 1
     with pytest.raises(ValueError):
         SemanticChunker(threshold=-0.1)
-    
+
     # Check if the similarity window is not a positive integer
     with pytest.raises(ValueError):
         SemanticChunker(similarity_window=-1)
@@ -79,6 +79,7 @@ def test_cloud_semantic_chunker_initialization() -> None:
     assert chunker.include_delim == "prev"
     assert chunker.return_type == "chunks"
 
+
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
     reason="CHONKIE_API_KEY is not set",
@@ -106,7 +107,11 @@ def test_cloud_semantic_chunker_batch() -> None:
     semantic_chunker = SemanticChunker(
         chunk_size=512,
     )
-    result = semantic_chunker(["Hello, world!", "This is another sentence.", "This is a third sentence."])
+    result = semantic_chunker([
+        "Hello, world!",
+        "This is another sentence.",
+        "This is a third sentence.",
+    ])
     assert len(result) == 3
     assert result[0][0]["text"] == "Hello, world!"
     assert result[0][0]["token_count"] == 4

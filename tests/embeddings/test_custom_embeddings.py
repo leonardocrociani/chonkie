@@ -16,7 +16,6 @@ from chonkie.embeddings.base import BaseEmbeddings
 
 
 class CustomEmbeddings(BaseEmbeddings):
-
     """Custom embeddings class."""
 
     def __init__(self, dimension: int = 4) -> None:
