@@ -284,7 +284,7 @@ class RecursiveChunker(BaseChunker):
         last_chunk_end_index = 0
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
-                chunks.extend(self._chunk_helper(split, level + 1, full_text))
+                chunks.extend(self._recursive_chunk(split, level + 1, full_text))
             else:
                 if self.return_type == "chunks":
                     if chunks:
