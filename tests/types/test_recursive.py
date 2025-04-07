@@ -5,7 +5,7 @@ import pytest
 from chonkie import RecursiveChunk, RecursiveLevel, RecursiveRules
 
 
-def test_recursive_level_init():
+def test_recursive_level_init() -> None:
     """Test RecursiveLevel initialization."""
     level = RecursiveLevel(delimiters=["\n", "."])
     assert level.delimiters == ["\n", "."]
@@ -13,7 +13,7 @@ def test_recursive_level_init():
     assert level.include_delim == "prev"
 
 
-def test_recursive_level_raises_error():
+def test_recursive_level_raises_error() -> None:
     """Test RecursiveLevel validation."""
     with pytest.raises(NotImplementedError):
         RecursiveLevel(whitespace=True, delimiters=["."])
@@ -28,7 +28,7 @@ def test_recursive_level_raises_error():
         RecursiveLevel(delimiters=[" "])
 
 
-def test_recursive_level_serialization():
+def test_recursive_level_serialization() -> None:
     """Test RecursiveLevel serialization and deserialization."""
     level = RecursiveLevel(delimiters=["\n", "."])
     level_dict = level.to_dict()
@@ -39,14 +39,14 @@ def test_recursive_level_serialization():
 
 
 # RecursiveRules Tests
-def test_recursive_rules_default_init():
+def test_recursive_rules_default_init() -> None:
     """Test RecursiveRules default initialization."""
     rules = RecursiveRules()
     assert len(rules.levels) == 5
     assert all(isinstance(level, RecursiveLevel) for level in rules.levels)
 
 
-def test_recursive_rules_custom_init():
+def test_recursive_rules_custom_init() -> None:
     """Test RecursiveRules custom initialization."""
     levels = [
         RecursiveLevel(delimiters=["\n"]),
@@ -57,7 +57,7 @@ def test_recursive_rules_custom_init():
     assert rules.levels == levels
 
 
-def test_recursive_rules_serialization():
+def test_recursive_rules_serialization() -> None:
     """Test RecursiveRules serialization and deserialization."""
     levels = [
         RecursiveLevel(delimiters=["\n"]),
@@ -71,7 +71,7 @@ def test_recursive_rules_serialization():
 
 
 # RecursiveChunk Tests
-def test_recursive_chunk_init():
+def test_recursive_chunk_init() -> None:
     """Test RecursiveChunk initialization."""
     chunk = RecursiveChunk(
         text="test chunk",
@@ -84,7 +84,7 @@ def test_recursive_chunk_init():
     assert chunk.level == 1
 
 
-def test_recursive_chunk_serialization():
+def test_recursive_chunk_serialization() -> None:
     """Test RecursiveChunk serialization/deserialization."""
     chunk = RecursiveChunk(
         text="test chunk",
