@@ -29,7 +29,13 @@ class LateChunk(Chunk):
 
     def to_dict(self) -> dict:
         """Return the LateChunk as a dictionary."""
-        return self.__dict__
+        return {
+            "text": self.text,
+            "start_index": self.start_index,
+            "end_index": self.end_index,
+            "token_count": self.token_count,
+            "embedding": self.embedding.tolist() if self.embedding is not None else None,
+        }
 
     @classmethod
     def from_dict(cls, data: Dict) -> "LateChunk":
