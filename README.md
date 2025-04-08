@@ -9,7 +9,7 @@ _The no-nonsense ultra-light and lightning-fast chunking library that's ready to
 [![PyPI version](https://img.shields.io/pypi/v/chonkie.svg)](https://pypi.org/project/chonkie/)
 [![License](https://img.shields.io/github/license/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-chonkie.ai-blue.svg)](https://docs.chonkie.ai)
-![Package size](https://img.shields.io/badge/size-15MB-blue)
+![Default Package size](https://img.shields.io/badge/size-<1MB-blue)
 [![codecov](https://codecov.io/gh/chonkie-inc/chonkie/graph/badge.svg?token=V4EWIJWREZ)](https://codecov.io/gh/chonkie-inc/chonkie)
 [![Downloads](https://static.pepy.tech/badge/chonkie)](https://pepy.tech/project/chonkie)
 [![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/rYYp6DC4cv?style=flat)](https://discord.gg/rYYp6DC4cv)
@@ -38,9 +38,10 @@ To install chonkie, run:
 pip install chonkie
 ```
 
-Chonkie follows the rule of minimum installs.
+Chonkie follows the rule of minimum default installs which keeps the package ultra-li
 Have a favorite chunker? Read our [docs](https://docs.chonkie.ai) to install only what you need
-Don't want to think about it? Simply install `all` (Not recommended for production environments)
+
+Don't want to think about it? Simply install `all` (Not recommended for production environments):
 
 ```bash
 pip install chonkie[all]
