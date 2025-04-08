@@ -138,7 +138,7 @@ class RecursiveRules:
     @classmethod
     def from_dict(cls, data: dict) -> "RecursiveRules":
         """Create a RecursiveRules object from a dictionary."""
-        dict_levels = data.pop("levels")
+        dict_levels = data.get("levels", None)
         object_levels = None
         if dict_levels is not None:
             if isinstance(dict_levels, dict):
