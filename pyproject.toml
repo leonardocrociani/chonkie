@@ -42,13 +42,15 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
+dependencies = ["tqdm>=4.64.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 
 [project.optional-dependencies]
+tiktoken = ["tiktoken>=0.5.0"]
+tokenizers = ["tokenizers>=0.16.0"]
 model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
