@@ -57,6 +57,8 @@ openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 all = [
+    "tiktoken>=0.5.0",
+    "tokenizers>=0.16.0",
     "sentence-transformers>=3.0.0",
     "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
@@ -67,6 +69,7 @@ all = [
 ]
 dev = [
     "tiktoken>=0.5.0",
+    "tokenizers>=0.16.0",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
     "pytest>=6.2.0",
