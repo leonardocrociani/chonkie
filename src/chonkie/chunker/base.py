@@ -26,13 +26,13 @@ class BaseChunker(ABC):
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
         self._use_multiprocessing = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the chunker."""
         return f"{self.__class__.__name__}()"
 
     def __call__(
         self, text: Union[str, Sequence[str]], show_progress: bool = True
-    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
+    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]], Sequence[str], Sequence[Sequence[str]]]:
         """Call the chunker with the given arguments.
 
         Args:
@@ -63,8 +63,8 @@ class BaseChunker(ABC):
             return 1
 
     def _sequential_batch_processing(
-        self, texts: Sequence[str], show_progress
-    ) -> Sequence[Sequence[Chunk]]:
+        self, texts: Sequence[str], show_progress: bool = True
+    ) -> Union[Sequence[Sequence[Chunk]], Sequence[Sequence[str]]]:
         """Process a batch of texts sequentially."""
         return [
             self.chunk(t)
@@ -80,7 +80,7 @@ class BaseChunker(ABC):
 
     def _parallel_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> Union[Sequence[Sequence[Chunk]], Sequence[Sequence[str]]]:
         """Process a batch of texts using multiprocessing."""
         num_workers = self._get_optimal_worker_count()
         total = len(texts)
@@ -102,21 +102,21 @@ class BaseChunker(ABC):
             return results
 
     @abstractmethod
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> Union[Sequence[Chunk], Sequence[str]]:
         """Chunk the given text.
 
         Args:
             text (str): The text to chunk.
 
         Returns:
-            List of Chunks containing the chunked text and other metadata.
+            Union[Sequence[Chunk], Sequence[str]]: A list of Chunks or a list of strings.
 
         """
         pass
 
     def chunk_batch(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> Union[Sequence[Sequence[Chunk]], Sequence[Sequence[str]]]:
         """Chunk a batch of texts.
 
         Args:
@@ -124,14 +124,14 @@ class BaseChunker(ABC):
             show_progress (bool): Whether to show progress.
 
         Returns:
-            List of lists of Chunks containing the chunked text and other metadata.
+            Union[Sequence[Sequence[Chunk]], Sequence[Sequence[str]]]: A list of lists of Chunks or a list of lists of strings.
 
         """
         # simple handles of empty and single text cases
         if len(texts) == 0:
             return []
         if len(texts) == 1:
-            return [self.chunk(texts[0])]
+            return [ self.chunk(texts[0]) ] # type: ignore
 
         # Now for the remaining, check the self._multiprocessing bool flag
         if self._use_multiprocessing:
