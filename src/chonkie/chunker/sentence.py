@@ -155,11 +155,11 @@ class SentenceChunker(BaseChunker):
     #             f"Unknown type passed to _estimate_token_count: {type(sentences)}"
     #         )
 
-    def _get_feedback(self, estimate: int, actual: int) -> float:
-        """Validate against the actual token counts and correct the estimates."""
-        estimate, actual = max(1, estimate), max(1, actual)
-        feedback = max(0.01, 1 - ((estimate - actual) / estimate))
-        return feedback
+    # def _get_feedback(self, estimate: int, actual: int) -> float:
+    #     """Validate against the actual token counts and correct the estimates."""
+    #     estimate, actual = max(1, estimate), max(1, actual)
+    #     feedback = max(0.01, 1 - ((estimate - actual) / estimate))
+    #     return feedback
 
     def _prepare_sentences(self, text: str) -> List[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
@@ -251,13 +251,9 @@ class SentenceChunker(BaseChunker):
         )
 
         chunks = []
-        feedback = 1.0
         pos = 0
 
         while pos < len(sentences):
-            # use updated feedback on the token sums
-            token_sums = [int(s * feedback) for s in token_sums]
-
             # Use bisect_left to find initial split point
             target_tokens = token_sums[pos] + self.chunk_size
             split_idx = bisect_left(token_sums, target_tokens) - 1
