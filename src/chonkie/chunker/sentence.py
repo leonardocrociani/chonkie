@@ -1,4 +1,10 @@
-"""A chunker that splits the text based on sentence boundaries and token limits."""
+"""Implements the SentenceChunker class for splitting text into chunks based on sentence boundaries.
+
+This module provides the `SentenceChunker`, a specialized chunker that segments text
+by identifying sentence endings (like periods, question marks, etc.) while adhering to
+specified token count limits for each chunk. It also handles overlapping chunks and
+allows customization of sentence boundary delimiters and minimum sentence lengths.
+"""
 
 import warnings
 from bisect import bisect_left
@@ -142,7 +148,7 @@ class SentenceChunker(BaseChunker):
 
         return sentences
 
-    # TODO: This has been deprecated as it is slow and inaccurate
+    # NOTE: This has been deprecated as it is slow and inaccurate -> Clean up once we have OverlapRefinery
     # def _estimate_token_counts(self, sentences: Union[str, List[str]]) -> int:
     #     """Estimate token count using character length."""
     #     CHARS_PER_TOKEN = 6.0  # Avg. char per token for llama3 is b/w 6-7
