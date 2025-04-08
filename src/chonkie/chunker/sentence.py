@@ -9,8 +9,9 @@ allows customization of sentence boundary delimiters and minimum sentence length
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Literal, Optional, Sequence, Union
+from typing import List, Literal, Optional, Sequence, Union
 
+from chonkie.tokenizer import TokenizerType
 from chonkie.types.base import Chunk
 from chonkie.types.sentence import Sentence, SentenceChunk
 
@@ -38,7 +39,7 @@ class SentenceChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+        tokenizer_or_token_counter: TokenizerType = "character",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,

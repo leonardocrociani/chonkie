@@ -4,11 +4,12 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Generator, List, Literal, Sequence, Union
+from typing import Generator, List, Literal, Sequence, Union
 
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.tokenizer import TokenizerType
 from chonkie.types.base import Chunk
 
 
@@ -25,7 +26,7 @@ class TokenChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Any] = "gpt2",
+        tokenizer: TokenizerType = "character",
         chunk_size: int = 512,
         chunk_overlap: Union[int, float] = 0,
         return_type: Literal["chunks", "texts"] = "chunks",

@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     except ImportError:
         transformers = Any  # fallback to Any
 
+TokenizerType = Union[str, Callable[[str], int], "tiktoken.Encoding", "tokenizers.Tokenizer", "transformers.PreTrainedTokenizer", "transformers.PreTrainedTokenizerFast"]
 
 class BaseTokenizer(ABC):
     """Base class for Character and Word tokenizers."""
