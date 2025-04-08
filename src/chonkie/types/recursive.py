@@ -1,7 +1,7 @@
 """Custom types for recursive chunking."""
 
 from dataclasses import dataclass
-from typing import Iterator, List, Literal, Optional, Union
+from typing import Dict, Iterator, List, Literal, Optional, Union
 
 from chonkie.types.base import Chunk
 
@@ -68,7 +68,7 @@ class RecursiveRules:
 
     levels: Optional[Union[RecursiveLevel, List[RecursiveLevel]]] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate attributes."""
         if self.levels is None:
             paragraphs = RecursiveLevel(delimiters=["\n\n", "\r\n", "\n", "\r"])
@@ -138,18 +138,17 @@ class RecursiveRules:
     @classmethod
     def from_dict(cls, data: dict) -> "RecursiveRules":
         """Create a RecursiveRules object from a dictionary."""
-        dict_levels = data.pop("levels")
+        dict_levels = data.get("levels", None)
         object_levels = None
         if dict_levels is not None:
             if isinstance(dict_levels, dict):
                 object_levels = RecursiveLevel.from_dict(dict_levels)
             elif isinstance(dict_levels, list):
-                object_levels = [
-                    RecursiveLevel.from_dict(d_level) for d_level in dict_levels
-                ]
+                object_levels = [RecursiveLevel.from_dict(d_level)
+                                 for d_level in dict_levels]
         return cls(levels=object_levels)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Return the RecursiveRules as a dictionary."""
         result = dict()
         result["levels"] = None
@@ -175,7 +174,7 @@ class RecursiveChunk(Chunk):
 
     level: Optional[int] = None
 
-    def str_repr(self) -> str:
+    def __repr__(self) -> str:
         """Return a string representation of the RecursiveChunk."""
         return (
             f"RecursiveChunk(text={self.text}, start_index={self.start_index}, "
@@ -183,19 +182,11 @@ class RecursiveChunk(Chunk):
             f"level={self.level})"
         )
 
-    def __repr__(self) -> str:
-        """Return a string representation of the RecursiveChunk."""
-        return self.str_repr()
-
-    def __str__(self):
-        """Return a string representation of the RecursiveChunk."""
-        return self.str_repr()
-
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict:
         """Return the RecursiveChunk as a dictionary."""
         return self.__dict__.copy()
 
     @classmethod
-    def from_dict(cls, data: dict) -> "RecursiveChunk":
+    def from_dict(cls, data: Dict) -> "RecursiveChunk":
         """Create a RecursiveChunk object from a dictionary."""
         return cls(**data)
