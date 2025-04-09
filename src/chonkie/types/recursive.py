@@ -154,10 +154,11 @@ class RecursiveRules:
 
     def to_dict(self) -> Dict:
         """Return the RecursiveRules as a dictionary."""
-        result = dict()
+        result: Dict[str, Optional[List[Dict]]] = dict()
         result["levels"] = None
         if isinstance(self.levels, RecursiveLevel):
-            result["levels"] = self.levels.to_dict()
+            # Add to a list to make it iterable 
+            result["levels"] = [self.levels.to_dict()] 
         elif isinstance(self.levels, list):
             result["levels"] = [level.to_dict() for level in self.levels]
         else:
