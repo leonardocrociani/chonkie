@@ -7,6 +7,7 @@ Welcome fellow CHONKer! We're thrilled you want to contribute to Chonkie. Every 
 ## 🚀 Getting Started
 
 ### Before You Dive In
+
 1. **Check existing issues** or open a new one to start a discussion
 2. **Read [Chonkie's documentation](https://docs.chonkie.ai)** and core [concepts](https://docs.chonkie.ai/getting-started/concepts)
 3. **Set up your development environment** using the guide below
@@ -31,6 +32,7 @@ pip install -e ".[dev,all]"            # For all features
 ## 🧪 Testing & Code Quality
 
 ### Running Tests
+
 ```bash
 pytest                           # Run all tests
 pytest tests/test_token_chunker.py    # Run specific test file
@@ -38,6 +40,7 @@ pytest --cov=chonkie            # Run tests with coverage
 ```
 
 ### Code Style
+
 We use [ruff](https://github.com/astral-sh/ruff) for formatting and linting:
 
 ```bash
@@ -46,12 +49,14 @@ ruff check --fix .               # Auto-fix issues where possible
 ```
 
 Our style configuration enforces:
+
 - Code formatting (`F`)
 - Import sorting (`I`) 
 - Documentation style (`D`)
 - Docstring coverage (`DOC`)
 
 ### Documentation Style
+
 We follow Google-style docstrings:
 
 ```python
@@ -84,35 +89,42 @@ src/
 ## 🎯 Contribution Opportunities
 
 ### For Beginners
+
 Start with issues labeled [`good-first-issue`](https://github.com/chonkie-ai/chonkie/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 ### Documentation
+
 - Improve existing docs
 - Add examples or tutorials
 - Fix typos
 
 ### Code Improvements
+
 - Implement new chunking strategies
 - Add tokenizer support
 - Optimize existing chunkers
 - Improve test coverage
 
 ### Performance Enhancements
+
 - Profile and optimize code
 - Add benchmarks
 - Improve memory usage
 
 ### New Features
+
 Look for issues with [FEAT] labels, especially those from Chonkie Maintainers
 
 ## 🚦 Pull Request Process
 
 ### 1. Branch Naming
+
 - `feature/description` for new features
 - `fix/description` for bug fixes
 - `docs/description` for documentation changes
 
 ### 2. Commit Messages
+
 Write clear, descriptive commit messages:
 
 ```
@@ -124,11 +136,14 @@ feat: add batch processing to WordChunker
 ```
 
 ### 3. Dependencies
+
 - Core dependencies go in `project.dependencies`
 - Optional features go in `project.optional-dependencies`
 - Development tools go in the `dev` optional dependency group
 
 ### 4. Code Review
+
+- **Make sure your PR is for the `development` branch**
 - All PRs need at least one review
 - Maintainers will review for:
   - Code quality (via ruff)
@@ -138,23 +153,39 @@ feat: add batch processing to WordChunker
 
 ## 🦛 Technical Details
 
+### Semantic Versioning
+
+Chonkie does not follow strict semantic versioning. We follow the following rules:
+
+- 'MAJOR' version when we refactor/rewrite large parts of the codebase
+- 'MINOR' version when we add breaking changes (e.g. changing a public API)
+- 'PATCH' version when we add non-breaking features (e.g. adding a new chunker) or fix bugs
+
 ### Development Dependencies
-Current development dependencies (as of January 1, 2025):
+
+Current development dependencies (as of April 9, 2025):
 
 ```toml
 [project.optional-dependencies]
 dev = [
-    "pytest>=6.2.0", 
+    "tiktoken>=0.5.0",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
-    "ruff>=0.0.265"
+    "pytest>=6.2.0", 
+    "pytest-cov>=4.0.0",
+    "pytest-xdist>=2.5.0",
+    "coverage",
+    "ruff>=0.0.265",
+    "mypy>=1.11.0"
 ]
 ```
 
 ### Optional Dependencies
+
 - `model2vec`: For model2vec embeddings
 - `st`: For sentence-transformers
 - `openai`: For OpenAI embeddings
+- `cohere`: For Cohere embeddings
 - `semantic`: For semantic features
 - `all`: All optional dependencies
 
