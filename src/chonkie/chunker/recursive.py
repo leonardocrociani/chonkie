@@ -6,7 +6,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, Literal, Optional, Sequence, Union
+from typing import Any, Callable, List, Literal, Optional, Sequence, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import (
@@ -14,7 +14,6 @@ from chonkie.types import (
     RecursiveLevel,
     RecursiveRules,
 )
-from chonkie.utils import Hubbie
 
 
 class RecursiveChunker(BaseChunker):
@@ -175,9 +174,6 @@ class RecursiveChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
-    # COMPLETED: Remove the make chunks function and calculate the start_index and end_index
-    # based on the text lengths --> which would be faster and more accurate indexing than
-    # the current approach
     def _make_chunks(
         self,
         text: str,
@@ -185,8 +181,7 @@ class RecursiveChunker(BaseChunker):
         level: int,
         start_offset: int
     ) -> RecursiveChunk:
-        """
-        Create a RecursiveChunk object with indices based on the current offset.
+        """Create a RecursiveChunk object with indices based on the current offset.
         
         This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
         avoiding a slower full-text search for efficiency.
@@ -199,6 +194,7 @@ class RecursiveChunker(BaseChunker):
             
         Returns:
             RecursiveChunk: A chunk object with calculated start and end indices, text, token count and level.
+
         """
         return RecursiveChunk(
             text=text,
@@ -213,7 +209,7 @@ class RecursiveChunker(BaseChunker):
         splits: list[str],
         token_counts: list[int],
         combine_whitespace: bool = False,
-    ) -> list[str]:
+    ) -> Tuple[List[str], List[int]]:
         """Merge short splits."""
         if not splits or not token_counts:
             return [], []
@@ -292,15 +288,10 @@ class RecursiveChunker(BaseChunker):
                 f"Invalid return_type {self.return_type}. Must be 'chunks' or 'texts'."
             )
 
-
         curr_rule = self.rules[level]
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
-        # Merge splits
-        # If no delimeters and no whitespace, we can just use the splits
-        # If no delimeters and whitespace, we need to merge the splits
-        # If delimeters and whitespace, we need to merge the splits
         if curr_rule.delimiters is None and not curr_rule.whitespace:
             merged, combined_token_counts = splits, token_counts
 
@@ -308,6 +299,11 @@ class RecursiveChunker(BaseChunker):
             merged, combined_token_counts = self._merge_splits(
                 splits, token_counts, combine_whitespace=True
             )
+            # NOTE: This is a hack to fix the reconstruction issue when whitespace is used.
+            # When whitespace is there, " ".join only adds space between words, not before the first word.
+            # To make it combine back properly, all splits except the first one are prefixed with a space.
+            merged = merged[:1] + [" " + text for (i, text) in enumerate(merged) if i != 0]
+
         else:
             merged, combined_token_counts = self._merge_splits(
                 splits, token_counts, combine_whitespace=False

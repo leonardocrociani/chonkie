@@ -317,7 +317,7 @@ def test_recursive_chunker_reconstruction_word_rules(
     )
     chunks = chunker.chunk(sample_text)
     assert len(chunks) > 0
-    assert sample_text == " ".join(chunk.text for chunk in chunks)
+    assert sample_text == "".join(chunk.text for chunk in chunks)
 
 
 def test_recursive_chunker_indices_word_rules(
