@@ -1,7 +1,7 @@
 ---
 name: Question
 about: Ask a question about the repository
-title: "[QUE]"
+title: "Que:"
 labels: question
 assignees: chonknick
 
