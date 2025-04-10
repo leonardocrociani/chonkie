@@ -1,11 +1,11 @@
 """Module containing the LateChunker class."""
 
 import importlib.util as importutil
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
-from chonkie.embeddings import BaseEmbeddings
+from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from chonkie.types import LateChunk, RecursiveRules
 
 
@@ -23,7 +23,7 @@ class LateChunker(RecursiveChunker):
     def __init__(
         self,
         embedding_model: Union[
-            str, BaseEmbeddings, Any
+            str, SentenceTransformerEmbeddings, Any
         ] = "sentence-transformers/all-MiniLM-L6-v2",
         chunk_size: int = 512,
         rules: RecursiveRules = RecursiveRules(),
@@ -44,14 +44,10 @@ class LateChunker(RecursiveChunker):
         self._import_dependencies()
 
         # set all the additional attributes
-        if isinstance(embedding_model, BaseEmbeddings):
+        if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
         elif isinstance(embedding_model, str):
-            from chonkie.embeddings.auto import AutoEmbeddings
-
-            self.embedding_model = AutoEmbeddings.get_embeddings(
-                embedding_model, **kwargs
-            )
+            self.embedding_model = SentenceTransformerEmbeddings(model=embedding_model, **kwargs)
         else:
             raise ValueError(f"{embedding_model} is not a valid embedding model")
 
@@ -72,7 +68,44 @@ class LateChunker(RecursiveChunker):
 
         # Disable multiprocessing for this chunker
         self._use_multiprocessing = False
+    
+    @classmethod
+    def from_recipe(cls, 
+                    name: Optional[str] = "default", 
+                    lang: Optional[str] = "en", 
+                    path: Optional[str] = None, 
+                    embedding_model: Union[str, SentenceTransformerEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
+                    chunk_size: int = 512,
+                    min_characters_per_chunk: int = 24,
+                    **kwargs: Any) -> "LateChunker": # type: ignore
+        """Create a LateChunker from a recipe.
 
+        Args:
+            name: The name of the recipe to use.
+            lang: The language that the recipe should support.
+            path: The path to the recipe to use.
+            embedding_model: The embedding model to use.
+            chunk_size: The chunk size to use.
+            min_characters_per_chunk: The minimum number of characters per chunk.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            LateChunker: The created LateChunker.   
+
+        Raises:
+            ValueError: If the recipe is invalid or if the recipe is not found.
+
+        """
+        # Create a hubbie instance
+        rules = RecursiveRules.from_recipe(name, lang, path)
+        return cls(
+            embedding_model=embedding_model,
+            chunk_size=chunk_size,
+            rules=rules,
+            min_characters_per_chunk=min_characters_per_chunk,
+            **kwargs
+        )   
+    
     def _get_late_embeddings(
         self, token_embeddings: "np.ndarray", token_counts: List[int]
     ) -> List["np.ndarray"]:
@@ -88,7 +121,7 @@ class LateChunker(RecursiveChunker):
             )
         return embs
 
-    def chunk(self, text: str) -> List[LateChunk]:
+    def chunk(self, text: str) -> List[LateChunk]: # type: ignore
         """Chunk the text via LateChunking."""
         # This would first call upon the _recursive_chunk method
         # and then use the embedding model to get the token token_embeddings
