@@ -6,7 +6,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, Literal, Optional, Sequence, Union
+from typing import Any, Callable, List, Literal, Optional, Sequence, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import (
@@ -73,6 +73,46 @@ class RecursiveChunker(BaseChunker):
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
 
+    @classmethod
+    def from_recipe(cls, 
+                    name: Optional[str] = 'default', 
+                    lang: Optional[str] = 'en',
+                    path: Optional[str] = None,
+                    tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+                    chunk_size: int = 512,
+                    min_characters_per_chunk: int = 24,
+                    return_type: Literal["texts", "chunks"] = "chunks",
+                    ) -> "RecursiveChunker":
+        """Create a RecursiveChunker object from a recipe.
+
+        The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
+        
+        Args:
+            name (Optional[str]): The name of the recipe.
+            lang (Optional[str]): The language that the recursive chunker should support.
+            path (Optional[str]): The path to the recipe.
+            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            chunk_size (int): The chunk size.
+            min_characters_per_chunk (int): The minimum number of characters per chunk.
+            return_type (Literal["texts", "chunks"]): The type of return value.
+
+        Returns:
+            RecursiveChunker: The RecursiveChunker object.
+
+        Raises:
+            ValueError: If the recipe is not found.
+
+        """
+        # Create a recursive rules object
+        rules = RecursiveRules.from_recipe(name, lang, path)
+        return cls(
+            tokenizer_or_token_counter=tokenizer_or_token_counter,
+            rules=rules,
+            chunk_size=chunk_size,
+            min_characters_per_chunk=min_characters_per_chunk,
+            return_type=return_type,
+        )
+
     @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
         estimate = max(1, len(text) // self._CHARS_PER_TOKEN)
@@ -134,37 +174,32 @@ class RecursiveChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
-    # TODO: Remove the make chunks function and calculate the start_index and end_index
-    # based on the text lengths --> which would be faster and more accurate indexing than
-    # the current approach
     def _make_chunks(
         self,
         text: str,
         token_count: int,
         level: int,
-        full_text: Optional[str] = None,
-        last_chunk_end_index: int = 0,
+        start_offset: int
     ) -> RecursiveChunk:
-        """Form and return a RecursiveChunk object."""
-        if full_text is None:
-            full_text = text
-        try:
-            start_index = last_chunk_end_index + full_text[last_chunk_end_index:].index(
-                text
-            )
-            end_index = start_index + len(text)
-        except Exception as e:
-            print(
-                f"Error finding start and end index for text '{text}' in full_text. Error: {e}"
-                f"Setting start and end index to 0."
-            )
-            start_index = 0
-            end_index = 0
+        """Create a RecursiveChunk object with indices based on the current offset.
+        
+        This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
+        avoiding a slower full-text search for efficiency.
+        
+        Args:
+            text (str): The text content of the chunk.
+            token_count (int): The number of tokens in the chunk.
+            level (int): The recursion level of the chunk.
+            start_offset (int): The starting offset in the original text.
+            
+        Returns:
+            RecursiveChunk: A chunk object with calculated start and end indices, text, token count and level.
 
+        """
         return RecursiveChunk(
             text=text,
-            start_index=start_index,
-            end_index=end_index,
+            start_index=start_offset,
+            end_index=start_offset + len(text),
             token_count=token_count,
             level=level,
         )
@@ -174,7 +209,7 @@ class RecursiveChunker(BaseChunker):
         splits: list[str],
         token_counts: list[int],
         combine_whitespace: bool = False,
-    ) -> list[str]:
+    ) -> Tuple[List[str], List[int]]:
         """Merge short splits."""
         if not splits or not token_counts:
             return [], []
@@ -236,7 +271,7 @@ class RecursiveChunker(BaseChunker):
         return merged, combined_token_counts
 
     def _recursive_chunk(
-        self, text: str, level: int = 0, full_text: Optional[str] = None
+        self, text: str, level: int = 0, start_offset: int =0
     ) -> Sequence[RecursiveChunk]:
         """Recursive helper for core chunking."""
         if not text:
@@ -246,26 +281,17 @@ class RecursiveChunker(BaseChunker):
             if self.return_type == "texts":
                 return [text]
             if self.return_type == "chunks":
-                return [
-                    self._make_chunks(
-                        text, self._estimate_token_count(text), level, full_text
-                    )
+                 return [
+                    self._make_chunks(text, self._estimate_token_count(text), level, start_offset)
                 ]
             raise ValueError(
                 f"Invalid return_type {self.return_type}. Must be 'chunks' or 'texts'."
             )
 
-        if full_text is None:
-            full_text = text
-
         curr_rule = self.rules[level]
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
-        # Merge splits
-        # If no delimeters and no whitespace, we can just use the splits
-        # If no delimeters and whitespace, we need to merge the splits
-        # If delimeters and whitespace, we need to merge the splits
         if curr_rule.delimiters is None and not curr_rule.whitespace:
             merged, combined_token_counts = splits, token_counts
 
@@ -273,34 +299,29 @@ class RecursiveChunker(BaseChunker):
             merged, combined_token_counts = self._merge_splits(
                 splits, token_counts, combine_whitespace=True
             )
+            # NOTE: This is a hack to fix the reconstruction issue when whitespace is used.
+            # When whitespace is there, " ".join only adds space between words, not before the first word.
+            # To make it combine back properly, all splits except the first one are prefixed with a space.
+            merged = merged[:1] + [" " + text for (i, text) in enumerate(merged) if i != 0]
+
         else:
             merged, combined_token_counts = self._merge_splits(
                 splits, token_counts, combine_whitespace=False
             )
 
         # Chunk long merged splits
-        chunks = []
-        last_chunk_end_index = 0
+        chunks: list[RecursiveChunk] = []
+        current_offset = start_offset
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
-                chunks.extend(self._recursive_chunk(split, level + 1, full_text))
+                chunks.extend(self._recursive_chunk(split, level + 1, current_offset))
             else:
                 if self.return_type == "chunks":
-                    if chunks:
-                        last_chunk_end_index = chunks[-1].end_index
-                    no_delim = curr_rule.delimiters is None and not curr_rule.whitespace
-                    # **Speedup**: Since there are no delimiters we can just join the "merged" result.
-                    chunks.append(
-                        self._make_chunks(
-                            split,
-                            token_count,
-                            level,
-                            ("".join(merged) if no_delim else full_text),
-                            last_chunk_end_index,
-                        )
-                    )
+                    chunks.append(self._make_chunks(split, token_count, level, current_offset))
                 elif self.return_type == "texts":
                     chunks.append(split)
+            # Update the offset by the length of the processed split.
+            current_offset += len(split)
         return chunks
 
     def chunk(self, text: str) -> Sequence[RecursiveChunk]:
@@ -310,7 +331,7 @@ class RecursiveChunker(BaseChunker):
             text (str): Text to chunk.
 
         """
-        return self._recursive_chunk(text=text, level=0, full_text=text)
+        return self._recursive_chunk(text=text, level=0, start_offset=0)
 
     def __repr__(self) -> str:
         """Get a string representation of the recursive chunker."""

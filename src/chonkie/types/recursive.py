@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, Iterator, List, Literal, Optional, Union
 
 from chonkie.types.base import Chunk
+from chonkie.utils import Hubbie
 
 
 @dataclass
@@ -61,12 +62,36 @@ class RecursiveLevel:
         """Create RecursiveLevel object from a dictionary."""
         return cls(**data)
 
+    @classmethod
+    def from_recipe(cls, name: str, lang: Optional[str] = 'en') -> "RecursiveLevel":
+        """Create RecursiveLevel object from a recipe.
+        
+        The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
+        
+        Args:
+            name (str): The name of the recipe.
+            lang (Optional[str]): The language of the recipe.
+
+        Returns:
+            RecursiveLevel: The RecursiveLevel object.
+
+        Raises:
+            ValueError: If the recipe is not found.
+
+        """
+        hub = Hubbie()
+        recipe = hub.get_recipe(name, lang)
+        # If the recipe is not None, we can get the `recursive_rules` key
+        if recipe is not None:
+            return cls.from_dict({"delimiters": recipe["recipe"]["delimiters"], "include_delim": recipe["recipe"]["include_delim"]})
+        else:
+            raise ValueError(f"Tried getting recipe `{name}_{lang}.json` but it is not available.")
 
 @dataclass
 class RecursiveRules:
     """Expression rules for recursive chunking."""
 
-    levels: Optional[Union[RecursiveLevel, List[RecursiveLevel]]] = None
+    levels: Optional[List[RecursiveLevel]] = None
 
     def __post_init__(self) -> None:
         """Validate attributes."""
@@ -101,14 +126,12 @@ class RecursiveRules:
             word = RecursiveLevel(whitespace=True)
             token = RecursiveLevel()
             self.levels = [paragraphs, sentences, pauses, word, token]
-        elif isinstance(self.levels, RecursiveLevel):
-            self.levels._validate_fields()
         elif isinstance(self.levels, list):
             for level in self.levels:
                 level._validate_fields()
         else:
             raise ValueError(
-                "Levels must be a RecursiveLevel object or a list of RecursiveLevel objects."
+                "Levels must be a list of RecursiveLevel objects."
             )
 
     def __repr__(self) -> str:
@@ -117,51 +140,60 @@ class RecursiveRules:
 
     def __len__(self) -> int:
         """Return the number of levels."""
-        return len(self.levels)
-
-    def __getitem__(self, index: int) -> RecursiveLevel:
+        return len(self.levels) if self.levels is not None else 0
+            
+    def __getitem__(self, index: int) -> Optional[RecursiveLevel]:
         """Return the RecursiveLevel at the specified index."""
-        if isinstance(self.levels, list):
-            return self.levels[index]
-        raise TypeError(
-            "Levels must be a list of RecursiveLevel objects to use indexing."
-        )
+        return self.levels[index] if self.levels is not None else None
 
-    def __iter__(self) -> Iterator[RecursiveLevel]:
+    def __iter__(self) -> Optional[Iterator[RecursiveLevel]]:
         """Return an iterator over the RecursiveLevels."""
-        if isinstance(self.levels, list):
-            return iter(self.levels)
-        raise TypeError(
-            "Levels must be a list of RecursiveLevel objects to use iteration."
-        )
+        return iter(self.levels) if self.levels is not None else None
 
     @classmethod
     def from_dict(cls, data: dict) -> "RecursiveRules":
         """Create a RecursiveRules object from a dictionary."""
         dict_levels = data.get("levels", None)
-        object_levels = None
+        object_levels: Optional[List[RecursiveLevel]] = None
         if dict_levels is not None:
             if isinstance(dict_levels, dict):
-                object_levels = RecursiveLevel.from_dict(dict_levels)
+                object_levels = [RecursiveLevel.from_dict(dict_levels)]
             elif isinstance(dict_levels, list):
-                object_levels = [RecursiveLevel.from_dict(d_level)
-                                 for d_level in dict_levels]
+                object_levels = [RecursiveLevel.from_dict(d_level) for d_level in dict_levels]
         return cls(levels=object_levels)
 
     def to_dict(self) -> Dict:
         """Return the RecursiveRules as a dictionary."""
-        result = dict()
-        result["levels"] = None
-        if isinstance(self.levels, RecursiveLevel):
-            result["levels"] = self.levels.to_dict()
-        elif isinstance(self.levels, list):
-            result["levels"] = [level.to_dict() for level in self.levels]
-        else:
-            raise ValueError(
-                "Levels must be a RecursiveLevel object or a list of RecursiveLevel objects."
-            )
+        result: Dict[str, Optional[List[Dict]]] = dict()
+        result["levels"] = [level.to_dict() for level in self.levels] if self.levels is not None else None
         return result
 
+    @classmethod
+    def from_recipe(cls, 
+                    name: Optional[str] = 'default', 
+                    lang: Optional[str] = 'en', 
+                    path: Optional[str] = None) -> "RecursiveRules":
+        """Create a RecursiveRules object from a recipe.
+        
+        The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes).
+        If the recipe is not there, you can create your own recipe and share it with the community!
+        
+        Args:
+            name (str): The name of the recipe.
+            lang (Optional[str]): The language of the recipe.
+            path (Optional[str]): Optionally, provide the path to the recipe.
+
+        Returns:
+            RecursiveRules: The RecursiveRules object.
+
+        Raises:
+            ValueError: If the recipe is not found.
+
+        """
+        # Create a hubbie instance
+        hub = Hubbie()
+        recipe = hub.get_recipe(name, lang, path) 
+        return cls.from_dict(recipe["recipe"]["recursive_rules"])
 
 @dataclass
 class RecursiveChunk(Chunk):
