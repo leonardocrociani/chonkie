@@ -103,6 +103,7 @@ class RecursiveRules:
             self.levels = [paragraphs, sentences, pauses, word, token]
         elif isinstance(self.levels, RecursiveLevel):
             self.levels._validate_fields()
+            self.levels = [self.levels] # Add to a list to make it iterable
         elif isinstance(self.levels, list):
             for level in self.levels:
                 level._validate_fields()
@@ -117,9 +118,12 @@ class RecursiveRules:
 
     def __len__(self) -> int:
         """Return the number of levels."""
-        return len(self.levels)
-
-    def __getitem__(self, index: int) -> RecursiveLevel:
+        if isinstance(self.levels, list):
+            return len(self.levels)
+        else:
+            return 1
+            
+    def __getitem__(self, index: int) -> Optional[RecursiveLevel]:
         """Return the RecursiveLevel at the specified index."""
         if isinstance(self.levels, list):
             return self.levels[index]
@@ -127,7 +131,7 @@ class RecursiveRules:
             "Levels must be a list of RecursiveLevel objects to use indexing."
         )
 
-    def __iter__(self) -> Iterator[RecursiveLevel]:
+    def __iter__(self) -> Optional[Iterator[RecursiveLevel]]:
         """Return an iterator over the RecursiveLevels."""
         if isinstance(self.levels, list):
             return iter(self.levels)
@@ -150,10 +154,11 @@ class RecursiveRules:
 
     def to_dict(self) -> Dict:
         """Return the RecursiveRules as a dictionary."""
-        result = dict()
+        result: Dict[str, Optional[List[Dict]]] = dict()
         result["levels"] = None
         if isinstance(self.levels, RecursiveLevel):
-            result["levels"] = self.levels.to_dict()
+            # Add to a list to make it iterable 
+            result["levels"] = [self.levels.to_dict()] 
         elif isinstance(self.levels, list):
             result["levels"] = [level.to_dict() for level in self.levels]
         else:
