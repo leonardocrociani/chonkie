@@ -235,7 +235,7 @@ class WordTokenizer(BaseTokenizer):
             Number of tokens
 
         """
-        return len(self.encode(text))
+        return len(self.tokenize(text))
 
 
 class Tokenizer:
