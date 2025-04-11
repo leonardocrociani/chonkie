@@ -27,7 +27,7 @@ class SentenceChunker(BaseChunker):
         chunk_overlap: Number of tokens to overlap between chunks
         min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
         min_characters_per_sentence: Minimum number of characters per sentence
-        approximate: Whether to use approximate token counting (defaults to True) [DEPRECATED]
+        approximate: Whether to use approximate token counting (defaults to False) [DEPRECATED]
         delim: Delimiters to split sentences on
         include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
         return_type: Whether to return chunks or texts
