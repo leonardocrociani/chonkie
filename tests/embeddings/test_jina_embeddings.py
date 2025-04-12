@@ -4,14 +4,12 @@ import sys
 
 import numpy as np
 import pytest
-from dotenv import load_dotenv
 
 # Ensure the src directory is in the path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
 
 from chonkie.embeddings.jina import JinaEmbeddings
 
-load_dotenv()  # Load environment variables from .env file
 # --- Fixtures ---
 
 @pytest.fixture(scope="module")
@@ -25,7 +23,6 @@ def embedding_model():
     api_key = os.environ.get("JINA_API_KEY")
     if not api_key:
         pytest.skip("Skipping Jina integration tests because JINA_API_KEY is not defined")
-    # Use default model and parameters from the implementation
     return JinaEmbeddings(api_key=api_key)
 
 @pytest.fixture
@@ -87,8 +84,6 @@ def test_embed_single_text(embedding_model, sample_text):
         sample_text: The single sample text fixture.
 
     """
-    # Note: The JinaEmbeddings.embed method expects List[str].
-    # Passing a list with one item as required by the signature.
     embedding = embedding_model.embed([sample_text])
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
@@ -103,12 +98,9 @@ def test_embed_batch_texts_live(embedding_model, sample_texts):
         sample_texts: The batch of sample texts fixture.
 
     """
-    # This test might fail or behave unexpectedly due to issues in the embed_batch implementation.
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
-    # The current implementation might return an empty list or raise errors.
-    # If it works, it should return a list of numpy arrays.
-    if embeddings: # Only check contents if the list is not empty
+    if embeddings: 
         assert len(embeddings) == len(sample_texts)
 
 
@@ -134,7 +126,6 @@ def test_count_tokens_batch_texts(embedding_model, sample_texts):
         sample_texts: The batch of sample texts fixture.
 
     """
-    # This calls count_tokens iteratively, so relies on the live API multiple times
     token_counts = embedding_model.count_tokens_batch(sample_texts)
     assert isinstance(token_counts, list)
     assert len(token_counts) == len(sample_texts)
@@ -154,14 +145,12 @@ def test_similarity(embedding_model, sample_texts):
         pytest.skip("Need at least two sample texts for similarity test")
 
     # Embed only the first two texts using the embed method.
-    # Using embed_batch might be unreliable due to potential implementation issues noted elsewhere.
     embedding1 = embedding_model.embed([sample_texts[0]])
     embedding2 = embedding_model.embed([sample_texts[1]])
 
     similarity_score = embedding_model.similarity(embedding1, embedding2)
-    assert isinstance(similarity_score, (float, np.floating)) # Can be numpy float
-    # Similarity score should be between -1.0 and 1.0 for cosine similarity
-    assert 0 <= similarity_score <= 1 # Allow for slight floating point inaccuracies
+    assert isinstance(similarity_score, (float, np.floating))
+    assert 0 <= similarity_score <= 1
 
 @skip_if_no_key
 def test_dimension_property(embedding_model):
@@ -200,7 +189,5 @@ def test_repr(embedding_model):
     assert repr_str.startswith("JinaEmbeddings")
 
 
-# Optional: Add main execution block if needed for direct running
 if __name__ == "__main__":
-    # Add '-v' for verbose output, '-s' to show prints
     pytest.main([__file__, '-v', '-s'])

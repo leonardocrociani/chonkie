@@ -76,7 +76,7 @@ class JinaEmbeddings(BaseEmbeddings):
     def embed(self, texts: List[str]) -> NDArray[np.float32]:
         """Embed the first text in a list using the Jina embeddings API.
 
-        Note: This method processes only the first text even if the list contains multiple texts.
+        Note: This method processes only the first text even if the list contains multiple texts, it is for embedding single text.
 
         Args:
             texts (List[str]): List containing the text(s) to embed.
@@ -184,11 +184,10 @@ class JinaEmbeddings(BaseEmbeddings):
             float: Cosine similarity between u and v.
 
         """
-        norm_u = np.linalg.norm(u)
-        norm_v = np.linalg.norm(v)
-        if norm_u == 0 or norm_v == 0:
-            return 0.0  # or raise an exception, depending on desired behavior
-        return float(np.dot(u, v) / (norm_u * norm_v))    
+        return np.divide(
+            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=float
+        )
+
     def count_tokens(self, text: str, tokenizer: str = 'cl100k_base') -> int:
         """Count tokens in text using the Jina segmenter.
 
