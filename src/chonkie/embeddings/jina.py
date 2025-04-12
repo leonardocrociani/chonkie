@@ -28,14 +28,15 @@ class JinaEmbeddings(BaseEmbeddings):
         """Initialize Jina embeddings.
 
         Args:
-            model: Name of the Jina embedding model to use
-            task: Task for the Jina model
-            late_chunking: Whether to use late chunking
-            embedding_type: Type of the embedding
-            dimensions: Dimensions of the embedding
-            api_key: Jina API key (if not provided, looks for JINA_API_KEY env var)
-            batch_size: Maximum number of texts to embed in one API call
-            max_retries: Maximum number of retries for API calls
+            model (str): Name of the Jina embedding model to use.
+            task (str): Task for the Jina model.
+            late_chunking (bool): Whether to use late chunking.
+            embedding_type (str): Type of the embedding.
+            dimensions (int): Dimensions of the embedding.
+            api_key (Optional[str]): Jina API key (if not provided, looks for
+                JINA_API_KEY env var).
+            batch_size (int): Maximum number of texts to embed in one API call.
+            max_retries (int): Maximum number of retries for API calls.
 
         """
         super().__init__()
@@ -46,28 +47,42 @@ class JinaEmbeddings(BaseEmbeddings):
         self.embedding_type = embedding_type
         self._batch_size = batch_size
         self._max_retries = max_retries
-        
+
         self.api_key = self._get_api_key(api_key)        
         self.url = 'https://api.jina.ai/v1/embeddings'
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}"
+            "Authorization": f"Bearer {self.api_key}"  # Use the stored key
         }
+
     def _get_api_key(self, api_key: Optional[str] = None) -> str:
-        api_key = api_key or os.getenv("JINA_API_KEY")
-        if not api_key:
+        """Retrieve the Jina API key from parameter or environment variable.
+
+        Args:
+            api_key (Optional[str]): The API key passed directly.
+
+        Returns:
+            str: The validated Jina API key.
+
+        Raises:
+            ValueError: If the API key is not provided either via the parameter
+                or the JINA_API_KEY environment variable.
+
+        """
+        key = api_key or os.getenv("JINA_API_KEY")
+        if not key:
             raise ValueError("Jina API key is required. Provide via api_key parameter or JINA_API_KEY environment variable")
-        return api_key
+        return key
     def embed(self, texts: List[str]) -> NDArray[np.float32]:
         """Embed the first text in a list using the Jina embeddings API.
 
         Note: This method processes only the first text even if the list contains multiple texts.
 
         Args:
-            texts: List containing the text(s) to embed.
+            texts (List[str]): List containing the text(s) to embed.
 
         Returns:
-            Numpy array with the embedding for the first text in the input list.
+            NDArray[np.float32]: Numpy array with the embedding for the first text.
 
         Raises:
             ValueError: If the input `texts` list is empty.
@@ -104,10 +119,10 @@ class JinaEmbeddings(BaseEmbeddings):
         """Embed multiple texts using the Jina embeddings API.
 
         Args:
-            texts: List of texts to embed.
+            texts (List[str]): List of texts to embed.
 
         Returns:
-            List of numpy arrays with embeddings for each text.
+            List[NDArray[np.float32]]: List of numpy arrays with embeddings for each text.
 
         Raises:
             requests.exceptions.HTTPError: If the initial API request for a batch fails
@@ -145,8 +160,14 @@ class JinaEmbeddings(BaseEmbeddings):
             except requests.exceptions.HTTPError as e:
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
+                    print(f"Fallback to single embeddings due to: {str(e)}")
                     # Fall back to single embeddings
-                    single_embeddings = [self.embed([t]) if isinstance(t, str) else np.array([]) for idx, t in enumerate(batch)] # or raise an error
+                    single_embeddings = []
+                    for t in batch:
+                        if isinstance(t, str):
+                            single_embeddings.append(self.embed([t]))
+                        else:
+                            raise ValueError(f"Invalid text type found in batch: {type(t)}")
                     all_embeddings.extend(single_embeddings)
                 else:
                     raise ValueError(f"Failed to embed text: {batch} due to: {e}")                    
@@ -156,11 +177,11 @@ class JinaEmbeddings(BaseEmbeddings):
         """Compute cosine similarity between two embeddings.
         
         Args:
-            u: First embedding vector
-            v: Second embedding vector
-            
+            u (NDArray[np.float32]): First embedding vector.
+            v (NDArray[np.float32]): Second embedding vector.
+
         Returns:
-            Cosine similarity between u and v (float between -1 and 1)
+            float: Cosine similarity between u and v.
 
         """
         norm_u = np.linalg.norm(u)
@@ -172,11 +193,11 @@ class JinaEmbeddings(BaseEmbeddings):
         """Count tokens in text using the Jina segmenter.
 
         Args:
-            text: The input text.
-            tokenizer: The tokenizer model to use (default: 'cl100k_base').
+            text (str): The input text.
+            tokenizer (str): The tokenizer model to use.
 
         Returns:
-            The number of tokens in the text.
+            int: The number of tokens in the text.
 
         Raises:
             requests.exceptions.RequestException: If the API request fails after retries.
@@ -207,18 +228,41 @@ class JinaEmbeddings(BaseEmbeddings):
                 warnings.warn(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
 
     def count_tokens_batch(self, texts: List[str]) -> List[int]:
-        """Count tokens in multiple texts."""
+        """Count tokens in multiple texts.
+
+        Args:
+            texts (List[str]): List of texts to count tokens for.
+
+        Returns:
+            List[int]: A list containing the token count for each text.
+
+        """
         return [self.count_tokens(text) for text in texts]
     
     @property
     def dimension(self) -> int:
-        """Return the dimensions of the embeddings."""
+        """Return the dimensions of the embeddings.
+
+        Returns:
+            int: The embedding dimension size.
+
+        """
         return self._dimension
         
     def get_tokenizer_or_token_counter(self):
-        """Get the tokenizer or token counter for the embeddings."""
+        """Get the tokenizer or token counter for the embeddings.
+
+        Returns:
+            Callable[[str], int]: The method used for counting tokens.
+
+        """
         return self.count_tokens
     
     def __repr__(self) -> str:
-        """Return a string representation of the JinaEmbeddings instance."""
+        """Return a string representation of the JinaEmbeddings instance.
+
+        Returns:
+            str: A string representation of the instance.
+
+        """
         return f"JinaEmbeddings(model={self.model}, dimensions={self._dimension})"
