@@ -47,17 +47,17 @@ class JinaEmbeddings(BaseEmbeddings):
         self._batch_size = batch_size
         self._max_retries = max_retries
         
-        api_key = api_key or os.getenv("JINA_API_KEY")
-        if not api_key:
-            raise ValueError("Jina API key is required. Provide via api_key parameter or JINA_API_KEY environment variable")
-        self.api_key = api_key
-        
+        self.api_key = self._get_api_key(api_key)        
         self.url = 'https://api.jina.ai/v1/embeddings'
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}"
         }
-    
+    def _get_api_key(self, api_key: Optional[str] = None) -> str:
+        api_key = api_key or os.getenv("JINA_API_KEY")
+        if not api_key:
+            raise ValueError("Jina API key is required. Provide via api_key parameter or JINA_API_KEY environment variable")
+        return api_key
     def embed(self, texts: List[str]) -> NDArray[np.float32]:
         """Embed the first text in a list using the Jina embeddings API.
 
@@ -68,9 +68,11 @@ class JinaEmbeddings(BaseEmbeddings):
 
         Returns:
             Numpy array with the embedding for the first text in the input list.
+
         Raises:
             ValueError: If the input `texts` list is empty.
             requests.exceptions.RequestException: If the API request fails after retries.
+
         """
         if not texts:
             raise ValueError("At least one text must be provided")
@@ -114,6 +116,7 @@ class JinaEmbeddings(BaseEmbeddings):
                 to single embedding fails for a text within a failed batch.
             requests.exceptions.RequestException: If an API request fails after all retries
                 (either batch or single fallback).
+
         """
         if not texts:
             return []
@@ -143,7 +146,7 @@ class JinaEmbeddings(BaseEmbeddings):
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
                     # Fall back to single embeddings
-                    single_embeddings = [self.embed([t]) if isinstance(t, str) else np.array([]) for t in batch] # or raise an error                    
+                    single_embeddings = [self.embed([t]) if isinstance(t, str) else np.array([]) for idx, t in enumerate(batch)] # or raise an error
                     all_embeddings.extend(single_embeddings)
                 else:
                     raise ValueError(f"Failed to embed text: {batch} due to: {e}")                    
@@ -177,6 +180,7 @@ class JinaEmbeddings(BaseEmbeddings):
 
         Raises:
             requests.exceptions.RequestException: If the API request fails after retries.
+
         """
         if not text:
             return 0
@@ -184,7 +188,7 @@ class JinaEmbeddings(BaseEmbeddings):
         url = 'https://api.jina.ai/v1/segment'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.api_key}'
+            'Authorization': f'Bearer {self._get_api_key()}'
         }
 
         data = {

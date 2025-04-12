@@ -20,6 +20,7 @@ def embedding_model():
 
     Returns:
         JinaEmbeddings: An initialized JinaEmbeddings instance or skips if key missing.
+
     """
     api_key = os.environ.get("JINA_API_KEY")
     if not api_key:
@@ -33,6 +34,7 @@ def sample_text():
 
     Returns:
         str: A sample text string.
+
     """
     return "This is a sample text for testing Jina embeddings."
 
@@ -42,6 +44,7 @@ def sample_texts():
 
     Returns:
         List[str]: A list of sample text strings.
+
     """
     return [
         "This is the first sample text for Jina.",
@@ -63,6 +66,7 @@ def test_initialization_with_env_key(embedding_model):
 
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
+
     """
     assert embedding_model.model == "jina-embeddings-v3" # Check default model
     assert embedding_model.task == "text-matching"
@@ -81,6 +85,7 @@ def test_embed_single_text(embedding_model, sample_text):
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
         sample_text: The single sample text fixture.
+
     """
     # Note: The JinaEmbeddings.embed method expects List[str].
     # Passing a list with one item as required by the signature.
@@ -96,6 +101,7 @@ def test_embed_batch_texts_live(embedding_model, sample_texts):
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
         sample_texts: The batch of sample texts fixture.
+
     """
     # This test might fail or behave unexpectedly due to issues in the embed_batch implementation.
     embeddings = embedding_model.embed_batch(sample_texts)
@@ -113,6 +119,7 @@ def test_count_tokens_single_text(embedding_model, sample_text):
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
         sample_text: The single sample text fixture.
+
     """
     token_count = embedding_model.count_tokens(sample_text)
     assert isinstance(token_count, int)
@@ -125,6 +132,7 @@ def test_count_tokens_batch_texts(embedding_model, sample_texts):
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
         sample_texts: The batch of sample texts fixture.
+
     """
     # This calls count_tokens iteratively, so relies on the live API multiple times
     token_counts = embedding_model.count_tokens_batch(sample_texts)
@@ -140,6 +148,7 @@ def test_similarity(embedding_model, sample_texts):
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
         sample_texts: The batch of sample texts fixture.
+
     """
     if len(sample_texts) < 2:
         pytest.skip("Need at least two sample texts for similarity test")
@@ -160,6 +169,7 @@ def test_dimension_property(embedding_model):
 
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
+
     """
     assert isinstance(embedding_model.dimension, int)
     assert embedding_model.dimension == 1024 # Check default dimension
@@ -170,6 +180,7 @@ def test_get_tokenizer_or_token_counter(embedding_model):
 
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
+
     """
     counter_func = embedding_model.get_tokenizer_or_token_counter()
     assert callable(counter_func)
@@ -182,6 +193,7 @@ def test_repr(embedding_model):
 
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
+
     """
     repr_str = repr(embedding_model)
     assert isinstance(repr_str, str)
