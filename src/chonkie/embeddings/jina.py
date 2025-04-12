@@ -209,7 +209,7 @@ class JinaEmbeddings(BaseEmbeddings):
         url = 'https://api.jina.ai/v1/segment'
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self._get_api_key()}'
+            'Authorization': f'Bearer {self.api_key}'
         }
 
         data = {
