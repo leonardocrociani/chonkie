@@ -82,8 +82,8 @@ def test_embed_single_text(embedding_model, sample_text):
         embedding_model: The JinaEmbeddings instance fixture.
         sample_text: The single sample text fixture.
     """
-    # Note: The JinaEmbeddings.embed method expects List[str] but seems designed for one item.
-    # Passing a list with one item.
+    # Note: The JinaEmbeddings.embed method expects List[str].
+    # Passing a list with one item as required by the signature.
     embedding = embedding_model.embed([sample_text])
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
@@ -101,7 +101,7 @@ def test_embed_batch_texts_live(embedding_model, sample_texts):
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
     # The current implementation might return an empty list or raise errors.
-    # If it works, it should return a list of dicts like {'embedding': [...], 'index': ...}
+    # If it works, it should return a list of numpy arrays.
     if embeddings: # Only check contents if the list is not empty
         assert len(embeddings) == len(sample_texts)
 
@@ -144,8 +144,8 @@ def test_similarity(embedding_model, sample_texts):
     if len(sample_texts) < 2:
         pytest.skip("Need at least two sample texts for similarity test")
 
-    # Embed only the first two texts using the single embed method (assuming it works for one text)
-    # Using embed_batch might be unreliable due to implementation issues.
+    # Embed only the first two texts using the embed method.
+    # Using embed_batch might be unreliable due to potential implementation issues noted elsewhere.
     embedding1 = embedding_model.embed([sample_texts[0]])
     embedding2 = embedding_model.embed([sample_texts[1]])
 

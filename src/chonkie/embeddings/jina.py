@@ -59,14 +59,15 @@ class JinaEmbeddings(BaseEmbeddings):
         }
     
     def embed(self, texts: List[str]) -> NDArray[np.float32]:
-        """Embed a list of texts using the Jina embeddings API.
+        """Embed the first text in a list using the Jina embeddings API.
+
+        Note: This method processes only the first text even if the list contains multiple texts.
 
         Args:
-            texts: List of texts to embed (even if just one text).
+            texts: List containing the text(s) to embed.
 
         Returns:
-            Numpy array with the embeddings (for first text if multiple provided).
-
+            Numpy array with the embedding for the first text in the input list.
         Raises:
             ValueError: If the input `texts` list is empty.
             requests.exceptions.RequestException: If the API request fails after retries.
@@ -88,7 +89,10 @@ class JinaEmbeddings(BaseEmbeddings):
                 response = requests.post(self.url, json=data, headers=self.headers)
                 response.raise_for_status()
                 vector = response.json()
-                return np.array(vector['data'][0]['embedding'], dtype=np.float32)
+                data = vector.get('data')
+                if not data or not data[0] or 'embedding' not in data[0]:
+                    raise ValueError(f"Unexpected API response format: {vector}")
+                return np.array(data[0]['embedding'], dtype=np.float32)            
             except requests.exceptions.RequestException as e:
                 if attempt == self._max_retries - 1:
                     raise
@@ -104,8 +108,12 @@ class JinaEmbeddings(BaseEmbeddings):
             List of numpy arrays with embeddings for each text.
 
         Raises:
-            requests.exceptions.HTTPError: If a batch request fails and fallback to
-                single embedding also fails for a text within that batch.
+            requests.exceptions.HTTPError: If the initial API request for a batch fails
+                and the batch contained only one text.
+            ValueError: If the API response format is unexpected, or if the fallback
+                to single embedding fails for a text within a failed batch.
+            requests.exceptions.RequestException: If an API request fails after all retries
+                (either batch or single fallback).
         """
         if not texts:
             return []
@@ -135,11 +143,10 @@ class JinaEmbeddings(BaseEmbeddings):
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
                     # Fall back to single embeddings
-                    single_embeddings = [self.embed([text]) for text in batch]
+                    single_embeddings = [self.embed([t]) if isinstance(t, str) else np.array([]) for t in batch] # or raise an error                    
                     all_embeddings.extend(single_embeddings)
                 else:
-                    raise
-                    
+                    raise ValueError(f"Failed to embed text: {batch} due to: {e}")                    
         return all_embeddings
 
     def similarity(self, u: NDArray[np.float32], v: NDArray[np.float32]) -> float:
@@ -153,8 +160,11 @@ class JinaEmbeddings(BaseEmbeddings):
             Cosine similarity between u and v (float between -1 and 1)
 
         """
-        return float(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
-    
+        norm_u = np.linalg.norm(u)
+        norm_v = np.linalg.norm(v)
+        if norm_u == 0 or norm_v == 0:
+            return 0.0  # or raise an exception, depending on desired behavior
+        return float(np.dot(u, v) / (norm_u * norm_v))    
     def count_tokens(self, text: str, tokenizer: str = 'cl100k_base') -> int:
         """Count tokens in text using the Jina segmenter.
 
