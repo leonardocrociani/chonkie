@@ -60,13 +60,16 @@ class JinaEmbeddings(BaseEmbeddings):
     
     def embed(self, texts: List[str]) -> NDArray[np.float32]:
         """Embed a list of texts using the Jina embeddings API.
-        
-        Args:
-            texts: List of texts to embed (even if just one text)
-            
-        Returns:
-            Numpy array with the embeddings (for first text if multiple provided)
 
+        Args:
+            texts: List of texts to embed (even if just one text).
+
+        Returns:
+            Numpy array with the embeddings (for first text if multiple provided).
+
+        Raises:
+            ValueError: If the input `texts` list is empty.
+            requests.exceptions.RequestException: If the API request fails after retries.
         """
         if not texts:
             raise ValueError("At least one text must be provided")
@@ -93,13 +96,16 @@ class JinaEmbeddings(BaseEmbeddings):
     
     def embed_batch(self, texts: List[str]) -> List[NDArray[np.float32]]:
         """Embed multiple texts using the Jina embeddings API.
-        
-        Args:
-            texts: List of texts to embed
-            
-        Returns:
-            List of numpy arrays with embeddings for each text
 
+        Args:
+            texts: List of texts to embed.
+
+        Returns:
+            List of numpy arrays with embeddings for each text.
+
+        Raises:
+            requests.exceptions.HTTPError: If a batch request fails and fallback to
+                single embedding also fails for a text within that batch.
         """
         if not texts:
             return []
@@ -150,7 +156,18 @@ class JinaEmbeddings(BaseEmbeddings):
         return float(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
     
     def count_tokens(self, text: str, tokenizer: str = 'cl100k_base') -> int:
-        """Count tokens in text using the Jina segmenter."""
+        """Count tokens in text using the Jina segmenter.
+
+        Args:
+            text: The input text.
+            tokenizer: The tokenizer model to use (default: 'cl100k_base').
+
+        Returns:
+            The number of tokens in the text.
+
+        Raises:
+            requests.exceptions.RequestException: If the API request fails after retries.
+        """
         if not text:
             return 0
             
