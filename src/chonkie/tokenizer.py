@@ -464,17 +464,9 @@ class Tokenizer:
         elif self._backend == "tiktoken":
             return [len(token_list) for token_list in self.tokenizer.encode_batch(texts)]  # type: ignore
         elif self._backend == "transformers":
-            return [
-                len(token_list)
-                for token_list in self.tokenizer.batch_encode_plus(  # type: ignore
-                    texts, add_special_tokens=False
-                )["input_ids"]
-            ]
+            return [len(token_list) for token_list in self.tokenizer.batch_encode_plus(texts, add_special_tokens=False)["input_ids"]]  # type: ignore
         elif self._backend == "tokenizers":
-            return [
-                len(token_list)
-                for token_list in [t.ids for t in self.tokenizer.encode_batch(texts)]  # type: ignore
-            ]
+            return [len(t.ids) for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)]  # type: ignore
         elif self._backend == "callable":
             return [self.tokenizer(text) for text in texts]  # type: ignore
 
