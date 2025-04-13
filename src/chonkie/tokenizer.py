@@ -397,7 +397,6 @@ class Tokenizer:
             return self.tokenizer(text)  # type: ignore
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
-    ### Batch Functions ###
     def encode_batch(self, texts: Sequence[str]) -> Sequence[Sequence[int]]:
         """Batch encode a list of texts into tokens.
 
