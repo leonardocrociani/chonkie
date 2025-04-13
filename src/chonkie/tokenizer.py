@@ -411,7 +411,7 @@ class Tokenizer:
         if self._backend == "chonkie":
             return self.tokenizer.encode_batch(texts)  # type: ignore
         elif self._backend == "tiktoken":
-            return self.tokenizer.encode_batch(list(texts))  # type: ignore
+            return self.tokenizer.encode_batch(texts)  # type: ignore
         elif self._backend == "transformers":
             encoded = self.tokenizer.batch_encode_plus(texts, add_special_tokens=False)  # type: ignore
             return encoded["input_ids"]  # type: ignore
