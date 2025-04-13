@@ -7,6 +7,7 @@ from typing import List, Optional
 import numpy as np
 import requests
 from numpy.typing import NDArray
+from transformers import AutoTokenizer
 
 from .base import BaseEmbeddings
 
@@ -14,13 +15,16 @@ from .base import BaseEmbeddings
 class JinaEmbeddings(BaseEmbeddings):
     """Jina embeddings implementation using their API."""
 
+    AVAILABLE_MODELS = {
+        "jina-embeddings-v3": 1024 
+    }
+
     def __init__(
             self,
             model: str = "jina-embeddings-v3",
             task: str = "text-matching",
             late_chunking: bool = True,
             embedding_type: str = "float",
-            dimensions: int = 1024,
             api_key: Optional[str] = None,
             batch_size: int = 128,
             max_retries: int = 3
@@ -32,7 +36,6 @@ class JinaEmbeddings(BaseEmbeddings):
             task (str): Task for the Jina model.
             late_chunking (bool): Whether to use late chunking.
             embedding_type (str): Type of the embedding.
-            dimensions (int): Dimensions of the embedding.
             api_key (Optional[str]): Jina API key (if not provided, looks for
                 JINA_API_KEY env var).
             batch_size (int): Maximum number of texts to embed in one API call.
@@ -40,19 +43,25 @@ class JinaEmbeddings(BaseEmbeddings):
 
         """
         super().__init__()
+
+        if model not in self.AVAILABLE_MODELS:
+            raise ValueError(
+                f"Model {model} not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}"
+            )
+
         self.model = model
         self.task = task
         self.late_chunking = late_chunking
-        self._dimension = dimensions
+        self._dimension = self.AVAILABLE_MODELS[model]
         self.embedding_type = embedding_type
         self._batch_size = batch_size
         self._max_retries = max_retries
-
+        self._tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v3')
         self.api_key = self._get_api_key(api_key)        
         self.url = 'https://api.jina.ai/v1/embeddings'
         self.headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"  # Use the stored key
+            "Authorization": f"Bearer {self.api_key}"
         }
 
     def _get_api_key(self, api_key: Optional[str] = None) -> str:
@@ -97,7 +106,6 @@ class JinaEmbeddings(BaseEmbeddings):
             "task": self.task,
             "late_chunking": self.late_chunking,
             "embedding_type": self.embedding_type,
-            "dimensions": self._dimension,
             "input": texts
         }
 
@@ -144,7 +152,6 @@ class JinaEmbeddings(BaseEmbeddings):
                 "task": self.task,
                 "late_chunking": self.late_chunking,
                 "embedding_type": self.embedding_type,
-                "dimensions": self._dimension,
                 "input": batch
             }
             
@@ -160,7 +167,7 @@ class JinaEmbeddings(BaseEmbeddings):
             except requests.exceptions.HTTPError as e:
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
-                    print(f"Fallback to single embeddings due to: {str(e)}")
+                    warnings.warn(f"Fallback to single embeddings due to: {str(e)}")
                     # Fall back to single embeddings
                     single_embeddings = []
                     for t in batch:
@@ -188,43 +195,21 @@ class JinaEmbeddings(BaseEmbeddings):
             np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=float
         )
 
-    def count_tokens(self, text: str, tokenizer: str = 'cl100k_base') -> int:
-        """Count tokens in text using the Jina segmenter.
+    def count_tokens(self, text: str) -> int:
+        """Count the number of tokens in the input text using Jina's tokenizer.
 
         Args:
-            text (str): The input text.
-            tokenizer (str): The tokenizer model to use.
-
+            text (str): Input text to tokenize. Leading/trailing whitespace is ignored.
+ 
         Returns:
-            int: The number of tokens in the text.
-
-        Raises:
-            requests.exceptions.RequestException: If the API request fails after retries.
+            int: Number of tokens (using the same tokenization rules as the embedding model).
 
         """
-        if not text:
+        if not text.strip():
             return 0
-            
-        url = 'https://api.jina.ai/v1/segment'
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {self.api_key}'
-        }
 
-        data = {
-            "content": text,
-            "tokenizer": tokenizer
-        }
-        
-        for attempt in range(self._max_retries):
-            try:
-                response = requests.post(url, headers=headers, json=data)
-                response.raise_for_status()
-                return response.json()['num_tokens']
-            except requests.exceptions.RequestException as e:
-                if attempt == self._max_retries - 1:
-                    raise
-                warnings.warn(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
+        tokens = self._tokenizer.tokenize(text)
+        return len(tokens)
 
     def count_tokens_batch(self, texts: List[str]) -> List[int]:
         """Count tokens in multiple texts.
@@ -249,14 +234,14 @@ class JinaEmbeddings(BaseEmbeddings):
         return self._dimension
         
     def get_tokenizer_or_token_counter(self):
-        """Get the tokenizer or token counter for the embeddings.
+        """Get the tokenizer instance used by the embeddings model.
 
         Returns:
-            Callable[[str], int]: The method used for counting tokens.
+            PreTrainedTokenizerFast: The Hugging Face tokenizer instance.
 
         """
-        return self.count_tokens
-    
+        return self._tokenizer
+
     def __repr__(self) -> str:
         """Return a string representation of the JinaEmbeddings instance.
 

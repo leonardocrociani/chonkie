@@ -1,12 +1,9 @@
 """Test suite for JinaEmbeddings."""
 import os
-import sys
 
 import numpy as np
 import pytest
-
-# Ensure the src directory is in the path for imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../src')))
+from transformers import PreTrainedTokenizerFast
 
 from chonkie.embeddings.jina import JinaEmbeddings
 
@@ -65,7 +62,7 @@ def test_initialization_with_env_key(embedding_model):
         embedding_model: The JinaEmbeddings instance fixture.
 
     """
-    assert embedding_model.model == "jina-embeddings-v3" # Check default model
+    assert embedding_model.model == "jina-embeddings-v3"
     assert embedding_model.task == "text-matching"
     assert embedding_model.late_chunking is True
     assert embedding_model.embedding_type == "float"
@@ -163,18 +160,34 @@ def test_dimension_property(embedding_model):
     assert isinstance(embedding_model.dimension, int)
     assert embedding_model.dimension == 1024 # Check default dimension
 
+
+
 @skip_if_no_key
-def test_get_tokenizer_or_token_counter(embedding_model):
-    """Test the get_tokenizer_or_token_counter method.
+def test_get_tokenizer_or_token_counter(embedding_model, sample_text):
+    """Test get_tokenizer_or_token_counter returns the correct tokenizer instance.
 
     Args:
         embedding_model: The JinaEmbeddings instance fixture.
+        sample_text: The single sample text fixture.
 
     """
-    counter_func = embedding_model.get_tokenizer_or_token_counter()
-    assert callable(counter_func)
-    # Check if it returns the count_tokens method
-    assert counter_func.__func__ is JinaEmbeddings.count_tokens
+    tokenizer_obj = embedding_model.get_tokenizer_or_token_counter()
+
+    assert tokenizer_obj is embedding_model._tokenizer
+
+    assert isinstance(tokenizer_obj, PreTrainedTokenizerFast)
+
+    tokens = tokenizer_obj.tokenize(sample_text)
+    assert tokens is not None
+    assert isinstance(tokens, list)
+    if len(sample_text.strip()) > 0:
+        assert len(tokens) > 0
+        assert all(isinstance(token, str) for token in tokens)
+    else:
+        assert len(tokens) == 0 
+
+    expected_token_count_via_method = embedding_model.count_tokens(sample_text)
+    assert len(tokens) == expected_token_count_via_method
 
 @skip_if_no_key
 def test_repr(embedding_model):
