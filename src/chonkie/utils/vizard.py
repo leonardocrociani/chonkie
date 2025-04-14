@@ -148,7 +148,7 @@ class Visualizer:
         """Print the chunks to the terminal, with rich highlights."""
         # Check if there are any chunks to visualize
         if not chunks: 
-            print("No chunks to visualize.")
+            self.console.print("No chunks to visualize.")
             return
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
