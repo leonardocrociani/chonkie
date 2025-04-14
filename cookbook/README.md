@@ -42,6 +42,7 @@ Want to add your project or integration to the cookbook? Check out our [contribu
 
 ---
 
+
 <div align='center'>
 
 Need help? Join our [Discord community](https://discord.gg/rYYp6DC4cv)!
