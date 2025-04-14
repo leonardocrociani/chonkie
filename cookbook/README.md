@@ -10,7 +10,7 @@ _A collection of examples, tutorials, and projects using Chonkie_
 
 | Tutorial | Description | Try it |
 |----------|-------------|-----------------|
-| Recursive Chunking for PDF/Markdown Documents | A quick look at how you can use Chonkie's RecursiveChunker to chunk your PDF/Markdown documents and build a RAG pipeline over it! | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/bhavnicksm/chonkie/blob/main/cookbook/tutorials/Chonkie_RecursiveChunker_for_PDF_and_Markdown.ipynb) |
+| Recursive Chunking for PDF/Markdown Documents | A quick look at how you can use Chonkie's RecursiveChunker to chunk your PDF/Markdown documents and build a RAG pipeline over it! | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chonkie-inc/chonkie/blob/main/cookbook/tutorials/Chonkie_RecursiveChunker_for_PDF_and_Markdown.ipynb) |
 
 ## 🔌 Community Integrations
 
