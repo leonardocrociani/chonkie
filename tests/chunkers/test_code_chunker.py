@@ -1,3 +1,4 @@
+"""Test the CodeChunker class."""
 import pytest
 
 from chonkie.chunker.code import CodeChunker
