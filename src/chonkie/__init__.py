@@ -20,6 +20,7 @@ from .embeddings import (
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
     Chunk,
+    CodeChunk,
     Context,
     LateChunk,
     RecursiveChunk,
@@ -59,6 +60,7 @@ __all__ += [
     "Sentence",
     "SemanticSentence",
     "LateChunk",
+    "CodeChunk",
 ]
 
 # Add all tokenizer classes to __all__
