@@ -8,8 +8,6 @@ from typing import List, Optional, Union
 
 from chonkie.types import Chunk
 
-
-
 # Add the theme for the Visualizer
 # Pastel colored rainbow theme
 PASTEL_THEME = [
