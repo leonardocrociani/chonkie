@@ -4,6 +4,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
+import warnings
 from bisect import bisect_left
 from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
@@ -139,7 +140,6 @@ class CodeChunker(BaseChunker):
 
 
         cumulative_group_token_counts = list(accumulate([0] + group_token_counts))
-        # print(f"Initial Groups: {len(node_groups)}, Counts: {group_token_counts}, Cumulative: {cumulative_group_token_counts}") # Debugging Statement
         
         merged_node_groups: List[List["Node"]] = [] # Explicit type hint
         merged_token_counts: List[int] = []      # Explicit type hint
@@ -189,7 +189,6 @@ class CodeChunker(BaseChunker):
             # Move the position marker to the start of the next potential merged group
             pos = index
 
-        # print(f"Node: {node.type}, Merged Groups: {len(merged_node_groups)}, Merged Counts: {merged_token_counts}") # Debugging
         return (merged_node_groups, merged_token_counts)
 
     def _get_texts_from_node_groups(self,
@@ -229,10 +228,10 @@ class CodeChunker(BaseChunker):
 
             # Basic validation for byte offsets
             if start_byte > end_byte:
-                print(f"Warning: Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}")
+                warnings.warn(f"Warning: Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}")
                 continue
             if start_byte < 0 or end_byte > len(original_text_bytes):
-                 print(f"Warning: Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}")
+                 warnings.warn(f"Warning: Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}")
                  continue
                 
             # Add the gap bytes if this is not the last node_group
@@ -247,7 +246,7 @@ class CodeChunker(BaseChunker):
                 text = chunk_bytes.decode("utf-8", errors="ignore") # Or 'replace'
                 chunk_texts.append(text)
             except Exception as e:
-                print(f"Warning: Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}")
+                warnings.warn(f"Warning: Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}")
                 # Append an empty string or placeholder if decoding fails
                 chunk_texts.append("")                
 
