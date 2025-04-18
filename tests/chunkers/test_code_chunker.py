@@ -60,7 +60,7 @@ def test_code_chunker_initialization() -> None:
 
 def test_code_chunker_chunking_python(python_code: str) -> None:
     """Test basic chunking of Python code."""
-    chunker = CodeChunker(language="python", chunk_size=50)
+    chunker = CodeChunker(language="python", chunk_size=50, include_nodes=True)
     chunks = chunker.chunk(python_code)
 
     assert isinstance(chunks, list)

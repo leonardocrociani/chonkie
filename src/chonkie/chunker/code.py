@@ -6,22 +6,55 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.tokenizer import Tokenizer
 from chonkie.types.code import CodeChunk
 
+if TYPE_CHECKING:
+    try: 
+        from tree_sitter import Node, Parser, Tree
+        from tree_sitter_language_pack import SupportedLanguage
+    except ImportError:
+        Node = Any
+        Parser = Any
+        Tree = Any
+        SupportedLanguage = Any
+
 
 class CodeChunker(BaseChunker):
-    """Chunker that recursively splits the code based on code context."""
+    """Chunker that recursively splits the code based on code context.
+    
+    Args:
+        tokenizer_or_token_counter: The tokenizer or token counter to use.
+        chunk_size: The size of the chunks to create.
+        language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
+        include_nodes: Whether to include the nodes in the returned chunks.
+        return_type: The type of the return value.
+
+    """
 
     def __init__(self,
                  tokenizer_or_token_counter: Union[str, List, Any] = "gpt2",
                  chunk_size: int = 512,
-                 language: str = "python",
+                 language: "SupportedLanguage" = "python",
+                 include_nodes: bool = False,
                  return_type: Literal["chunks", "texts"] = "chunks") -> None:
-        """Initialize a CodeChunker object."""
+        """Initialize a CodeChunker object.
+        
+        Args:
+            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            chunk_size: The size of the chunks to create.
+            language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
+            include_nodes: Whether to include the nodes in the returned chunks.
+            return_type: The type of the return value.
+
+        Raises:
+            ImportError: If tree-sitter and tree-sitter-language-pack are not installed.
+            ValueError: If the language is not supported.
+
+        """
         # Lazy import dependencies to avoid importing them when not needed
         self._import_dependencies()
 
@@ -29,9 +62,10 @@ class CodeChunker(BaseChunker):
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
         self.chunk_size = chunk_size
         self.return_type = return_type
+        self.include_nodes = include_nodes
 
         # TODO: Check if this is one of the supported languages
-        self.language = language 
+        self.language = language
 
         # Initialize a Parser based on the language
         self.parser: Parser = get_parser(language) 
@@ -40,20 +74,20 @@ class CodeChunker(BaseChunker):
         """Import the dependencies for the CodeChunker."""
         # Lazy import dependencies to avoid importing them when not needed
         try:
-            global Node, Parser, Tree, get_parser
+            global Node, Parser, Tree, get_parser, SupportedLanguage
             from tree_sitter import Node, Parser, Tree
-            from tree_sitter_language_pack import get_parser
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
         except ImportError:
             raise ImportError("tree-sitter and tree-sitter-language-pack are not installed" + 
                              "Please install them using `pip install chonkie[code]`.")
 
-    def _merge_node_groups(self, node_groups: List[List[Node]]) -> List[Node]:
+    def _merge_node_groups(self, node_groups: List[List["Node"]]) -> List["Node"]:
         merged_node_group = []
         for group in node_groups: 
             merged_node_group.extend(group)
         return merged_node_group
         
-    def _group_child_nodes(self, node: Node) -> Tuple[List[List[Node]], List[int]]:
+    def _group_child_nodes(self, node: "Node") -> Tuple[List[List["Node"]], List[int]]:
         """Group the nodes together based on their token_counts."""
         # Some edge cases to break the recursion
         if len(node.children) == 0:
@@ -65,7 +99,7 @@ class CodeChunker(BaseChunker):
 
         # Have a current group and a current token count to keep track
         current_token_count = 0
-        current_node_group = []
+        current_node_group: List["Node"] = []
         for child in node.children:
             child_text = child.text.decode()
             token_count: int = self.tokenizer.count_tokens(child_text)
@@ -107,7 +141,7 @@ class CodeChunker(BaseChunker):
         cumulative_group_token_counts = list(accumulate([0] + group_token_counts))
         # print(f"Initial Groups: {len(node_groups)}, Counts: {group_token_counts}, Cumulative: {cumulative_group_token_counts}") # Debugging Statement
         
-        merged_node_groups: List[List[Node]] = [] # Explicit type hint
+        merged_node_groups: List[List["Node"]] = [] # Explicit type hint
         merged_token_counts: List[int] = []      # Explicit type hint
         pos = 0
         while pos < len(node_groups):
@@ -159,7 +193,7 @@ class CodeChunker(BaseChunker):
         return (merged_node_groups, merged_token_counts)
 
     def _get_texts_from_node_groups(self,
-                                    node_groups: List[List[Node]],
+                                    node_groups: List[List["Node"]],
                                     original_text_bytes: bytes) -> List[str]:
         """Reconstructs the text for each node group using original byte offsets.
 
@@ -230,11 +264,15 @@ class CodeChunker(BaseChunker):
     def _create_chunks(self,
                        texts: List[str],
                        token_counts: List[int],
-                       node_groups: List[List[Node]]) -> List[CodeChunk]:
+                       node_groups: List[List["Node"]]) -> List[CodeChunk]:
         """Create Code Chunks."""
         chunks = []
         current_index = 0
-        for (token_count, (text, node_group)) in zip(token_counts, zip(texts, node_groups)): 
+        for i in range(len(texts)): 
+            text = texts[i]
+            token_count = token_counts[i]
+            node_group = node_groups[i] if self.include_nodes else None
+
             chunks.append(CodeChunk(text=text, 
                                     start_index=current_index, 
                                     end_index=current_index + len(text),
@@ -250,18 +288,29 @@ class CodeChunker(BaseChunker):
 
         original_text_bytes = text.encode("utf-8") # Store bytes
 
-        # Create the parsing tree for the current code
-        tree: Tree = self.parser.parse(original_text_bytes) # type: ignore
-        root_node: Node = tree.root_node # type: ignore
+        try:
+            # Create the parsing tree for the current code
+            tree: Tree = self.parser.parse(original_text_bytes) # type: ignore
+            root_node: Node = tree.root_node # type: ignore
 
-        # Get the node_groups 
-        node_groups, token_counts = self._group_child_nodes(root_node)
-        texts: List[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
-        
+            # Get the node_groups 
+            node_groups, token_counts = self._group_child_nodes(root_node)
+            texts: List[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
+        finally: 
+            # Clean up the tree and root_node if they are not needed
+            if not self.include_nodes:
+                del tree, root_node
+                node_groups = []
+
         if self.return_type == "texts":
             return texts
         else:
             chunks = self._create_chunks(texts, token_counts, node_groups)
             return chunks 
         
-    
+    def __repr__(self) -> str:
+        """Return the string representation of the CodeChunker."""
+        return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
+                f"chunk_size={self.chunk_size},"
+                f"language={self.language},"
+                f"return_type={self.return_type})")
