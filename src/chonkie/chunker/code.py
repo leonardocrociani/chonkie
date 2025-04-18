@@ -79,8 +79,8 @@ class CodeChunker(BaseChunker):
             from tree_sitter import Node, Parser, Tree
             from tree_sitter_language_pack import SupportedLanguage, get_parser
         except ImportError:
-            raise ImportError("tree-sitter and tree-sitter-language-pack are not installed" + 
-                             "Please install them using `pip install chonkie[code]`.")
+            raise ImportError("tree-sitter and tree-sitter-language-pack are not installed." + 
+                             " Please install them using `pip install chonkie[code]`.")
 
     def _merge_node_groups(self, node_groups: List[List["Node"]]) -> List["Node"]:
         merged_node_group = []
