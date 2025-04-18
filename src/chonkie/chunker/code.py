@@ -8,9 +8,6 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, List, Literal, Tuple, Union
 
-from tree_sitter import Node, Parser, Tree
-from tree_sitter_language_pack import get_parser
-
 from chonkie.chunker.base import BaseChunker
 from chonkie.tokenizer import Tokenizer
 from chonkie.types.code import CodeChunk
@@ -25,13 +22,30 @@ class CodeChunker(BaseChunker):
                  language: str = "python",
                  return_type: Literal["chunks", "texts"] = "chunks") -> None:
         """Initialize a CodeChunker object."""
+        # Lazy import dependencies to avoid importing them when not needed
+        self._import_dependencies()
+
         # Initialize all the values
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
         self.chunk_size = chunk_size
         self.return_type = return_type
 
+        # TODO: Check if this is one of the supported languages
+        self.language = language 
+
         # Initialize a Parser based on the language
-        self.parser: Parser = get_parser(language) # Type hint for parser
+        self.parser: Parser = get_parser(language) 
+
+    def _import_dependencies(self) -> None:
+        """Import the dependencies for the CodeChunker."""
+        # Lazy import dependencies to avoid importing them when not needed
+        try:
+            global Node, Parser, Tree, get_parser
+            from tree_sitter import Node, Parser, Tree
+            from tree_sitter_language_pack import get_parser
+        except ImportError:
+            raise ImportError("tree-sitter and tree-sitter-language-pack are not installed" + 
+                             "Please install them using `pip install chonkie[code]`.")
 
     def _merge_node_groups(self, node_groups: List[List[Node]]) -> List[Node]:
         merged_node_group = []
@@ -166,7 +180,6 @@ class CodeChunker(BaseChunker):
         if not original_text_bytes:
             return [] # Return empty list if original text was empty
 
-        current_end_byte = 0
         for i, group in enumerate(node_groups):
             if not group:
                 # Skip if an empty group was somehow generated
@@ -238,8 +251,8 @@ class CodeChunker(BaseChunker):
         original_text_bytes = text.encode("utf-8") # Store bytes
 
         # Create the parsing tree for the current code
-        tree: Tree = self.parser.parse(original_text_bytes)
-        root_node: Node = tree.root_node
+        tree: Tree = self.parser.parse(original_text_bytes) # type: ignore
+        root_node: Node = tree.root_node # type: ignore
 
         # Get the node_groups 
         node_groups, token_counts = self._group_child_nodes(root_node)
@@ -250,3 +263,5 @@ class CodeChunker(BaseChunker):
         else:
             chunks = self._create_chunks(texts, token_counts, node_groups)
             return chunks 
+        
+    
