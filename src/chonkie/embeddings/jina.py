@@ -21,18 +21,21 @@ from .base import BaseEmbeddings
 class JinaEmbeddings(BaseEmbeddings):
     """Jina embeddings implementation using their API."""
 
-    # TODO: Add more models here as they are supported by the Jina API
     AVAILABLE_MODELS = {
-        "jina-embeddings-v3": 1024 
-    }
+        "jina-embeddings-v3": 1024,
+        "jina-embeddings-v2-base-en": 768,
+        "jina-embeddings-v2-base-es": 768,
+        "jina-embeddings-v2-base-de": 768,
+        "jina-embeddings-v2-base-zh": 768,   
+        "jina-embeddings-v2-base-code": 768,
+        "jina-embeddings-b-en-v1": 768
+    }   
 
     def __init__(
             self,
             model: str = "jina-embeddings-v3",
             task: str = "text-matching",
-            late_chunking: bool = True,
-            embedding_type: str = "float",
-            batch_size: int = 128,
+            batch_size: int = 32,
             max_retries: int = 3,
             api_key: Optional[str] = None
     ):
@@ -67,9 +70,9 @@ class JinaEmbeddings(BaseEmbeddings):
         # Initialize the Jina embeddings model
         self.model = model
         self.task = task
-        self.late_chunking = late_chunking
         self._dimension = self.AVAILABLE_MODELS[model]
-        self.embedding_type = embedding_type
+        self.embedding_type = "float"
+        self.late_chunking = False # Set to False since we don't need it! Chonkie can handle this!
         self._batch_size = batch_size
         self._max_retries = max_retries
         try:
@@ -192,15 +195,14 @@ class JinaEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except requests.exceptions.HTTPError as e:
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
-                    warnings.warn(f"Fallback to single embeddings due to: {str(e)}")
+                    warnings.warn(f"Failed to embed batch: {batch} due to: {e}. Falling back to sequential embedding texts.")
                     # Fall back to single embeddings
                     single_embeddings = []
-                    for t in batch:
-                        if isinstance(t, str):
-                            single_embeddings.append(self.embed([t]))
+                    for text in batch:
+                        if isinstance(text, str):
+                            single_embeddings.append(self.embed(text))
                         else:
-                            raise ValueError(f"Invalid text type found in batch: {type(t)}")
+                            raise ValueError(f"Invalid text type found in batch: {type(text)}")
                     all_embeddings.extend(single_embeddings)
                 else:
                     raise ValueError(f"Failed to embed text: {batch} due to: {e}")                    
