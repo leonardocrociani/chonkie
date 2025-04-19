@@ -176,3 +176,4 @@ EmbeddingsRegistry.register("embed-multilingual-v2.0", CohereEmbeddings)
 
 # Register Jina embeddings
 EmbeddingsRegistry.register("jina", JinaEmbeddings, pattern=r"^jina|^jinaai")
+EmbeddingsRegistry.register("jina-embeddings-v3", JinaEmbeddings)
