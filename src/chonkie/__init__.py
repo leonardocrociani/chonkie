@@ -13,6 +13,7 @@ from .embeddings import (
     AutoEmbeddings,
     BaseEmbeddings,
     CohereEmbeddings,
+    JinaEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
@@ -89,6 +90,7 @@ __all__ += [
     "OpenAIEmbeddings",
     "CohereEmbeddings",
     "AutoEmbeddings",
+    "JinaEmbeddings",
 ]
 
 
