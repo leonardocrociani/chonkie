@@ -6,7 +6,6 @@ from typing import List, cast
 
 import pytest
 import tiktoken
-from datasets import load_dataset
 from tiktoken import Encoding
 from tokenizers import Tokenizer
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
