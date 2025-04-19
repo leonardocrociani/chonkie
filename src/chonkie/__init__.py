@@ -18,6 +18,10 @@ from .embeddings import (
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
 )
+from .refinery import (
+    BaseRefinery,
+    OverlapRefinery,
+)
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
     Chunk,
@@ -93,6 +97,11 @@ __all__ += [
     "JinaEmbeddings",
 ]
 
+# Add all refinery classes to __all__
+__all__ += [
+    "BaseRefinery",
+    "OverlapRefinery"
+]
 
 # Add all utils classes to __all__
 __all__ += [

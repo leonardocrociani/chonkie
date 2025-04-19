@@ -94,7 +94,8 @@ packages = [
     "chonkie.types",
     "chonkie.embeddings",
     "chonkie.cloud",
-    "chonkie.utils"
+    "chonkie.utils",
+    "chonkie.refinery"
 ]
 
 [tool.ruff]
