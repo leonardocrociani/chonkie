@@ -20,6 +20,7 @@ from .embeddings import (
 )
 from .refinery import (
     BaseRefinery,
+    EmbeddingsRefinery,
     OverlapRefinery,
 )
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
@@ -100,7 +101,8 @@ __all__ += [
 # Add all refinery classes to __all__
 __all__ += [
     "BaseRefinery",
-    "OverlapRefinery"
+    "OverlapRefinery",
+    "EmbeddingsRefinery",
 ]
 
 # Add all utils classes to __all__
