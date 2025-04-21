@@ -7,7 +7,6 @@ from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
-
 # TODO: Fix the way that float context size is handled.
 # Currently, it just estimates the context size to token count
 # but it should ideally handle it on a chunk by chunk basis.
