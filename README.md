@@ -29,7 +29,7 @@ Tired of making your gazillionth chunker? Sick of the overhead of large librarie
 **✨ Easy to use**: Install, Import, CHONK </br>
 **⚡ Fast**: CHONK at the speed of light! zooooom </br>
 **🪶 Light-weight**: No bloat, just CHONK </br>
-**🌏 Wide support**: CHONK with your favorite tokenizer, embedding model and APIs! </br>
+**🌏 Wide support**: CHONKie [integrates](#integrations) with your favorite tokenizer, embedding model and APIs! </br>
 **💬 ️Multilingual**: Out-of-the-box support for 5+ language CHONKS (more coming 🔜) </br>
 **☁️ Cloud-Ready**: CHONK locally or in the [Chonkie Cloud](https://cloud.chonkie.ai) </br>
 **🦛 Cute CHONK mascot**: psst it's a pygmy hippo btw </br>
