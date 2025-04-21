@@ -222,8 +222,8 @@ class OverlapRefinery(BaseRefinery):
         """
         # Iterate over the chunks till the second to last chunk
         for i, chunk in enumerate(chunks[1:]):
-            # Get the previous chunk
-            prev_chunk = chunks[i-1]
+            # Get the previous chunk, since i starts from 0 
+            prev_chunk = chunks[i]
 
             # Calculate the overlap context
             context = self._get_prefix_overlap_context(prev_chunk)
@@ -287,10 +287,10 @@ class OverlapRefinery(BaseRefinery):
         """Refine the suffix of the chunk.
         
         Args:
-            chunk: The chunk to refine.
+            chunks: The chunks to refine.
 
         Returns:
-            The refined chunk.
+            The refined chunks.
 
         """
         # Iterate over the chunks till the second to last chunk
