@@ -13,9 +13,15 @@ from .embeddings import (
     AutoEmbeddings,
     BaseEmbeddings,
     CohereEmbeddings,
+    JinaEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+)
+from .refinery import (
+    BaseRefinery,
+    EmbeddingsRefinery,
+    OverlapRefinery,
 )
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
@@ -37,7 +43,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -89,8 +95,15 @@ __all__ += [
     "OpenAIEmbeddings",
     "CohereEmbeddings",
     "AutoEmbeddings",
+    "JinaEmbeddings",
 ]
 
+# Add all refinery classes to __all__
+__all__ += [
+    "BaseRefinery",
+    "OverlapRefinery",
+    "EmbeddingsRefinery",
+]
 
 # Add all utils classes to __all__
 __all__ += [
