@@ -8,6 +8,16 @@ from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 
+# TODO: Fix the way that float context size is handled.
+# Currently, it just estimates the context size to token count
+# but it should ideally handle it on a chunk by chunk basis.
+
+# TODO: Add support for `justified` method which is the best of
+# both prefix and suffix overlap.
+
+# TODO: The OverlapRefinery is so slow right now (TwT)
+# We need to find a way to speed it up.
+
 class OverlapRefinery(BaseRefinery):
     """Refinery for adding overlap to chunks."""
 
@@ -30,7 +40,7 @@ class OverlapRefinery(BaseRefinery):
         Args:
             tokenizer_or_token_counter: The tokenizer or token counter to use. Defaults to None.
             context_size: The size of the context to add to the chunks.
-            mode: The mode to use for overlapping. Could be token, sentence, or recursive.
+            mode: The mode to use for overlapping. Could be token or recursive.
             method: The method to use for the context. Could be suffix or prefix.
             rules: The rules to use for the recursive overlap. Defaults to RecursiveRules().
             merge: Whether to merge the context with the chunk. Defaults to True.
@@ -353,3 +363,10 @@ class OverlapRefinery(BaseRefinery):
             return self._refine_suffix(chunks)
         else:
             raise ValueError("Method must be one of: prefix, suffix.")
+        
+    def __repr__(self) -> str:
+        """Return the string representation of the refinery."""
+        return (f"OverlapRefinery(tokenizer={self.tokenizer}, "
+                f"context_size={self.context_size}, "
+                f"mode={self.mode}, method={self.method}, "
+                f"merge={self.merge}, inplace={self.inplace})")
