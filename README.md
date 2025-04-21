@@ -4,16 +4,22 @@
 
 # 🦛 Chonkie ✨
 
-_The no-nonsense ultra-light and lightning-fast chunking library that's ready to CHONK your texts!_
-
 [![PyPI version](https://img.shields.io/pypi/v/chonkie.svg)](https://pypi.org/project/chonkie/)
 [![License](https://img.shields.io/github/license/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-chonkie.ai-blue.svg)](https://docs.chonkie.ai)
-![Package size](https://img.shields.io/badge/size-15MB-blue)
+[![Package size](https://img.shields.io/badge/size-15MB-blue)](https://github.com/chonkie-inc/chonkie/blob/main/README.md#installation)
 [![codecov](https://codecov.io/gh/chonkie-inc/chonkie/graph/badge.svg?token=V4EWIJWREZ)](https://codecov.io/gh/chonkie-inc/chonkie)
 [![Downloads](https://static.pepy.tech/badge/chonkie)](https://pepy.tech/project/chonkie)
 [![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/rYYp6DC4cv?style=flat)](https://discord.gg/rYYp6DC4cv)
 [![GitHub stars](https://img.shields.io/github/stars/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/stargazers)
+
+_The no-nonsense ultra-light and lightning-fast chunking library that's ready to CHONK your texts!_
+
+[Installation](#installation) •
+[Usage](#usage) •
+[Chunkers](#chunkers) •
+[Integrations](#integrations) •
+[Benchmarks](#benchmarks)
 
 </div>
 
@@ -69,7 +75,7 @@ for chunk in chunks:
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
 
-# Supported Methods
+# Chunkers
 
 Chonkie provides several chunkers to help you split your text efficiently for RAG applications. Here's a quick overview of the available chunkers:
 
@@ -83,7 +89,14 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
 
-# Benchmarks 🏃‍♂️
+# Integrations
+
+Chonkie integrates smoothly with the tools you already use:
+
+- **Tokenizers:** Choose from **3 supported tokenizers** (like `Hugging Face 🤗` and `Tiktoken`) or provide your own custom token counting function. Flexibility first!
+- **Embedding Models:** Seamlessly works with **5 out-of-the-box embedding model providers**, including `SentenceTransformers`, `Model2Vec`, `OpenAI`, `Cohere`, and `Jina AI`. Bring your favorite embeddings to the CHONK party!
+
+# Benchmarks
 
 > "I may be smol hippo, but I pack a big punch!" 🦛
 
@@ -113,9 +126,7 @@ Remember: No contribution is too small for this tiny hippo! 🦛
 Chonkie would like to CHONK its way through a special thanks to all the users and contributors who have helped make this library what it is today! Your feedback, issue reports, and improvements have helped make Chonkie the CHONKIEST it can be.
 
 And of course, special thanks to [Moto Moto](https://www.youtube.com/watch?v=I0zZC4wtqDQ&t=5s) for endorsing Chonkie with his famous quote:
-> "I like them big, I like them chonkie."
->                                         ~ Moto Moto
-
+> "I like them big, I like them chonkie." ~ Moto Moto
 
 # Citation
 
