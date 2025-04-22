@@ -7,6 +7,7 @@ from .sdpm import SDPMChunker
 from .semantic import SemanticChunker
 from .sentence import SentenceChunker
 from .token import TokenChunker
+from .code import CodeChunker
 
 __all__ = [
     "BaseChunker",
@@ -16,4 +17,5 @@ __all__ = [
     "SemanticChunker",
     "SDPMChunker",
     "LateChunker",
+    "CodeChunker",
 ]

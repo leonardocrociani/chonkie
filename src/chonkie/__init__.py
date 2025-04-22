@@ -8,6 +8,7 @@ from .chunker import (
     SemanticChunker,
     SentenceChunker,
     TokenChunker,
+    CodeChunker
 )
 from .embeddings import (
     AutoEmbeddings,
@@ -85,6 +86,7 @@ __all__ += [
     "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
+    "CodeChunker"
 ]
 
 # Add all embeddings classes to __all__
