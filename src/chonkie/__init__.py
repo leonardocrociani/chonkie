@@ -2,13 +2,13 @@
 
 from .chunker import (
     BaseChunker,
+    CodeChunker,
     LateChunker,
     RecursiveChunker,
     SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     TokenChunker,
-    CodeChunker
 )
 from .embeddings import (
     AutoEmbeddings,
@@ -44,7 +44,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
