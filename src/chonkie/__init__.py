@@ -2,6 +2,7 @@
 
 from .chunker import (
     BaseChunker,
+    CodeChunker,
     LateChunker,
     RecursiveChunker,
     SDPMChunker,
@@ -43,7 +44,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -85,6 +86,7 @@ __all__ += [
     "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
+    "CodeChunker"
 ]
 
 # Add all embeddings classes to __all__
