@@ -10,6 +10,7 @@ from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .voyageai import VoyageAIEmbeddings
 
 
 @dataclass
@@ -177,3 +178,14 @@ EmbeddingsRegistry.register("embed-multilingual-v2.0", CohereEmbeddings)
 # Register Jina embeddings
 EmbeddingsRegistry.register("jina", JinaEmbeddings, pattern=r"^jina|^jinaai")
 EmbeddingsRegistry.register("jina-embeddings-v3", JinaEmbeddings)
+
+
+#Register Voyage embeddings
+EmbeddingsRegistry.register("voyageai", VoyageAIEmbeddings, pattern="^voyage|^voyageai")
+EmbeddingsRegistry.register("voyage-3-large", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-3", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-3-lite", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-code-3", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-finance-2", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-law-2", VoyageAIEmbeddings)
+EmbeddingsRegistry.register("voyage-code-2", VoyageAIEmbeddings)
