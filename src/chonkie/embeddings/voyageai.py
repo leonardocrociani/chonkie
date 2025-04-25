@@ -1,4 +1,4 @@
-import importlib
+import importlib.util as importutil
 import os
 import warnings
 from typing import TYPE_CHECKING, Any, List, Literal, Optional
@@ -10,11 +10,11 @@ from .base import BaseEmbeddings
 if TYPE_CHECKING:
     try: 
         import numpy as np
-        from transformers import AutoTokenizer
+        from tokenizers import Tokenizer
         import voyageai
     except ImportError:
         np = Any # type: ignore
-        AutoTokenizer = Any # type: ignore
+        Tokenizer = Any # type: ignore
         voyageai = Any # type: ignore
 
 class VoyageAIEmbeddings(BaseEmbeddings):
@@ -25,15 +25,15 @@ class VoyageAIEmbeddings(BaseEmbeddings):
     for single texts or batches, with optional truncation and configurable output dimension.
     """
 
-    # Supported models with (dimension, max_tokens)
+    # Supported models with (allowed dimension, max_tokens)
     AVAILABLE_MODELS = {
-        "voyage-3-large": (1024, 32000), # The best general-purpose and multilingual retrieval quality
-        "voyage-3": (1024, 32000), # Optimized for general-purpose and multilingual retrieval quality 
-        "voyage-3-lite": (512, 32000), # Optimized for latency and cost
-        "voyage-code-3": (1024, 32000), # Optimized for code retrieval
-        "voyage-finance-2": (1024, 32000), # Optimized for finance retrieval and RAG
-        "voyage-law-2": (1024, 16000), # Optimized for legal retrieval and RAG
-        "voyage-code-2": (1536, 16000), # Optimized for code retrieval (17% better than alternatives) / Previous generation of code embeddings
+        "voyage-3-large":  ((1024, 256, 512, 2048), 32000), # The best general-purpose and multilingual retrieval quality
+        "voyage-3":        ((1024,),           32000), # Optimized for general-purpose and multilingual retrieval quality 
+        "voyage-3-lite":   ((512,),            32000), # Optimized for latency and cost
+        "voyage-code-3":   ((1024, 256, 512, 2048), 32000), # Optimized for code retrieval
+        "voyage-finance-2":((1024,),           32000), # Optimized for finance retrieval and RAG
+        "voyage-law-2":    ((1024,),           16000),  # Optimized for legal retrieval and RAG
+        "voyage-code-2":   ((1536,),           16000), # Optimized for code retrieval (17% better than alternatives) / Previous generation of code embeddings
     }
     DEFAULT_MODEL = "voyage-3"
 
@@ -73,11 +73,13 @@ class VoyageAIEmbeddings(BaseEmbeddings):
                 f"Model {model!r} not available. Choose from: {list(self.AVAILABLE_MODELS)}"
             )
         self.model = model
-        self._token_limit = self.AVAILABLE_MODELS[model][1]
-        self._dimension = self.AVAILABLE_MODELS[model][0]
+        allowed_dims, self._token_limit = self.AVAILABLE_MODELS[model]
+        self._allowed_dims = set(allowed_dims)
+         # first entry of allowed dimensions is the default dimension for that model
+        self._dimension = allowed_dims[0]
 
         try:
-            self._tokenizer = AutoTokenizer.from_pretrained(f"voyageai/{model}", trust_remote_code=True)
+            self._tokenizer = Tokenizer.from_pretrained(f'voyageai/{model}')
         except Exception as e:
             raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}")
 
@@ -97,31 +99,24 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
         self.truncation = truncation
         self.batch_size = min(batch_size, 128)
-        if output_dimension is not None and output_dimension not in {256, 512, 1024, 2048}:
+        if output_dimension is None:
+            self.output_dimension = self._dimension
+        elif output_dimension in self._allowed_dims:
+            self.output_dimension = output_dimension
+        else:
             raise ValueError(
-                f"Invalid output_dimension: {output_dimension}. Must be one of {256,512,1024,2048} or None."
+                f"Invalid output_dimension={output_dimension} for model={model}. "
+                f"Allowed: {sorted(self._allowed_dims)}"
             )
-        self.output_dimension = output_dimension
 
     def count_tokens(self, text: str) -> int:
-        """Count the number of tokens in a given text, applying truncation if enabled."""
-        return len(
-        self._tokenizer.encode(
-            text,
-            truncation=self.truncation,
-            max_length=self._token_limit,
-        )
-    )
+        """Count tokens in text using the model's tokenizer."""
+        return len(self._tokenizer.encode(text))
     
     def count_tokens_batch(self, texts: List[str]) -> List[int]:
         """Count tokens in multiple texts."""
-        output = self._tokenizer.batch_encode_plus(
-            texts,
-            truncation=self.truncation,
-            max_length=self._token_limit,
-            return_length=True,
-        )
-        return output["length"]
+        tokens = self._tokenizer.encode_batch(texts)
+        return [len(t) for t in tokens]
 
     def embed(self, text: str, input_type: Literal["query", "document"] = None) -> "np.ndarray":
         """
@@ -257,18 +252,20 @@ class VoyageAIEmbeddings(BaseEmbeddings):
     @classmethod
     def is_available(cls) -> bool:
         """Check if the voyageai package is available."""
-        return importlib.util.find_spec("voyageai") is not None
+        return (importutil.find_spec("voyageai") is not None
+                and importutil.find_spec("numpy") is not None
+                and importutil.find_spec("tokenizers") is not None)
 
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazy import dependencies if they are not already imported.""" 
         if cls.is_available():
-            global np, AutoTokenizer, voyageai
+            global np, Tokenizer, voyageai
             import numpy as np
-            from transformers import AutoTokenizer
+            from tokenizers import Tokenizer
             import voyageai
         else:
-            raise ImportError("One (or more) of the following packages is not available: numpy, AutoTokenizer or voyageai." +
+            raise ImportError("One (or more) of the following packages is not available: numpy, tokenizers or voyageai." +
              " Please install it via `pip install chonkie[voyageai]`")
 
     @property
@@ -276,10 +273,15 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> Any:
-        """Return a tokenizers tokenizer object of the current model."""
+    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+        """Get the tokenizer instance used by the embeddings model.
+
+        Returns:
+            Tokenizer: A Tokenizer instance for the voyageai embeddings model.
+
+        """
         return self._tokenizer
 
     def __repr__(self) -> str:
-        """Return a string representation of the VoyageEmbeddings object."""
-        return f"VoyageEmbeddings(model={self.model})"
+        """Return a string representation of the VoyageAIEmbeddings object."""
+        return f"VoyageAIEmbeddings(model={self.model})"

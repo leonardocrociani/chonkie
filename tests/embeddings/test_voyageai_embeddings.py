@@ -70,17 +70,11 @@ def test_initialization_batch_size_cap():
     assert embedding.batch_size == 128
 
 
-def test_count_tokens_short_text(dummy_embedding_model, sample_short_text):
+def test_count_tokens(dummy_embedding_model, sample_short_text):
     """Test token counting for a short text."""
     tokens = dummy_embedding_model.count_tokens(sample_short_text)
     assert isinstance(tokens, int)
     assert tokens > 0
-
-def test_count_tokens_long_text_truncation(dummy_embedding_model, sample_long_text):
-    """Test token counting for a long text with truncation."""
-    dummy_embedding_model.truncation = True
-    tokens = dummy_embedding_model.count_tokens(sample_long_text)
-    assert tokens <= dummy_embedding_model._token_limit
 
 def test_count_tokens_long_text_no_truncation(dummy_embedding_model, sample_long_text):
     """Test token counting for a long text with truncation disabled."""
@@ -132,9 +126,9 @@ def test_embed_batch(api_embedding_model, sample_texts):
 def test_embed_with_output_dimension():
     """Test embedding with a custom output_dimension."""
     api_key = os.getenv("VOYAGEAI_API_KEY")
-    embedding_model = VoyageAIEmbeddings(model="voyage-3", api_key=api_key, output_dimension=256)
+    embedding_model = VoyageAIEmbeddings(model="voyage-3", api_key=api_key, output_dimension=1024)
     embedding = embedding_model.embed("text")
-    assert embedding.shape == (256,)
+    assert embedding.shape == (1024,)
 
 # Asynchronous Embedding Tests
 @pytest.mark.anyio
@@ -177,7 +171,7 @@ def test_is_available():
 
 def test_repr(dummy_embedding_model):
     """Test that VoyageAIEmbeddings correctly returns a string representation."""
-    assert repr(dummy_embedding_model) == "VoyageEmbeddings(model=voyage-3)"
+    assert repr(dummy_embedding_model) == "VoyageAIEmbeddings(model=voyage-3)"
 
 def test_get_tokenizer_or_token_counter(dummy_embedding_model):
     """Test retrieval of the tokenizer."""
