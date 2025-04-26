@@ -2,7 +2,7 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Literal, Union
+from typing import Any, Callable, List, Literal, Optional, Union
 
 from tqdm import tqdm
 
@@ -29,7 +29,7 @@ class SlumberChunker(RecursiveChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
     def __init__(self,
-                 genie: BaseGenie = GeminiGenie(), 
+                 genie: Optional[BaseGenie] = None, 
                  tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
                  chunk_size: int = 1024,
                  rules: RecursiveRules = RecursiveRules(),
@@ -40,7 +40,7 @@ class SlumberChunker(RecursiveChunker):
         """Initialize the SlumberChunker.
 
         Args:
-            genie (BaseGenie): The genie to use.
+            genie (Optional[BaseGenie]): The genie to use.
             tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
             chunk_size (int): The size of the chunks to create.
             rules (RecursiveRules): The rules to use to split the candidate chunks.
@@ -55,6 +55,10 @@ class SlumberChunker(RecursiveChunker):
 
         # Lazily import the dependencies
         self._import_dependencies()
+
+        # If the genie is not provided, use the default GeminiGenie
+        if genie is None:
+            genie = GeminiGenie()
 
         # Since we can't name it self.chunk_size, we'll name it self.input_size
         self.input_size = chunk_size
