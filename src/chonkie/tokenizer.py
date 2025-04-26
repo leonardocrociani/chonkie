@@ -32,7 +32,7 @@ class BaseTokenizer(ABC):
     def __init__(self) -> None:
         """Initialize the BaseTokenizer."""
         self.vocab: list[str] = []
-        self.token2id: defaultdict[str, int] = defaultdict(self.defaulttoken2id)
+        self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
         # self.token2id: Dict[str, int] = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
         self.vocab.append(" ")  # Add space to the vocabulary
