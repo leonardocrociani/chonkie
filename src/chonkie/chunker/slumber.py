@@ -120,7 +120,7 @@ class SlumberChunker(RecursiveChunker):
             global BaseModel, Split
             from pydantic import BaseModel
 
-            class Split(BaseModel):
+            class Split(BaseModel): # type: ignore
                 split_index: int
     
         except ImportError:
