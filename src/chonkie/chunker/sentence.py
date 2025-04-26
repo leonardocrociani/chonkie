@@ -45,7 +45,7 @@ class SentenceChunker(BaseChunker):
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = False,
-        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
     ):
@@ -60,7 +60,7 @@ class SentenceChunker(BaseChunker):
             min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
             min_characters_per_sentence: Minimum number of characters per sentence (defaults to 12)
             approximate: Whether to use approximate token counting (defaults to False)
-            delim: Delimiters to split sentences on (defaults to [".", "!", "?", "newline"])
+            delim: Delimiters to split sentences on (defaults to [". ", "! ", "? ", "newline"])
             include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
             return_type: Whether to return chunks or texts (defaults to "chunks")
 
