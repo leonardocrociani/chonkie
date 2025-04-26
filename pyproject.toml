@@ -58,6 +58,7 @@ openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+genie = ["pydantic", "google-genai"]
 all = [
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
@@ -72,6 +73,8 @@ all = [
     "accelerate>=1.6.0",
     "huggingface-hub>=0.24.0",
     "jsonschema>=4.23.0",
+    "pydantic",
+    "google-genai",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -95,7 +98,8 @@ packages = [
     "chonkie.types",
     "chonkie.embeddings",
     "chonkie.utils",
-    "chonkie.refinery", 
+    "chonkie.refinery",
+    "chonkie.genie",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
 ]

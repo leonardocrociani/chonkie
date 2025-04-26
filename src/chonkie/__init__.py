@@ -8,6 +8,7 @@ from .chunker import (
     SDPMChunker,
     SemanticChunker,
     SentenceChunker,
+    SlumberChunker,
     TokenChunker,
 )
 from .embeddings import (
@@ -18,6 +19,10 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+)
+from .genie import (
+    BaseGenie,
+    GeminiGenie,
 )
 from .refinery import (
     BaseRefinery,
@@ -86,7 +91,8 @@ __all__ += [
     "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
-    "CodeChunker"
+    "CodeChunker",
+    "SlumberChunker",
 ]
 
 # Add all embeddings classes to __all__
@@ -111,4 +117,10 @@ __all__ += [
 __all__ += [
     "Hubbie",
     "Visualizer",
+]
+
+# Add all genie classes to __all__
+__all__ += [
+    "BaseGenie",
+    "GeminiGenie",
 ]
