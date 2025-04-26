@@ -92,16 +92,9 @@ class SlumberChunker(RecursiveChunker):
             if group_end_index == current_pos:
                 group_end_index += 1
 
-            # Print everything!
-            # print(f"Current Pos: {current_pos}")
-            # print(f"Current Token Count: {current_token_count}")
-            # print(f"Group End Index: {group_end_index}")
-
             prompt = self.template.format(passages="\n".join(split_texts[current_pos:group_end_index]))
             response = int(self.genie.generate(prompt, Split)['split_index'])
 
-            # print(f"Response: {response}")
-            
             if current_pos >= response:
                 response = current_pos + 1
 
