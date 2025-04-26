@@ -25,9 +25,8 @@ Follow the following rules while finding the splitting passage:
 </passages>
 """
 
-
 class SlumberChunker(RecursiveChunker):
-    """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
+    """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
     def __init__(self,
                  genie: BaseGenie = GeminiGenie(), 
@@ -35,7 +34,7 @@ class SlumberChunker(RecursiveChunker):
                  chunk_size: int = 1024,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 32,
-                 min_characters_per_chunk: int = 128,
+                 min_characters_per_chunk: int = 12,
                  return_type: Literal["chunks", "texts"] = "chunks", 
                  verbose: bool = False):
         """Initialize the SlumberChunker.
@@ -95,6 +94,8 @@ class SlumberChunker(RecursiveChunker):
             prompt = self.template.format(passages="\n".join(split_texts[current_pos:group_end_index]))
             response = int(self.genie.generate(prompt, Split)['split_index'])
 
+            # Make sure that the response doesn't bug out and return a index smaller 
+            # than the current position
             if current_pos >= response:
                 response = current_pos + 1
 
