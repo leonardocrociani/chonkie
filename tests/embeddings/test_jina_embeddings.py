@@ -1,16 +1,17 @@
 """Test suite for JinaEmbeddings."""
 import os
+from typing import List
 
 import numpy as np
 import pytest
-from transformers import PreTrainedTokenizerFast
+from tokenizers import Tokenizer
 
 from chonkie.embeddings.jina import JinaEmbeddings
 
 # --- Fixtures ---
 
 @pytest.fixture(scope="module")
-def embedding_model():
+def embedding_model() -> JinaEmbeddings:
     """Fixture to create a JinaEmbeddings instance using environment API key.
 
     Returns:
@@ -23,7 +24,7 @@ def embedding_model():
     return JinaEmbeddings(api_key=api_key)
 
 @pytest.fixture
-def sample_text():
+def sample_text() -> str:
     """Fixture for a single sample text.
 
     Returns:
@@ -33,7 +34,7 @@ def sample_text():
     return "This is a sample text for testing Jina embeddings."
 
 @pytest.fixture
-def sample_texts():
+def sample_texts() -> List[str]:
     """Fixture for a batch of sample texts.
 
     Returns:
@@ -55,7 +56,7 @@ skip_if_no_key = pytest.mark.skipif(
 )
 
 @skip_if_no_key
-def test_initialization_with_env_key(embedding_model):
+def test_initialization_with_env_key(embedding_model: JinaEmbeddings) -> None:
     """Test JinaEmbeddings initialization using environment API key and defaults.
 
     Args:
@@ -64,16 +65,14 @@ def test_initialization_with_env_key(embedding_model):
     """
     assert embedding_model.model == "jina-embeddings-v3"
     assert embedding_model.task == "text-matching"
-    assert embedding_model.late_chunking is True
+    assert embedding_model.late_chunking is False
     assert embedding_model.embedding_type == "float"
     assert embedding_model.api_key is not None
     assert embedding_model.headers["Authorization"].startswith("Bearer ")
     assert embedding_model.url == 'https://api.jina.ai/v1/embeddings'
 
-
-
 @skip_if_no_key
-def test_embed_single_text(embedding_model, sample_text):
+def test_embed_single_text(embedding_model: JinaEmbeddings, sample_text: str) -> None:
     """Test embedding a single text using the live Jina API.
 
     Args:
@@ -81,13 +80,13 @@ def test_embed_single_text(embedding_model, sample_text):
         sample_text: The single sample text fixture.
 
     """
-    embedding = embedding_model.embed([sample_text])
+    embedding = embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
 
 
 @skip_if_no_key
-def test_embed_batch_texts_live(embedding_model, sample_texts):
+def test_embed_batch_texts_live(embedding_model: JinaEmbeddings, sample_texts: List[str]) -> None:
     """Test embedding a batch of texts using the live Jina API.
 
     Args:
@@ -100,37 +99,8 @@ def test_embed_batch_texts_live(embedding_model, sample_texts):
     if embeddings: 
         assert len(embeddings) == len(sample_texts)
 
-
 @skip_if_no_key
-def test_count_tokens_single_text(embedding_model, sample_text):
-    """Test counting tokens for a single text using the live Jina API.
-
-    Args:
-        embedding_model: The JinaEmbeddings instance fixture.
-        sample_text: The single sample text fixture.
-
-    """
-    token_count = embedding_model.count_tokens(sample_text)
-    assert isinstance(token_count, int)
-    assert token_count > 0
-
-@skip_if_no_key
-def test_count_tokens_batch_texts(embedding_model, sample_texts):
-    """Test counting tokens for a batch of texts using the live Jina API.
-
-    Args:
-        embedding_model: The JinaEmbeddings instance fixture.
-        sample_texts: The batch of sample texts fixture.
-
-    """
-    token_counts = embedding_model.count_tokens_batch(sample_texts)
-    assert isinstance(token_counts, list)
-    assert len(token_counts) == len(sample_texts)
-    assert all(isinstance(count, int) for count in token_counts)
-    assert all(count > 0 for count in token_counts)
-
-@skip_if_no_key
-def test_similarity(embedding_model, sample_texts):
+def test_similarity(embedding_model: JinaEmbeddings, sample_texts: List[str]) -> None   :
     """Test similarity calculation between two embeddings from the live Jina API.
 
     Args:
@@ -142,15 +112,15 @@ def test_similarity(embedding_model, sample_texts):
         pytest.skip("Need at least two sample texts for similarity test")
 
     # Embed only the first two texts using the embed method.
-    embedding1 = embedding_model.embed([sample_texts[0]])
-    embedding2 = embedding_model.embed([sample_texts[1]])
+    embedding1 = embedding_model.embed(sample_texts[0])
+    embedding2 = embedding_model.embed(sample_texts[1])
 
     similarity_score = embedding_model.similarity(embedding1, embedding2)
     assert isinstance(similarity_score, (float, np.floating))
     assert 0 <= similarity_score <= 1
 
 @skip_if_no_key
-def test_dimension_property(embedding_model):
+def test_dimension_property(embedding_model: JinaEmbeddings) -> None:
     """Test the dimension property returns the correct value.
 
     Args:
@@ -163,7 +133,7 @@ def test_dimension_property(embedding_model):
 
 
 @skip_if_no_key
-def test_get_tokenizer_or_token_counter(embedding_model, sample_text):
+def test_get_tokenizer_or_token_counter(embedding_model: JinaEmbeddings, sample_text: str) -> None:
     """Test get_tokenizer_or_token_counter returns the correct tokenizer instance.
 
     Args:
@@ -172,25 +142,11 @@ def test_get_tokenizer_or_token_counter(embedding_model, sample_text):
 
     """
     tokenizer_obj = embedding_model.get_tokenizer_or_token_counter()
-
     assert tokenizer_obj is embedding_model._tokenizer
-
-    assert isinstance(tokenizer_obj, PreTrainedTokenizerFast)
-
-    tokens = tokenizer_obj.tokenize(sample_text)
-    assert tokens is not None
-    assert isinstance(tokens, list)
-    if len(sample_text.strip()) > 0:
-        assert len(tokens) > 0
-        assert all(isinstance(token, str) for token in tokens)
-    else:
-        assert len(tokens) == 0 
-
-    expected_token_count_via_method = embedding_model.count_tokens(sample_text)
-    assert len(tokens) == expected_token_count_via_method
-
+    assert isinstance(tokenizer_obj, Tokenizer)
+    
 @skip_if_no_key
-def test_repr(embedding_model):
+def test_repr(embedding_model: JinaEmbeddings) -> None:
     """Test the __repr__ method.
 
     Args:

@@ -1,13 +1,19 @@
 """Module for Jina AI embeddings integration."""
 
+import importlib.util as importutil
 import os
 import warnings
-from typing import List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
-import numpy as np
 import requests
-from numpy.typing import NDArray
-from transformers import AutoTokenizer
+
+if TYPE_CHECKING:
+    try: 
+        import numpy as np
+        from tokenizers import Tokenizer
+    except ImportError:
+        np = Any # type: ignore
+        Tokenizer = Any # type: ignore
 
 from .base import BaseEmbeddings
 
@@ -16,18 +22,22 @@ class JinaEmbeddings(BaseEmbeddings):
     """Jina embeddings implementation using their API."""
 
     AVAILABLE_MODELS = {
-        "jina-embeddings-v3": 1024 
-    }
+        "jina-embeddings-v3": 1024,
+        "jina-embeddings-v2-base-en": 768,
+        "jina-embeddings-v2-base-es": 768,
+        "jina-embeddings-v2-base-de": 768,
+        "jina-embeddings-v2-base-zh": 768,   
+        "jina-embeddings-v2-base-code": 768,
+        "jina-embeddings-b-en-v1": 768
+    }   
 
     def __init__(
             self,
             model: str = "jina-embeddings-v3",
             task: str = "text-matching",
-            late_chunking: bool = True,
-            embedding_type: str = "float",
-            api_key: Optional[str] = None,
-            batch_size: int = 128,
-            max_retries: int = 3
+            batch_size: int = 32,
+            max_retries: int = 3,
+            api_key: Optional[str] = None
     ):
         """Initialize Jina embeddings.
 
@@ -44,69 +54,81 @@ class JinaEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
+        # Lazy import dependencies if they are not already imported
+        self._import_dependencies()
+
         if model not in self.AVAILABLE_MODELS:
             raise ValueError(
                 f"Model {model} not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}"
             )
+        
+        # Check if the API key is provided
+        self.api_key = api_key or os.getenv("JINA_API_KEY")
+        if not self.api_key:
+            raise ValueError("Jina API key is required. Provide via api_key parameter or JINA_API_KEY environment variable")
 
+        # Initialize the Jina embeddings model
         self.model = model
         self.task = task
-        self.late_chunking = late_chunking
         self._dimension = self.AVAILABLE_MODELS[model]
-        self.embedding_type = embedding_type
+        self.embedding_type = "float"
+        self.late_chunking = False # Set to False since we don't need it! Chonkie can handle this!
         self._batch_size = batch_size
         self._max_retries = max_retries
-        self._tokenizer = AutoTokenizer.from_pretrained('jinaai/jina-embeddings-v3')
-        self.api_key = self._get_api_key(api_key)        
+        try:
+            self._tokenizer = Tokenizer.from_pretrained(f'jinaai/{model}')
+        except Exception as e:
+            raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}")
+        
+        # Initialize the URL for the API request
         self.url = 'https://api.jina.ai/v1/embeddings'
+        
+        # Initialize the headers for the API request
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}"
         }
 
-    def _get_api_key(self, api_key: Optional[str] = None) -> str:
-        """Retrieve the Jina API key from parameter or environment variable.
+    def _is_available(self) -> bool:
+        """Check if the Jina package is available."""
+        return (
+            importutil.find_spec("numpy") is not None
+            and importutil.find_spec("tokenizers") is not None
+        )
+
+    def _import_dependencies(self) -> None:
+        """Lazy import dependencies if they are not already imported.""" 
+        if self._is_available():
+            global np, Tokenizer
+            import numpy as np
+            from tokenizers import Tokenizer
+        else:
+            raise ImportError("One (or more) of the following packages is not available: numpy, tokenizers." +
+             " Please install it via `pip install chonkie[jina]`")
+    
+    def embed(self, text: str) -> "np.ndarray":
+        """Embed a single text using the Jina embeddings API.
 
         Args:
-            api_key (Optional[str]): The API key passed directly.
+            text (str): The text to embed.
 
         Returns:
-            str: The validated Jina API key.
+            np.ndarray: Numpy array with the embedding for the text.
 
         Raises:
-            ValueError: If the API key is not provided either via the parameter
-                or the JINA_API_KEY environment variable.
-
-        """
-        key = api_key or os.getenv("JINA_API_KEY")
-        if not key:
-            raise ValueError("Jina API key is required. Provide via api_key parameter or JINA_API_KEY environment variable")
-        return key
-    def embed(self, texts: List[str]) -> NDArray[np.float32]:
-        """Embed the first text in a list using the Jina embeddings API.
-
-        Note: This method processes only the first text even if the list contains multiple texts, it is for embedding single text.
-
-        Args:
-            texts (List[str]): List containing the text(s) to embed.
-
-        Returns:
-            NDArray[np.float32]: Numpy array with the embedding for the first text.
-
-        Raises:
-            ValueError: If the input `texts` list is empty.
+            ValueError: If the input `text` is empty or the API response is unexpected.
             requests.exceptions.RequestException: If the API request fails after retries.
 
         """
-        if not texts:
-            raise ValueError("At least one text must be provided")
-            
+        if not text:
+            raise ValueError("Input text cannot be empty")
+
         data = {
             "model": self.model,
             "task": self.task,
             "late_chunking": self.late_chunking,
             "embedding_type": self.embedding_type,
-            "input": texts
+            "input": [text]  # API expects a list, even for single text
         }
 
         for attempt in range(self._max_retries):
@@ -114,23 +136,30 @@ class JinaEmbeddings(BaseEmbeddings):
                 response = requests.post(self.url, json=data, headers=self.headers)
                 response.raise_for_status()
                 vector = response.json()
-                data = vector.get('data')
-                if not data or not data[0] or 'embedding' not in data[0]:
+                response_data = vector.get('data')
+                if not response_data or not response_data[0] or 'embedding' not in response_data[0]:
                     raise ValueError(f"Unexpected API response format: {vector}")
-                return np.array(data[0]['embedding'], dtype=np.float32)            
+                # Assuming the API returns a list with one embedding
+                return np.array(response_data[0]['embedding'], dtype=np.float32)
             except requests.exceptions.RequestException as e:
                 if attempt == self._max_retries - 1:
-                    raise
-                warnings.warn(f"Attempt {attempt + 1} failed: {str(e)}. Retrying...")
-    
-    def embed_batch(self, texts: List[str]) -> List[NDArray[np.float32]]:
+                    # Raise a more informative error including the text that failed
+                    raise ValueError(f"Failed to embed text '{text[:50]}...' after {self._max_retries} attempts due to: {e}")
+                warnings.warn(f"Attempt {attempt + 1} failed for text '{text[:50]}...': {str(e)}. Retrying...")
+
+        # This point should theoretically not be reached if max_retries > 0,
+        # as the loop either returns successfully or raises an exception on the last attempt.
+        # Adding a fallback raise to satisfy linters and catch unexpected scenarios.
+        raise RuntimeError(f"Embedding failed for text '{text[:50]}...' after multiple retries, but no exception was raised.")
+
+    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
         """Embed multiple texts using the Jina embeddings API.
 
         Args:
             texts (List[str]): List of texts to embed.
 
         Returns:
-            List[NDArray[np.float32]]: List of numpy arrays with embeddings for each text.
+            List["np.ndarray"]: List of numpy arrays with embeddings for each text.
 
         Raises:
             requests.exceptions.HTTPError: If the initial API request for a batch fails
@@ -166,62 +195,31 @@ class JinaEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except requests.exceptions.HTTPError as e:
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one...")
-                    warnings.warn(f"Fallback to single embeddings due to: {str(e)}")
+                    warnings.warn(f"Failed to embed batch: {batch} due to: {e}. Falling back to sequential embedding texts.")
                     # Fall back to single embeddings
                     single_embeddings = []
-                    for t in batch:
-                        if isinstance(t, str):
-                            single_embeddings.append(self.embed([t]))
+                    for text in batch:
+                        if isinstance(text, str):
+                            single_embeddings.append(self.embed(text))
                         else:
-                            raise ValueError(f"Invalid text type found in batch: {type(t)}")
+                            raise ValueError(f"Invalid text type found in batch: {type(text)}")
                     all_embeddings.extend(single_embeddings)
                 else:
                     raise ValueError(f"Failed to embed text: {batch} due to: {e}")                    
         return all_embeddings
 
-    def similarity(self, u: NDArray[np.float32], v: NDArray[np.float32]) -> float:
+    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings.
         
         Args:
-            u (NDArray[np.float32]): First embedding vector.
-            v (NDArray[np.float32]): Second embedding vector.
+            u (np.ndarray): First embedding vector.
+            v (np.ndarray): Second embedding vector.
 
         Returns:
-            float: Cosine similarity between u and v.
+            np.float32: Cosine similarity between u and v.
 
         """
-        return np.divide(
-            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=float
-        )
-
-    def count_tokens(self, text: str) -> int:
-        """Count the number of tokens in the input text using Jina's tokenizer.
-
-        Args:
-            text (str): Input text to tokenize. Leading/trailing whitespace is ignored.
- 
-        Returns:
-            int: Number of tokens (using the same tokenization rules as the embedding model).
-
-        """
-        if not text.strip():
-            return 0
-
-        tokens = self._tokenizer.tokenize(text)
-        return len(tokens)
-
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
-        """Count tokens in multiple texts.
-
-        Args:
-            texts (List[str]): List of texts to count tokens for.
-
-        Returns:
-            List[int]: A list containing the token count for each text.
-
-        """
-        return [self.count_tokens(text) for text in texts]
+        return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
     
     @property
     def dimension(self) -> int:
@@ -233,14 +231,14 @@ class JinaEmbeddings(BaseEmbeddings):
         """
         return self._dimension
         
-    def get_tokenizer_or_token_counter(self):
+    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
         """Get the tokenizer instance used by the embeddings model.
 
         Returns:
-            PreTrainedTokenizerFast: The Hugging Face tokenizer instance.
+            Tokenizer: A Tokenizer instance for the Jina embeddings model.
 
         """
-        return self._tokenizer
+        return self._tokenizer      
 
     def __repr__(self) -> str:
         """Return a string representation of the JinaEmbeddings instance.

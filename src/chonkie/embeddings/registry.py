@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Pattern, Type, Union
 
 from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
+from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
@@ -32,7 +33,7 @@ class EmbeddingsRegistry:
         embedding_cls: Type[BaseEmbeddings],
         pattern: Optional[Union[str, Pattern]] = None,
         supported_types: Optional[List[str]] = None,
-    ):
+    ) -> None:
         """Register a new embeddings implementation.
 
         Args:
@@ -97,7 +98,7 @@ class EmbeddingsRegistry:
         )
 
     @classmethod
-    def wrap(cls, object: Any, **kwargs) -> BaseEmbeddings:
+    def wrap(cls, object: Any, **kwargs: Any) -> BaseEmbeddings:
         """Wrap an object in the appropriate embeddings class.
 
         The objects that are handled here could be either a Model or Client object.
@@ -172,3 +173,7 @@ EmbeddingsRegistry.register("embed-multilingual-light-v3.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-english-v2.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-english-light-v2.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-multilingual-v2.0", CohereEmbeddings)
+
+# Register Jina embeddings
+EmbeddingsRegistry.register("jina", JinaEmbeddings, pattern=r"^jina|^jinaai")
+EmbeddingsRegistry.register("jina-embeddings-v3", JinaEmbeddings)
