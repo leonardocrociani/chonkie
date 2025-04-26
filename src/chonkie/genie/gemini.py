@@ -21,12 +21,14 @@ class GeminiGenie(BaseGenie):
 
         """
         super().__init__()
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
-        if not self.api_key:
-            raise ValueError("GeminiGenie requires an API key. Either pass the `api_key` parameter or set the `GEMINI_API_KEY` in your environment.")
 
         # Lazily import the dependencies
         self._import_dependencies()
+
+        # Initialize the API key
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError("GeminiGenie requires an API key. Either pass the `api_key` parameter or set the `GEMINI_API_KEY` in your environment.")
 
         # Initialize the client and model
         self.client = genai.Client(api_key=self.api_key) # type: ignore
