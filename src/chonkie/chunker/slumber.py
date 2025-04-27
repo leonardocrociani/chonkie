@@ -33,10 +33,10 @@ class SlumberChunker(BaseChunker):
                  tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
                  chunk_size: int = 1024,
                  rules: RecursiveRules = RecursiveRules(),
-                 candidate_size: int = 32,
+                 candidate_size: int = 128,
                  min_characters_per_chunk: int = 24,
                  return_type: Literal["chunks", "texts"] = "chunks", 
-                 verbose: bool = False):
+                 verbose: bool = True):
         """Initialize the SlumberChunker.
 
         Args:
