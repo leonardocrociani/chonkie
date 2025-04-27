@@ -3,6 +3,7 @@
 from .base import BaseChunker
 from .code import CodeChunker
 from .late import LateChunker
+from .neural import NeuralChunker
 from .recursive import RecursiveChunker
 from .sdpm import SDPMChunker
 from .semantic import SemanticChunker
@@ -20,4 +21,5 @@ __all__ = [
     "LateChunker",
     "CodeChunker",
     "SlumberChunker",
+    "NeuralChunker",
 ]
