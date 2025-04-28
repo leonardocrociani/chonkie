@@ -11,7 +11,7 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
 
-PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly seperates from the previous passages in topic and/or semantics. </task>
+PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
 <rules>
 Follow the following rules while finding the splitting passage:
@@ -60,7 +60,7 @@ class SlumberChunker(BaseChunker):
         if genie is None:
             genie = GeminiGenie()
 
-        # Since we can't name it self.chunk_size, we'll name it self.input_size
+        # Set the parameters for the SlumberChunker
         self.genie = genie
         self.chunk_size = chunk_size
         self.candidate_size = candidate_size
@@ -219,7 +219,7 @@ class SlumberChunker(BaseChunker):
                 group_end_index += 1
 
             prompt = self.template.format(passages="\n".join(prepared_split_texts[current_pos:group_end_index]))
-            response = int(self.genie.generate(prompt, Split)['split_index'])
+            response = int(self.genie.generate_json(prompt, Split)['split_index'])
 
             # Make sure that the response doesn't bug out and return a index smaller 
             # than the current position
