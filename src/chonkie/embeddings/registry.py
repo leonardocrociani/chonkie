@@ -180,7 +180,7 @@ EmbeddingsRegistry.register("jina", JinaEmbeddings, pattern=r"^jina|^jinaai")
 EmbeddingsRegistry.register("jina-embeddings-v3", JinaEmbeddings)
 
 
-#Register Voyage embeddings
+# Register Voyage embeddings
 EmbeddingsRegistry.register("voyageai", VoyageAIEmbeddings, pattern="^voyage|^voyageai")
 EmbeddingsRegistry.register("voyage-3-large", VoyageAIEmbeddings)
 EmbeddingsRegistry.register("voyage-3", VoyageAIEmbeddings)

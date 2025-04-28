@@ -3,6 +3,7 @@
 import os
 import pytest
 import numpy as np
+import voyageai
 from chonkie.embeddings.voyageai import VoyageAIEmbeddings
 
 
@@ -54,11 +55,14 @@ def test_initialization_invalid_model():
 
 def test_initialization_no_api_key():
     """Test that VoyageAIEmbeddings raises ValueError if no API key is provided."""
-    if "VOYAGEAI_API_KEY" in os.environ:
-        del os.environ["VOYAGEAI_API_KEY"]
-    with pytest.raises(ValueError, match="VoyageAI API key not found"):
+    os.environ.pop("VOYAGEAI_API_KEY", None)
+    os.environ.pop("VOYAGE_API_KEY", None)
+    with pytest.raises(voyageai.error.AuthenticationError) as excinfo:
         VoyageAIEmbeddings(model="voyage-3")
+    msg = str(excinfo.value)
+    assert "No API key provided" in msg
 
+    
 def test_initialization_invalid_output_dimension():
     """Test that VoyageAIEmbeddings raises ValueError for invalid output_dimension."""
     with pytest.raises(ValueError, match="Invalid output_dimension"):
@@ -75,12 +79,6 @@ def test_count_tokens(dummy_embedding_model, sample_short_text):
     tokens = dummy_embedding_model.count_tokens(sample_short_text)
     assert isinstance(tokens, int)
     assert tokens > 0
-
-def test_count_tokens_long_text_no_truncation(dummy_embedding_model, sample_long_text):
-    """Test token counting for a long text with truncation disabled."""
-    dummy_embedding_model.truncation = False
-    tokens = dummy_embedding_model.count_tokens(sample_long_text)
-    # Tokens may exceed _token_limit; behavior depends on tokenizer
 
 def test_count_tokens_batch(dummy_embedding_model, sample_texts):
     """Test token counting for a batch of texts."""
