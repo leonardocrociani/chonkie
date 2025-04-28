@@ -4,6 +4,7 @@ from .chunker import (
     BaseChunker,
     CodeChunker,
     LateChunker,
+    NeuralChunker,
     RecursiveChunker,
     SDPMChunker,
     SemanticChunker,
@@ -93,6 +94,7 @@ __all__ += [
     "LateChunker",
     "CodeChunker",
     "SlumberChunker",
+    "NeuralChunker",
 ]
 
 # Add all embeddings classes to __all__
