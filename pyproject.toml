@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.0.6a0"
+version = "1.0.6"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -58,6 +58,7 @@ openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 genie = ["pydantic", "google-genai"]
 all = [
     "rich>=13.0.0",
@@ -75,6 +76,8 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic",
     "google-genai",
+    "transformers>=4.0.0",
+    "torch>=2.0.0, <3.0",
 ]
 dev = [
     "datasets>=1.14.0",
