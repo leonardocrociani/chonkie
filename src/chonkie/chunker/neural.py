@@ -46,7 +46,10 @@ class NeuralChunker(BaseChunker):
     self._import_dependencies()
 
     # Initialize the tokenizer to pass in to the parent class
-    tokenizer = AutoTokenizer.from_pretrained(model) # type: ignore
+    try:
+      tokenizer = AutoTokenizer.from_pretrained(model) # type: ignore
+    except Exception as e:
+      raise ValueError(f"Error initializing tokenizer: {e}")
 
     # Initialize the Parent class with the tokenizer
     super().__init__(tokenizer)
@@ -58,7 +61,10 @@ class NeuralChunker(BaseChunker):
     self.return_type = return_type
 
     # Initialize the pipeline
-    self.pipe = pipeline("token-classification", model=model, device=device) # type: ignore
+    try:
+      self.pipe = pipeline("token-classification", model=model, device=device) # type: ignore
+    except Exception as e:
+      raise ValueError(f"Error initializing pipeline: {e}")
 
     # Set the _use_multiprocessing value to be False
     self._use_multiprocessing = False
@@ -91,7 +97,7 @@ class NeuralChunker(BaseChunker):
   
   def _merge_close_spans(self, 
                         response: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Merge close spans."""
+    """Replace the split points that are too close to each other with the last span."""
     merged_response = []
     i = 0
     while i < len(response):
@@ -109,7 +115,7 @@ class NeuralChunker(BaseChunker):
     return merged_response
   
   def _get_chunks_from_splits(self, splits: List[str]) -> List[Chunk]:
-    """Get the chunks from the splits."""
+    """Create a list of Chunks from the splits."""
     chunks = []
     current_index = 0
     token_counts = self.tokenizer.count_tokens_batch(splits)
