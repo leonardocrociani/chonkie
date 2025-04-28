@@ -219,7 +219,7 @@ class SlumberChunker(BaseChunker):
                 group_end_index += 1
 
             prompt = self.template.format(passages="\n".join(prepared_split_texts[current_pos:group_end_index]))
-            response = int(self.genie.generate(prompt, Split)['split_index'])
+            response = int(self.genie.generate_json(prompt, Split)['split_index'])
 
             # Make sure that the response doesn't bug out and return a index smaller 
             # than the current position
