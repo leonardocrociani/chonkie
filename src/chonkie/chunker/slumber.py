@@ -60,7 +60,7 @@ class SlumberChunker(BaseChunker):
         if genie is None:
             genie = GeminiGenie()
 
-        # Since we can't name it self.chunk_size, we'll name it self.input_size
+        # Set the parameters for the SlumberChunker
         self.genie = genie
         self.chunk_size = chunk_size
         self.candidate_size = candidate_size
