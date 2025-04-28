@@ -2,10 +2,15 @@
 import importlib.util as importutil
 import json
 import os
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from .base import BaseGenie
 
+if TYPE_CHECKING:
+    try: 
+        from Pydantic import BaseModel
+    except ImportError:
+        BaseModel = Any  # type: ignore
 
 class GeminiGenie(BaseGenie):
     """Gemini's Genie."""
@@ -34,11 +39,14 @@ class GeminiGenie(BaseGenie):
         self.client = genai.Client(api_key=self.api_key) # type: ignore
         self.model = model
 
-    #TODO: Fix the type hinting here later. 
-    def generate(self, prompt: str, schema: Optional[Any] = None) -> Any:
+    def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
-        if schema:
-            response = self.client.models.generate_content(
+        response = self.client.models.generate_content(model=self.model, contents=prompt)
+        return str(response.text)
+    
+    def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
+        """Generate a JSON response based on the given prompt and schema."""
+        response = self.client.models.generate_content(
             model=self.model,
             contents=prompt,
             config={
@@ -46,14 +54,10 @@ class GeminiGenie(BaseGenie):
                 'response_schema': schema,
                 }
             )
-            return json.loads(response.text)
-        else:
-            response = self.client.models.generate_content(
-            model=self.model,
-            contents=prompt
-            )
-            return response.text
-    
+        try:
+            return dict(json.loads(response.text))
+        except Exception as e:
+            raise ValueError(f"Failed to parse JSON response: {e}")
 
     def _is_available(self) -> bool:
         """Check if all the dependencies are available in the environement."""
