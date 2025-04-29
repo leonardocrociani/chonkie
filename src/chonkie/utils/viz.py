@@ -9,7 +9,7 @@ from typing import List, Optional, Union
 from chonkie.types import Chunk
 
 # light themes
-light = {
+LIGHT_THEMES = {
     # Pastel colored rainbow theme
     "pastel": [
         "#FFADAD",
@@ -36,7 +36,7 @@ light = {
 }
 
 # dark themes
-dark = {
+DARK_THEMES = {
     # Tiktokenizer but with darker colors
     "tiktokenizer_dark": [
         "#2A4E66",
@@ -137,17 +137,12 @@ class Visualizer:
         self.console = Console() # type: ignore
         
         # We want the editor's text color to apply by default for custom themes
-        self.text_color = ""
         # If the theme is a string, get the theme
         if isinstance(theme, str):
-            # If the mode is dark, we choose white and vice versa
-            if (theme in light):
-                self.text_color = TEXT_COLOR_LIGHT
-            elif (theme in dark):
-                self.text_color = TEXT_COLOR_DARK
-            self.theme = self._get_theme(theme)
+            self.theme, self.text_color = self._get_theme(theme)
             self.theme_name = theme
         else:
+            self.text_color = ""
             self.theme = theme
             self.theme_name = "custom"
 
@@ -163,10 +158,10 @@ class Visualizer:
     # NOTE: This is a helper function to manage the theme
     def _get_theme(self, theme: str) -> List[str]:
         """Get the theme from the theme name."""
-        if theme in dark:
-            return dark[theme]
-        elif theme in light:
-            return light[theme]
+        if theme in DARK_THEMES:
+            return DARK_THEMES[theme], TEXT_COLOR_DARK
+        elif theme in LIGHT_THEMES:
+            return LIGHT_THEMES[theme], TEXT_COLOR_LIGHT
         else:
             raise ValueError(f"Invalid theme: {theme}")
 
@@ -367,7 +362,7 @@ class Visualizer:
         main_content = MAIN_TEMPLATE.format(html_parts="".join(html_parts))
 
         # Set the background colors and the text color
-        if (self.theme_name != "custom" and self.theme_name in dark):
+        if (self.theme_name != "custom" and self.theme_name in DARK_THEMES):
             # Set the dark mode colors
             body_bg_color = BODY_BACKGROUND_COLOR_DARK
             content_bg_color = CONTENT_BACKGROUND_COLOR_DARK
