@@ -48,6 +48,17 @@ DARK_THEMES = {
         "#55386E", 
         "#3A6640", 
         "#66353B", 
+    ],
+    # Pastel but with darker colors
+    "pastel_dark": [
+        "#5C2E2E", 
+        "#5C492E",  
+        "#4F5C2E",  
+        "#2E5C4F",  
+        "#2E3F5C",  
+        "#3A3A3A",  
+        "#4F2E5C",  
+        "#2E5C3F"   
     ]
 }
 
