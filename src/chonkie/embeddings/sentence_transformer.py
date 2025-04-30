@@ -24,7 +24,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     """
 
     def __init__(
-        self, model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2", **kwargs
+        self, 
+        model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2",
+        **kwargs
     ) -> None:
         """Initialize SentenceTransformerEmbeddings with a sentence-transformers model.
 
