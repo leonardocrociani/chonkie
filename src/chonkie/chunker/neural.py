@@ -98,20 +98,22 @@ class NeuralChunker(BaseChunker):
   def _merge_close_spans(self, 
                         response: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Replace the split points that are too close to each other with the last span."""
-    merged_response = []
-    i = 0
-    while i < len(response):
+    if not response:
+        return []
+
+    merged_response = [response[0]]
+    for i in range(1, len(response)):
         current_span = response[i]
-        j = i + 1
-        while j < len(response):
-            next_span = response[j]
-            if next_span["start"] - current_span["end"] < self.min_characters_per_chunk:
-                current_span = next_span  # Keep the last span
-                j += 1
-            else:
-                break
-        merged_response.append(current_span)
-        i = j
+        last_merged_span = merged_response[-1]
+        
+        if current_span["start"] - last_merged_span["end"] < self.min_characters_per_chunk:
+            # If the current span is too close to the last merged one,
+            # replace the last one with the current one.
+            merged_response[-1] = current_span
+        else:
+            # Otherwise, append the current span.
+            merged_response.append(current_span)
+            
     return merged_response
   
   def _get_chunks_from_splits(self, splits: List[str]) -> List[Chunk]:
