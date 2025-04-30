@@ -60,9 +60,17 @@ class NeuralChunker(BaseChunker):
     self.min_characters_per_chunk = min_characters_per_chunk
     self.return_type = return_type
 
+    # Initialize the model
+    model = AutoModelForTokenClassification.from_pretrained(model, device=device) # type: ignore
+
     # Initialize the pipeline
     try:
-      self.pipe = pipeline("token-classification", model=model, device=device) # type: ignore
+      self.pipe = pipeline("token-classification", 
+                           model=model,
+                           tokenizer=tokenizer,
+                           device=device, 
+                           aggregation_strategy="simple", 
+                           stride=tokenizer.model_max_length) # type: ignore
     except Exception as e:
       raise ValueError(f"Error initializing pipeline: {e}")
 
