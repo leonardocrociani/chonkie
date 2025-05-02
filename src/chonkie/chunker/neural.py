@@ -12,7 +12,6 @@ from chonkie.types import Chunk
 
 from .base import BaseChunker
 
-
 # TODO: Add a check to see if the model is supported
 
 # TODO: Add try/except block to catch if the model is not loaded correctly
