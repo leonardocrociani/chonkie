@@ -12,6 +12,16 @@ from chonkie.types import Chunk
 
 from .base import BaseChunker
 
+# TODO: Add a check to see if the model is supported
+
+# TODO: Add try/except block to catch if the model is not loaded correctly
+
+# TODO: Add a list of supported models to choose from
+
+# TODO: Allow for loading a custom model by passing in the model + tokenizer directly
+
+# TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
+# If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once. 
 
 class NeuralChunker(BaseChunker):
   """Class for chunking text using a complete Neural Approach.
@@ -60,9 +70,17 @@ class NeuralChunker(BaseChunker):
     self.min_characters_per_chunk = min_characters_per_chunk
     self.return_type = return_type
 
+    # Initialize the model
+    model = AutoModelForTokenClassification.from_pretrained(model).to(device) # type: ignore
+
     # Initialize the pipeline
     try:
-      self.pipe = pipeline("token-classification", model=model, device=device) # type: ignore
+      self.pipe = pipeline("token-classification", 
+                           model=model,
+                           tokenizer=tokenizer,
+                           device=device, 
+                           aggregation_strategy="simple", 
+                           stride=512) # type: ignore
     except Exception as e:
       raise ValueError(f"Error initializing pipeline: {e}")
 
@@ -76,8 +94,8 @@ class NeuralChunker(BaseChunker):
   def _import_dependencies(self) -> None:
     """Import the dependencies."""
     if self._is_available():
-      global AutoTokenizer, pipeline
-      from transformers import AutoTokenizer, pipeline
+      global AutoTokenizer, AutoModelForTokenClassification, pipeline
+      from transformers import AutoModelForTokenClassification, AutoTokenizer, pipeline
     else:
       raise ImportError("transformers is not installed. Please install it with `pip install chonkie[neural]`.")
 
