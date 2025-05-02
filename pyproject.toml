@@ -86,6 +86,7 @@ dev = [
     "pytest>=6.2.0",
     "pytest-cov>=4.0.0",
     "pytest-xdist>=2.5.0",
+    "pytest-asyncio>=0.26.0",
     "coverage",
     "ruff>=0.0.265",
     "mypy>=1.11.0",
@@ -93,6 +94,8 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = "src"
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

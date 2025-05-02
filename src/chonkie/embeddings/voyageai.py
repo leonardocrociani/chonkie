@@ -2,10 +2,9 @@
 
 import asyncio
 import importlib.util as importutil
+import os
 import warnings
 from typing import TYPE_CHECKING, Any, List, Literal, Optional
-
-from voyageai.util import default_api_key
 
 from .base import BaseEmbeddings
 
@@ -66,13 +65,30 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         # Lazy import dependencies
         self._import_dependencies()
 
+        # Check if the API key is provided or set in the environment variable
+        key = api_key or os.getenv("VOYAGE_API_KEY")
+        if key is None:
+            raise ValueError("No API key provided. Please set VOYAGE_API_KEY environment variable or pass in an api_key parameter.")
+
+        # Initialize the API clients
+        self._client = voyageai.Client(
+            api_key=key, max_retries=max_retries, timeout=timeout
+        )
+        self._aclient = voyageai.AsyncClient(
+            api_key=key, max_retries=max_retries, timeout=timeout
+        )
+
+        # Check if the model is supported
         if model not in self.AVAILABLE_MODELS:
             raise ValueError(
-                f"Model {model!r} not available. Choose from: {list(self.AVAILABLE_MODELS)}"
+                f"Model {model!r} not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}"
             )
+
+        # Set the model and tokenizer
         self.model = model
         allowed_dims, self._token_limit = self.AVAILABLE_MODELS[model]
         self._allowed_dims = set(allowed_dims)
+
         # first entry of allowed dimensions is the default dimension for that model
         self._dimension = allowed_dims[0]
 
@@ -81,16 +97,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         except Exception as e:
             raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}")
 
-        # API clients
-        key = api_key or default_api_key()
-
-        self._client = voyageai.Client(
-            api_key=key, max_retries=max_retries, timeout=timeout
-        )
-        self._aclient = voyageai.AsyncClient(
-            api_key=key, max_retries=max_retries, timeout=timeout
-        )
-
+        # Set the truncation, batch size, and output dimension
         self.truncation = truncation
         self.batch_size = min(batch_size, 128)
         if output_dimension is None:
@@ -112,7 +119,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         tokens = self._tokenizer.encode_batch(texts)
         return [len(t) for t in tokens]
 
-    def embed(self, text: str, input_type: Literal["query", "document"] = None) -> "np.ndarray":
+    def embed(self, text: str, input_type: Optional[Literal["query", "document"]] = None) -> "np.ndarray":
         """Obtain embedding for a single text synchronously.
 
         Args:
@@ -142,7 +149,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         
         return np.array(response.embeddings[0], dtype=np.float32)
 
-    async def aembed(self, text: str, input_type: Literal["query", "document"] = None) -> "np.ndarray":
+    async def aembed(self, text: str, input_type: Optional[Literal["query", "document"]] = None) -> "np.ndarray":
         """Obtain embedding for a single text asynchronously.
 
         Args:
@@ -173,7 +180,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         
         return np.array(response.embeddings[0], dtype=np.float32)
 
-    def embed_batch(self, texts: List[str], input_type: Literal["query", "document"] = None) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str], input_type: Optional[Literal["query", "document"]] = None) -> List["np.ndarray"]:
         """Obtain embeddings for a batch of texts synchronously.
 
         Args:
@@ -211,7 +218,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         return embeddings
     
 
-    async def __process_batch(self, batch: List[str], input_type: Literal["query", "document"] = None) -> List["np.ndarray"]:
+    async def __process_batch(self, batch: List[str], input_type: Optional[Literal["query", "document"]] = None) -> List["np.ndarray"]:
         """Process a single batch of texts to obtain embeddings.
 
         This method is intended for internal use only.
@@ -248,7 +255,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         except Exception as e:
             raise RuntimeError(f"VoyageAI API error during embedding: {e}") from e
 
-    async def aembed_batch(self, texts: List[str], input_type: Literal["query", "document"] = None) -> List["np.ndarray"]:
+    async def aembed_batch(self, texts: List[str], input_type: Optional[Literal["query", "document"]] = None) -> List["np.ndarray"]:
         """Obtain embeddings for a batch of texts asynchronously.
 
         Args:
@@ -273,17 +280,15 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             embeddings.extend(result)
         return embeddings
 
-    @classmethod
-    def is_available(cls) -> bool:
+    def is_available(self) -> bool:
         """Check if the voyageai package is available."""
         return (importutil.find_spec("voyageai") is not None
                 and importutil.find_spec("numpy") is not None
                 and importutil.find_spec("tokenizers") is not None)
 
-    @classmethod
-    def _import_dependencies(cls) -> None:
+    def _import_dependencies(self) -> None:
         """Lazy import dependencies if they are not already imported.""" 
-        if cls.is_available():
+        if self.is_available():
             global np, Tokenizer, voyageai
             import numpy as np
             import voyageai
@@ -308,4 +313,4 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
     def __repr__(self) -> str:
         """Return a string representation of the VoyageAIEmbeddings object."""
-        return f"VoyageAIEmbeddings(model={self.model})"
+        return f"VoyageAIEmbeddings(model={self.model}, dimension={self.dimension})"
