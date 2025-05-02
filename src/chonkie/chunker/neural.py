@@ -6,7 +6,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import Any, Dict, List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.types import Chunk
 
@@ -38,17 +38,35 @@ class NeuralChunker(BaseChunker):
 
   """
 
+  SUPPORTED_MODELS = [
+    "mirth/chonky_distilbert_base_uncased_1",
+    "mirth/chonky_modernbert_base_1",
+    "mirth/chonky_modernbert_large_1",
+  ]
+
+  SUPPORTED_MODEL_STRIDES = {
+    "mirth/chonky_distilbert_base_uncased_1": 256,
+    "mirth/chonky_modernbert_base_1": 512,
+    "mirth/chonky_modernbert_large_1": 512,
+  }
+
+  DEFAULT_MODEL = "mirth/chonky_distilbert_base_uncased_1"
+
   def __init__(self,
-               model: str = "mirth/chonky_modernbert_base_1",
-               device: str = "cpu", 
+               model: Union[str, Any] = DEFAULT_MODEL,
+               tokenizer: Optional[Union[str, Any]] = None,
+               device_map: str = "auto", 
                min_characters_per_chunk: int = 10, 
+               stride: Optional[int] = None,
                return_type: Literal["chunks", "texts"] = "chunks") -> None:
     """Initialize the NeuralChunker object.
     
     Args:
       model: The model to use for the chunker.
-      device: The device to use for the chunker.
+      tokenizer: The tokenizer to use for the chunker.
+      device_map: The device to use for the chunker.
       min_characters_per_chunk: The minimum number of characters per chunk.
+      stride: The stride to use for the chunker.
       return_type: The type of return value.
 
     """
@@ -57,30 +75,52 @@ class NeuralChunker(BaseChunker):
 
     # Initialize the tokenizer to pass in to the parent class
     try:
-      tokenizer = AutoTokenizer.from_pretrained(model) # type: ignore
+      if isinstance(tokenizer, str):
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer) # type: ignore
+      elif tokenizer is None and isinstance(model, str):
+        tokenizer = AutoTokenizer.from_pretrained(model) # type: ignore
+      elif isinstance(tokenizer, PreTrainedTokenizerFast):
+        tokenizer = tokenizer
+      else:
+        raise ValueError("Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object.")
     except Exception as e:
       raise ValueError(f"Error initializing tokenizer: {e}")
 
     # Initialize the Parent class with the tokenizer
     super().__init__(tokenizer)
 
+    # Initialize the model and stride
+    try:
+      if isinstance(model, str):
+        # Check if the model is supported
+        if model not in self.SUPPORTED_MODELS:
+          raise ValueError(f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}")
+        # Initialize the model
+        self.model = AutoModelForTokenClassification.from_pretrained(model, device_map=device_map) # type: ignore
+        # Set the stride
+        stride = self.SUPPORTED_MODEL_STRIDES[model] if stride is None else stride
+      elif model is not None and "transformers" in str(type(model)):
+        # Assuming that the model is a transformers model already, since it has transformers in the name, teehee~
+        self.model = model
+        # Since a custom model is provided, we need to set the stride to 0
+        stride = 0 if stride is None else stride
+      else:
+        raise ValueError("Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object.")
+    except Exception as e:
+      raise ValueError(f"Error initializing model: {e}")
+
     # Set the attributes
-    self.model = model
-    self.device = device
     self.min_characters_per_chunk = min_characters_per_chunk
     self.return_type = return_type
-
-    # Initialize the model
-    model = AutoModelForTokenClassification.from_pretrained(model).to(device) # type: ignore
 
     # Initialize the pipeline
     try:
       self.pipe = pipeline("token-classification", 
                            model=model,
                            tokenizer=tokenizer,
-                           device=device, 
+                           device_map=device_map, 
                            aggregation_strategy="simple", 
-                           stride=512) # type: ignore
+                           stride=stride) # type: ignore
     except Exception as e:
       raise ValueError(f"Error initializing pipeline: {e}")
 
@@ -94,8 +134,13 @@ class NeuralChunker(BaseChunker):
   def _import_dependencies(self) -> None:
     """Import the dependencies."""
     if self._is_available():
-      global AutoTokenizer, AutoModelForTokenClassification, pipeline
-      from transformers import AutoModelForTokenClassification, AutoTokenizer, pipeline
+      global AutoTokenizer, AutoModelForTokenClassification, pipeline, PreTrainedTokenizerFast
+      from transformers import (
+        AutoModelForTokenClassification,
+        AutoTokenizer,
+        PreTrainedTokenizerFast,
+        pipeline,
+      )
     else:
       raise ImportError("transformers is not installed. Please install it with `pip install chonkie[neural]`.")
 
