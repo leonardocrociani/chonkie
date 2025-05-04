@@ -20,6 +20,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
   - [Optional Dependencies](#optional-dependencies)
 - [Usage](#usage)
 - [CHONKosophy](#chonkosophy)
+  - [How does Chonkie think about chunking?](#how-does-chonkie-think-about-chunking)
 - [Chunkers](#chunkers)
   - [`TokenChunker`](#tokenchunker)
   - [`SentenceChunker`](#sentencechunker)
@@ -27,6 +28,10 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
   - [`SemanticChunker`](#semanticchunker)
   - [`SDPMChunker`](#sdpmchunker)
   - [`LateChunker`](#latechunker)
+- [Refinery](#refinery)
+  - [`OverlapRefinery`](#overlaprefinery)
+  - [`EmbeddingRefinery`](#embeddingrefinery)
+- [Chefs](#chefs)
 - [Tokenizers](#tokenizers)
 - [Embeddings](#embeddings)
   - [Custom Embeddings](#custom-embeddings)
@@ -113,6 +118,15 @@ Refer to the types reference below for more information on the `Chunk` object.
 ## CHONKosophy
 
 Chonkie truly believes that chunking should be simple to understand, easy to use and performant where it matters. It is fundamental to Chonkie's design principles. We truly believe that chunking should never be brought into the foreground of your codebase, and should be a primitive that you don't even think about. Just like how we don't think about the `for` loop or the `if` statement at the assembly level (sorry assembly devs 🤖).
+
+
+### How does Chonkie think about chunking?
+
+In Chonkie, we think of chunking as a pipeline, not just a single operation. Generally, the pipeline looks like this:
+
+`Input Data -> Chef -> Chunker(s) -> Refinery(s) -> Porter/Handshake`
+
+The `Chef` is responsible for fetching the data, cleaning it, and preparing it for chunking. The `Chunker` is responsible for chunking the data. The `Refinery` is responsible for refining the chunks, and the `Porter` and `Handshake` are responsible for the final step of the pipeline, which is to return the chunks in a format that can be used by the user or to upsert into a database.
 
 
 ## Chunkers 
@@ -621,6 +635,23 @@ for chunk in chunks:
 
 ```
 </details>
+
+
+## Refinery
+
+The `Refinery` classes are used to refine and add additional context to the chunks, through various means.
+
+### `OverlapRefinery`
+
+
+### `EmbeddingRefinery`
+
+
+## Chefs
+
+The `Chef` classes are chonkie's pre-processing classes that are used to find, fetch, clean and process the data, preparing it to be chunked. Since Chonkie's chunkers are designed to be non-destructive in nature, the `Chef` classes consist of steps that involve non-reversible operations like conversion from HTML to text, or cleaning text from unwanted characters.
+
+
 
 
 ## Tokenizers
