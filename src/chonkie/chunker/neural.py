@@ -222,6 +222,6 @@ class NeuralChunker(BaseChunker):
   def __repr__(self) -> str:
     """Return the string representation of the object."""
     return (f"NeuralChunker(model={self.model},"
-            f" device={self.device}, "
+            f"tokenizer={self.tokenizer}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk}, "
             f"return_type={self.return_type})")
