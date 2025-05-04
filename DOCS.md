@@ -29,7 +29,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
   - [`LateChunker`](#latechunker)
 - [Tokenizers](#tokenizers)
 - [Embeddings](#embeddings)
-  - [How to support a new embedding model or provider?](#how-to-support-a-new-embedding-model-or-provider)
+  - [Custom Embeddings](#custom-embeddings)
 - [Package Versioning](#package-versioning)
 
 ## 📦 Installation
@@ -737,7 +737,7 @@ embeddings = AutoEmbeddings("minishlab/potion-base-8M")
 embedding = embeddings("Hello, world!")
 ```
 
-### How to support a new embedding model or provider? 
+### Custom Embeddings
 
 If you're trying to load a model that is not already supported by Chonkie, don't worry! We've got you covered. Just follow the steps below:
 
