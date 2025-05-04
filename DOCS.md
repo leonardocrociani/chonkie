@@ -26,6 +26,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
   - [`RecursiveChunker`](#recursivechunker)
   - [`SemanticChunker`](#semanticchunker)
   - [`SDPMChunker`](#sdpmchunker)
+  - [`LateChunker`](#latechunker)
 - [Tokenizers](#tokenizers)
 - [Embeddings](#embeddings)
   - [How to support a new embedding model or provider?](#how-to-support-a-new-embedding-model-or-provider)
@@ -517,6 +518,108 @@ for chunk in chunks:
     print(f"Tokens: {chunk.token_count}\n---")
 ```
 
+</details>
+
+### `LateChunker`
+
+The `LateChunker` implements a chunking strategy based on "late interaction," similar to the logic used in ColBERT style models. It first chunks the text using the logic inherited from `RecursiveChunker` based on specified delimiters and `chunk_size`. Then, it calculates the mean embedding for the tokens within each generated chunk using a provided `sentence-transformers` model. The final output consists of `LateChunk` objects, each containing the chunk text, metadata, and its corresponding sentence embeddings (from mean-pooled token embeddings).
+
+This chunker requires the `sentence-transformers` library. You can install it with `pip install "chonkie[st]"`.
+
+**Parameters:**
+
+- `embedding_model (Union[str, SentenceTransformerEmbeddings, Any])`: The sentence-transformers embedding model to use for generating token embeddings. Can be a string identifier (e.g., `"sentence-transformers/all-MiniLM-L6-v2"`) or an instantiated `SentenceTransformerEmbeddings` object. Defaults to `"sentence-transformers/all-MiniLM-L6-v2"`. Requires `chonkie[st]`.
+- `chunk_size (int)`: The target maximum number of tokens per chunk, used by the underlying `RecursiveChunker`. Defaults to `512`.
+- `rules (RecursiveRules)`: The recursive splitting rules to use. Defaults to `RecursiveRules()`. Defines delimiters and priorities for splitting.
+- `min_characters_per_chunk (int)`: The minimum number of characters required for a chunk to be considered valid. Defaults to `24`.
+- `**kwargs (Any)`: Additional keyword arguments passed to the `SentenceTransformerEmbeddings` constructor if `embedding_model` is provided as a string.
+
+**Methods:**
+
+- `chunk(text: str) -> List[LateChunk]`: Chunks a string into a list of `LateChunk` objects, each containing its text, indices, token count, and calculated embedding.
+- `chunk_batch(texts: List[str]) -> List[List[LateChunk]]`: Chunks a list of strings. (Inherited)
+- `from_recipe(name: str, lang: str, **kwargs) -> LateChunker`: Creates a `LateChunker` instance using pre-defined recursive splitting rules (`RecursiveRules`) from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). Allows customization of `embedding_model`, `chunk_size`, etc. Requires `chonkie[hub]`.
+- `__call__(text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]`: Convenience method calling `chunk` or `chunk_batch` depending on input type. (Inherited)
+
+**Examples:**
+
+Here are a couple of examples on how to use the `LateChunker` in practice.
+
+<details>
+<summary><strong>1. Basic Usage of `LateChunker`</strong></summary>
+
+```python
+# Requires "chonkie[st]" to be installed
+from chonkie import LateChunker
+
+# Initialize with default settings (all-MiniLM-L6-v2 model, chunk_size 512)
+chunker = LateChunker()
+
+text = "Late interaction models process queries and documents token by token. This chunker provides token-level embeddings for each chunk. It uses recursive splitting first."
+chunks = chunker(text)
+
+# Print out the chunks and their embedding shapes
+for chunk in chunks:
+    print(f"Text: {chunk.text}")
+    print(f"Token Count: {chunk.token_count}")
+    print(f"Start Index: {chunk.start_index}")
+    print(f"End Index: {chunk.end_index}")
+    # Embedding is a numpy array
+    print(f"Embedding Shape: {chunk.embedding.shape}")
+    print("-" * 10)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Using `LateChunker.from_recipe` with a different model</strong></summary>
+
+```python
+# Requires "chonkie[st, hub]" to be installed
+from chonkie import LateChunker
+
+# Uses default recipe for English ('en') recursive rules
+# Specify a different embedding model and chunk size
+chunker = LateChunker.from_recipe(
+    lang="en",
+    embedding_model="sentence-transformers/paraphrase-MiniLM-L3-v2", # Example different model
+    chunk_size=128
+)
+
+text = "Using a recipe simplifies rule setup. We can still specify the embedding model. This is useful for different languages or text types."
+chunks = chunker(text)
+
+for chunk in chunks:
+    print(chunk.text)
+    print(f"Tokens: {chunk.token_count}")
+    print(f"Embedding Shape: {chunk.embedding.shape}\n---")
+```
+
+</details>
+
+<details>
+<summary><strong>3. Passing `SentenceTransformerEmbeddings` arguments via `**kwargs`</strong></summary>
+
+```python
+# Requires "chonkie[st]" to be installed
+from chonkie import LateChunker
+
+# Example: Pass arguments to the underlying SentenceTransformer model,
+# like specifying the device.
+chunker = LateChunker(
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+    chunk_size=256,
+    device="cpu" # Kwarg passed to SentenceTransformerEmbeddings -> SentenceTransformer
+)
+
+text = "Keyword arguments allow fine-tuning the embedding model initialization if needed."
+chunks = chunker(text)
+
+for chunk in chunks:
+    print(chunk.text)
+    print(f"Tokens: {chunk.token_count}\n---")
+
+```
 </details>
 
 
