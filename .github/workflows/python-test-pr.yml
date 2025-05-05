@@ -6,10 +6,9 @@ on:
       - 'main'
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
@@ -29,7 +28,29 @@ jobs:
 
       - name: Lint with Ruff
         run: ruff check
-        continue-on-error: true
+
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and set-up python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
 
       - name: Cache Hugging Face models
         uses: actions/cache@v4
