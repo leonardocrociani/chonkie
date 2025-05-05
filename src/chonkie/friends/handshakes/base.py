@@ -20,11 +20,11 @@ class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
     @abstractmethod
-    def write(self, chunk: Chunk) -> Any:
+    def write(self, chunk: Union[Chunk, Sequence[Chunk]]) -> Any:
         """Write a single chunk to the vector database.
 
         Args:
-            chunk (Chunk): The chunk to write.
+            chunk (Union[Chunk, Sequence[Chunk]]): The chunk to write.
 
         Returns:
             Any: The result from the database write operation.
@@ -32,11 +32,11 @@ class BaseHandshake(ABC):
         """
         raise NotImplementedError
 
-    def write_batch(self, chunks: Sequence[Chunk]) -> Any:
+    def write_batch(self, chunks: Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]) -> Any:
         """Write a batch of chunks to the vector database.
 
         Args:
-            chunks (Sequence[Chunk]): The sequence of chunks to write.
+            chunks (Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]): The sequence of chunks to write.
 
         Returns:
             Any: The result from the database batch write operation.
