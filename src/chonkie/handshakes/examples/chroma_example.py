@@ -37,7 +37,6 @@ print("Connecting to ChromaDB...")
 chroma_api_key = os.getenv(
     "CHROMA_API_KEY", None
 )  # Replace with your actual key or env var
-
 if not chroma_api_key:
     raise ValueError(
         "Chroma API key not found. Set the CHROMA_API_KEY environment variable."
