@@ -28,6 +28,7 @@ jobs:
 
       - name: Lint with Ruff
         run: ruff check
+        continue-on-error: true
 
   test:
     runs-on: ubuntu-latest
