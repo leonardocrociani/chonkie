@@ -35,7 +35,11 @@ from .refinery import (
     EmbeddingsRefinery,
     OverlapRefinery,
 )
-from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
+from .tokenizer import (
+    CharacterTokenizer,
+    Tokenizer,
+    WordTokenizer,
+)
 from .types import (
     Chunk,
     CodeChunk,
