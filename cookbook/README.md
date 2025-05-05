@@ -1,6 +1,6 @@
 <div align='center'>
 
-# 🦛 Chonkie's Cookbook 📚
+# 🦛 Chonkbook 📚
 
 _A collection of examples, tutorials, and projects using Chonkie_
 
@@ -33,6 +33,8 @@ Share your knowledge and experiences with Chonkie! Whether it's a blog post, vid
 
 | Type | Title | Author | Description |
 |------|--------|--------|-------------|
+| Blog | [Chonkie: a lightweight RAG text chunking library](https://www.aisharenet.com/en/chonkie/) | Aishare | A quick look at Chonkie, a lightweight RAG text chunking library. |
+| Blog | [Text Chunking for RAG systems with Chonkie](https://generativeai.pub/text-chunking-for-rag-systems-with-chonkie-d609d0eef55c) | Toni Ramchandani | Chonkie: Revolutionizing Text Chunking for Efficient RAG Applications |
 | Video | [Chonkie - RAG Chunking Library - Easy Local Installation and Testing](https://www.youtube.com/watch?v=f4f1TkeL5Hk) | Fahd Mirza | A quick walkthrough of how to install Chonkie and test it out for yourself! |
 | Blog | [Easy Late-Chunking with Chonkie](https://pub.towardsai.net/easy-late-chunking-with-chonkie-7f05e5916997) | Michael Ryaboy | This blog post is a quick look at how you can use Chonkie's LateChunker to chunk your documents and build a search pipeline over it with KDB.AI! |
 | Blog | [Ingest (almost) any non-PDF document in a vector database, effortlessly](https://dev.to/astrabert/ingest-almost-any-non-pdf-document-in-a-vector-database-effortlessly-547c) | Clelia (Astra) Bertelli | Introduction to the ingest-anything library, a tool that allows you to ingest (almost) any non-PDF document in a vector database, effortlessly. |
