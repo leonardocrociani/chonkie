@@ -2,13 +2,11 @@
 
 import importlib.util as importutil
 import warnings
-from typing import TYPE_CHECKING, Any, Literal, Optional, Sequence, Union, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.refinery import EmbeddingsRefinery
 from chonkie.types import Chunk
-
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
@@ -164,4 +162,6 @@ class ChromaHandshake(BaseHandshake):
 
         print(f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}")
     
-
+    def __repr__(self) -> str:
+        """Return the string representation of the ChromaHandshake."""
+        return f"ChromaHandshake(collection_name={self.collection_name})"
