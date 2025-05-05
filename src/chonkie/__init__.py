@@ -1,6 +1,5 @@
 """Main package for Chonkie."""
 
-from . import handshakes
 from .chunker import (
     BaseChunker,
     CodeChunker,
