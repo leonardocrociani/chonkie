@@ -1,356 +1,396 @@
-"""Unit tests for QdrantHandshake class."""
+"""Unit tests for QdrantHandshake class using an in-memory Qdrant instance."""
 
-from unittest.mock import AsyncMock, MagicMock, call, patch
+import uuid
+from contextlib import suppress
 
 import numpy as np
 import pytest
 
-# Mock the qdrant_client library before importing the class under test
-qdrant_client_mock = MagicMock()
-models_mock = MagicMock()
-qdrant_client_mock.models = models_mock
-qdrant_client_mock.http.models.Distance = MagicMock()
-qdrant_client_mock.http.models.VectorParams = MagicMock()
-qdrant_client_mock.QdrantClient = MagicMock()
+# Try importing qdrant_client, skip tests if unavailable
+qdrant_client = pytest.importorskip("qdrant_client")
+from qdrant_client import QdrantClient, models
 
-# Define specific distance values if needed for tests
-qdrant_client_mock.http.models.Distance.COSINE = "Cosine"
-qdrant_client_mock.http.models.Distance.EUCLID = "Euclid"
+from chonkie.handshakes.vector_db_writers.qdrant import QdrantHandshake
+from chonkie.types import Chunk
 
+# --- Fixtures ---
 
-with patch.dict("sys.modules", {"qdrant_client": qdrant_client_mock}):
-    from chonkie.handshakes.vector_db_writers.qdrant import QdrantHandshake
-    from chonkie.types import Chunk
+@pytest.fixture(scope="function")
+def test_collection_name():
+    """Generate a unique collection name for each test function."""
+    return f"chonkie-test-coll-{uuid.uuid4()}"
 
 
-@pytest.fixture
-def mock_qdrant_client():
-    """Fixture for a mocked QdrantClient object."""
-    client = MagicMock()
-    # Mock async upsert separately if needed, or make upsert an AsyncMock
-    client.upsert = AsyncMock(return_value="upsert_result")
-    client.get_collection = MagicMock()
-    client.recreate_collection = MagicMock()
-    return client
+@pytest.fixture(scope="function")
+def qdrant_client_in_memory():
+    """Fixture for an in-memory QdrantClient."""
+    client = QdrantClient(":memory:")
+    yield client
+    # No explicit cleanup needed for :memory: client
+
+
+@pytest.fixture(scope="function")
+def qdrant_handshake(qdrant_client_in_memory, test_collection_name):
+    """Fixture for a QdrantHandshake using an in-memory client."""
+    # Use a small default vector size for tests
+    vector_size = 2
+    handshake = QdrantHandshake(
+        collection_name=test_collection_name,
+        client=qdrant_client_in_memory,
+        vector_size=vector_size,
+        distance=models.Distance.COSINE,
+        create_collection_if_not_exists=True,
+    )
+    # Ensure collection exists after handshake initialization
+    try:
+        qdrant_client_in_memory.get_collection(collection_name=test_collection_name)
+    except Exception as e:
+        pytest.fail(f"Collection {test_collection_name} was not created: {e}")
+
+    yield handshake
+    # Clean up the collection after the test
+    with suppress(Exception): # Ignore errors if collection doesn't exist
+         qdrant_client_in_memory.delete_collection(collection_name=test_collection_name)
 
 
 @pytest.fixture
 def sample_chunks_qdrant():
     """Fixture for sample Chunk objects for Qdrant tests (embeddings required)."""
-    return [
-        Chunk(
-            text="Qdrant chunk one.",
-            embedding=np.array([0.5, 0.6], dtype=np.float32),
-            id="qd1",
-            metadata={"source": "fileX", "type": "para"},
-            token_count=3,
-            start_index=0,
-            end_index=18,
-        ),
-        Chunk(
-            text="Qdrant chunk two.",
-            embedding=np.array([0.7, 0.8], dtype=np.float32),
-            id="qd2",
-            metadata={"source": "fileY", "type": "list"},
-            token_count=3,
-            start_index=19,
-            end_index=37,
-        ),
-    ]
+    chunk1 = Chunk(
+        text="Qdrant chunk one.",
+        token_count=3,
+        start_index=0,
+        end_index=18,
+    )
+    chunk1.embedding = np.array([0.5, 0.6], dtype=np.float32)
+    chunk1.id = "qd1"
+    # Assign metadata as attributes
+    chunk1.source = "fileX"
+    chunk1.type = "para"
+
+    chunk2 = Chunk(
+        text="Qdrant chunk two.",
+        token_count=3,
+        start_index=19,
+        end_index=37,
+    )
+    chunk2.embedding = np.array([0.7, 0.8], dtype=np.float32)
+    chunk2.id = "qd2"
+    # Assign metadata as attributes
+    chunk2.source = "fileY"
+    chunk2.type = "list"
+
+    chunk3 = Chunk( # Chunk with no metadata initially
+        text="Qdrant chunk three.",
+        token_count=3,
+        start_index=38,
+        end_index=57,
+    )
+    chunk3.embedding = np.array([0.1, 0.9], dtype=np.float32)
+    chunk3.id = "qd3"
+
+    return [chunk1, chunk2, chunk3]
 
 
 @pytest.fixture
 def sample_chunks_qdrant_no_embeddings():
     """Fixture for sample Chunk objects without embeddings (should cause errors)."""
-    return [
-        Chunk(
-            text="No embedding here.", id="qd3", metadata={"source": "fileZ"}
-        ),
-    ]
-
-
-# Test Initialization
-def test_init_with_existing_client(mock_qdrant_client):
-    """Test initialization with an existing client."""
-    mock_qdrant_client.get_collection.return_value = (
-        True  # Simulate collection exists
+    chunk_no_emb = Chunk(
+        text="No embedding here.",
+        # Assuming default/dummy values for required fields if needed by tests
+        token_count=3,
+        start_index=0,
+        end_index=18,
     )
+    chunk_no_emb.id = "qd_no_emb"
+    # Assign metadata as attributes
+    chunk_no_emb.source = "fileZ"
+    return [chunk_no_emb]
+
+
+# --- Test Initialization ---
+
+def test_init_with_existing_client_create_collection(qdrant_client_in_memory, test_collection_name):
+    """Test initialization with an existing client and creating the collection."""
+    vector_size = 4 # Different size for this test
     handshake = QdrantHandshake(
-        collection_name="existing_coll",
-        client=mock_qdrant_client,
-        create_collection_if_not_exists=False,
-    )
-    assert handshake.client == mock_qdrant_client
-    assert handshake.collection_name == "existing_coll"
-    mock_qdrant_client.get_collection.assert_called_once_with(
-        collection_name="existing_coll"
-    )
-    mock_qdrant_client.recreate_collection.assert_not_called()
-
-
-@patch("chonkie.handshakes.vector_db_writers.qdrant.QdrantClient")
-def test_init_without_client_create_collection(mock_client_constructor):
-    """Test initialization without client, creating collection."""
-    mock_client_instance = mock_client_constructor.return_value
-    mock_client_instance.get_collection.side_effect = Exception(
-        "Not found"
-    )  # Simulate collection doesn't exist
-
-    handshake = QdrantHandshake(
-        collection_name="new_q_coll",
-        url="http://qdrant:6333",
-        api_key="q-key",
-        vector_size=128,
-        distance=qdrant_client_mock.http.models.Distance.EUCLID,
+        collection_name=test_collection_name,
+        client=qdrant_client_in_memory,
+        vector_size=vector_size,
+        distance=models.Distance.EUCLID,
         create_collection_if_not_exists=True,
-        prefer_grpc=True,
     )
+    assert handshake.client == qdrant_client_in_memory
+    assert handshake.collection_name == test_collection_name
 
-    mock_client_constructor.assert_called_once_with(
-        url="http://qdrant:6333", api_key="q-key", prefer_grpc=True
-    )
-    assert handshake.client == mock_client_instance
-    mock_client_instance.get_collection.assert_called_once_with(
-        collection_name="new_q_coll"
-    )
-    qdrant_client_mock.http.models.VectorParams.assert_called_once_with(
-        size=128, distance=qdrant_client_mock.http.models.Distance.EUCLID
-    )
-    mock_client_instance.recreate_collection.assert_called_once_with(
-        collection_name="new_q_coll",
-        vectors_config=qdrant_client_mock.http.models.VectorParams.return_value,
-    )
+    # Verify collection was created
+    collection_info = qdrant_client_in_memory.get_collection(collection_name=test_collection_name)
+    assert collection_info.vectors_config.params.size == vector_size
+    assert collection_info.vectors_config.params.distance == models.Distance.EUCLID
 
 
-@patch("chonkie.handshakes.vector_db_writers.qdrant.QdrantClient")
-def test_init_create_collection_missing_vector_size(mock_client_constructor):
+def test_init_with_existing_client_collection_exists(qdrant_client_in_memory, test_collection_name):
+    """Test initialization when the collection already exists."""
+    vector_size = 8
+    distance = models.Distance.DOT
+    # Pre-create the collection
+    qdrant_client_in_memory.recreate_collection(
+        collection_name=test_collection_name,
+        vectors_config=models.VectorParams(size=vector_size, distance=distance)
+    )
+
+    handshake = QdrantHandshake(
+        collection_name=test_collection_name,
+        client=qdrant_client_in_memory,
+        create_collection_if_not_exists=False, # Should not try to recreate
+        # vector_size/distance shouldn't matter if not creating
+    )
+    assert handshake.client == qdrant_client_in_memory
+    assert handshake.collection_name == test_collection_name
+
+    # Verify collection still exists with original config
+    collection_info = qdrant_client_in_memory.get_collection(collection_name=test_collection_name)
+    assert collection_info.vectors_config.params.size == vector_size
+    assert collection_info.vectors_config.params.distance == distance
+
+
+def test_init_without_client_create_collection(test_collection_name):
+    """Test initialization without providing a client instance (should create one)."""
+    vector_size = 16
+    handshake = QdrantHandshake(
+        collection_name=test_collection_name,
+        location=":memory:", # Use in-memory location
+        vector_size=vector_size,
+        distance=models.Distance.COSINE,
+        create_collection_if_not_exists=True,
+    )
+    assert isinstance(handshake.client, QdrantClient)
+    assert handshake.collection_name == test_collection_name
+
+    # Verify collection was created in the new client instance
+    collection_info = handshake.client.get_collection(collection_name=test_collection_name)
+    assert collection_info.vectors_config.params.size == vector_size
+    assert collection_info.vectors_config.params.distance == models.Distance.COSINE
+
+
+def test_init_create_collection_missing_vector_size(qdrant_client_in_memory, test_collection_name):
     """Test ValueError if creating collection without vector_size."""
-    mock_client_instance = mock_client_constructor.return_value
-    mock_client_instance.get_collection.side_effect = Exception("Not found")
-
     with pytest.raises(ValueError, match="vector_size must be provided"):
         QdrantHandshake(
-            collection_name="new_q_coll",
+            collection_name=test_collection_name,
+            client=qdrant_client_in_memory,
             create_collection_if_not_exists=True,
             # vector_size is missing
         )
 
 
-def test_init_collection_not_found_and_not_create(mock_qdrant_client):
+def test_init_collection_not_found_and_not_create(qdrant_client_in_memory, test_collection_name):
     """Test ValueError if collection not found and create_collection_if_not_exists is False."""
-    mock_qdrant_client.get_collection.side_effect = Exception(
-        "Collection not found error"
-    )
     with pytest.raises(
-        ValueError,
-        match="not found and create_collection_if_not_exists is False",
+        ValueError, # Qdrant client raises UnexpectedResponseError or similar
+        match=f"Collection `{test_collection_name}` not found and create_collection_if_not_exists is False.",
     ):
         QdrantHandshake(
-            collection_name="nonexistent_q",
-            client=mock_qdrant_client,
+            collection_name=test_collection_name, # Does not exist yet
+            client=qdrant_client_in_memory,
             create_collection_if_not_exists=False,
         )
-    mock_qdrant_client.get_collection.assert_called_once_with(
-        collection_name="nonexistent_q"
-    )
 
 
-# Test _prepare_qdrant_points
-def test_prepare_qdrant_points_success(
-    mock_qdrant_client, sample_chunks_qdrant
-):
+# --- Test _prepare_qdrant_points ---
+# This is an internal method, but testing it ensures data transformation logic is correct.
+# We still need a handshake instance to call it.
+
+def test_prepare_qdrant_points_success(qdrant_handshake, sample_chunks_qdrant):
     """Test successful preparation of Qdrant points."""
-    handshake = QdrantHandshake(
-        collection_name="test", client=mock_qdrant_client, vector_size=2
-    )  # vector_size needed for init check mock
     extra_meta = {"global": "value"}
-    points = handshake._prepare_qdrant_points(
+    points = qdrant_handshake._prepare_qdrant_points(
         sample_chunks_qdrant, extra_metadata=extra_meta
     )
 
-    assert len(points) == 2
-    models_mock.PointStruct.assert_has_calls([
-        call(
-            id="qd1",
-            vector=sample_chunks_qdrant[0].embedding,
-            payload={
-                "source": "fileX",
-                "type": "para",
-                "token_count": 3,
-                "start_index": 0,
-                "end_index": 18,
-                "global": "value",
-            },
-        ),
-        call(
-            id="qd2",
-            vector=sample_chunks_qdrant[1].embedding,
-            payload={
-                "source": "fileY",
-                "type": "list",
-                "token_count": 3,
-                "start_index": 19,
-                "end_index": 37,
-                "global": "value",
-            },
-        ),
-    ])
-    # Check the actual returned objects (assuming PointStruct mock returns the call args)
-    assert points[0] == models_mock.PointStruct.call_args_list[0][1]
-    assert points[1] == models_mock.PointStruct.call_args_list[1][1]
+    assert len(points) == 3
+    assert isinstance(points[0], models.PointStruct)
+    assert points[0].id == "qd1"
+    np.testing.assert_array_equal(points[0].vector, sample_chunks_qdrant[0].embedding)
+    assert points[0].payload == {
+        "source": "fileX",
+        "type": "para",
+        "token_count": 3,
+        "start_index": 0,
+        "end_index": 18,
+        "global": "value", # Extra metadata included
+    }
+
+    assert isinstance(points[1], models.PointStruct)
+    assert points[1].id == "qd2"
+    np.testing.assert_array_equal(points[1].vector, sample_chunks_qdrant[1].embedding)
+    assert points[1].payload == {
+        "source": "fileY",
+        "type": "list",
+        "token_count": 3,
+        "start_index": 19,
+        "end_index": 37,
+        "global": "value",
+    }
+
+    assert isinstance(points[2], models.PointStruct)
+    assert points[2].id == "qd3"
+    np.testing.assert_array_equal(points[2].vector, sample_chunks_qdrant[2].embedding)
+    assert points[2].payload == {
+        # No original metadata, only default + extra
+        "token_count": 3,
+        "start_index": 38,
+        "end_index": 57,
+        "global": "value",
+    }
 
 
 def test_prepare_qdrant_points_missing_embedding_raises_error(
-    mock_qdrant_client, sample_chunks_qdrant_no_embeddings
+    qdrant_handshake, sample_chunks_qdrant_no_embeddings
 ):
     """Test _prepare_qdrant_points raises ValueError if embeddings are missing."""
-    handshake = QdrantHandshake(
-        collection_name="test", client=mock_qdrant_client, vector_size=2
-    )
-    # The error should be raised by _prepare_data called within _prepare_qdrant_points
     with pytest.raises(
         ValueError, match="One or more chunks are missing required embeddings"
     ):
-        handshake._prepare_qdrant_points(sample_chunks_qdrant_no_embeddings)
+        qdrant_handshake._prepare_qdrant_points(sample_chunks_qdrant_no_embeddings)
 
 
-def test_prepare_qdrant_points_empty_list(mock_qdrant_client):
+def test_prepare_qdrant_points_empty_list(qdrant_handshake):
     """Test _prepare_qdrant_points with an empty list."""
-    handshake = QdrantHandshake(
-        collection_name="test", client=mock_qdrant_client, vector_size=2
-    )
-    points = handshake._prepare_qdrant_points([])
+    points = qdrant_handshake._prepare_qdrant_points([])
     assert points == []
-    models_mock.PointStruct.assert_not_called()
 
 
-# Test write and write_batch
-def test_write_calls_write_batch(mock_qdrant_client, sample_chunks_qdrant):
-    """Test that write calls write_batch."""
-    handshake = QdrantHandshake(
-        collection_name="test", client=mock_qdrant_client, vector_size=2
-    )
-    handshake.write_batch = MagicMock(
-        return_value="batch_result"
-    )  # Mock write_batch
+# --- Test write and write_batch (Integration with :memory: client) ---
 
-    result = handshake.write(
-        sample_chunks_qdrant[0], wait=False, extra_metadata={"single": True}
+def test_write_calls_write_batch(qdrant_handshake, sample_chunks_qdrant):
+    """Test that write calls write_batch and successfully writes a single chunk."""
+    chunk_to_write = sample_chunks_qdrant[0]
+    extra_meta = {"single_write": True}
+
+    # Use the real write method
+    result = qdrant_handshake.write(
+        chunk_to_write, wait=True, extra_metadata=extra_meta
     )
 
-    handshake.write_batch.assert_called_once_with(
-        [sample_chunks_qdrant[0]], wait=False, extra_metadata={"single": True}
+    # Check result (Qdrant upsert result is complex, just check it's not None/error)
+    assert result is not None
+
+    # Verify the point exists in the collection
+    retrieved_points = qdrant_handshake.client.retrieve(
+        collection_name=qdrant_handshake.collection_name,
+        ids=[chunk_to_write.id],
+        with_payload=True,
+        with_vectors=True,
     )
-    assert result == "batch_result"
+    assert len(retrieved_points) == 1
+    point = retrieved_points[0]
+    assert point.id == chunk_to_write.id
+    np.testing.assert_array_equal(point.vector, chunk_to_write.embedding)
+    assert point.payload["source"] == chunk_to_write.metadata["source"]
+    assert point.payload["single_write"] is True # Check extra metadata
 
 
-def test_write_batch_success(mock_qdrant_client, sample_chunks_qdrant):
+def test_write_batch_success(qdrant_handshake, sample_chunks_qdrant):
     """Test successful batch write operation."""
-    handshake = QdrantHandshake(
-        collection_name="q_coll", client=mock_qdrant_client, vector_size=2
-    )
-    mock_points = [MagicMock(), MagicMock()]
-    handshake._prepare_qdrant_points = MagicMock(return_value=mock_points)
-    mock_qdrant_client.upsert.return_value = (
-        "upsert_success"  # Reset mock return value
+    extra_meta = {"batch_run": 5}
+    result = qdrant_handshake.write_batch(
+        sample_chunks_qdrant, wait=True, extra_metadata=extra_meta
     )
 
-    result = handshake.write_batch(
-        sample_chunks_qdrant, wait=True, extra_metadata={"run": 5}
-    )
+    # Check result
+    assert result is not None
 
-    handshake._prepare_qdrant_points.assert_called_once_with(
-        sample_chunks_qdrant, extra_metadata={"run": 5}
+    # Verify points exist
+    ids_to_check = [c.id for c in sample_chunks_qdrant]
+    retrieved_points = qdrant_handshake.client.retrieve(
+        collection_name=qdrant_handshake.collection_name,
+        ids=ids_to_check,
+        with_payload=True,
     )
-    mock_qdrant_client.upsert.assert_called_once_with(
-        collection_name="q_coll", points=mock_points, wait=True
-    )
-    assert result == "upsert_success"
+    assert len(retrieved_points) == len(sample_chunks_qdrant)
+    retrieved_ids = {p.id for p in retrieved_points}
+    assert retrieved_ids == set(ids_to_check)
+    # Check extra metadata on one point
+    assert retrieved_points[0].payload["batch_run"] == 5
 
 
-def test_write_batch_no_chunks(mock_qdrant_client):
+def test_write_batch_no_chunks(qdrant_handshake):
     """Test write_batch when no chunks are provided."""
-    handshake = QdrantHandshake(
-        collection_name="q_coll", client=mock_qdrant_client, vector_size=2
+    result = qdrant_handshake.write_batch([])
+    assert result is None # Should do nothing and return None
+
+    # Verify collection is still empty (or has 0 points if created empty)
+    count = qdrant_handshake.client.count(
+        collection_name=qdrant_handshake.collection_name
     )
-    handshake._prepare_qdrant_points = MagicMock(
-        return_value=[]
-    )  # Simulate no points prepared
-
-    result = handshake.write_batch([])
-
-    handshake._prepare_qdrant_points.assert_called_once_with(
-        [], extra_metadata=None
-    )
-    mock_qdrant_client.upsert.assert_not_called()
-    assert result is None
+    assert count.count == 0
 
 
-# Test Async Methods
-@pytest.mark.asyncio
-async def test_awrite_calls_awrite_batch(
-    mock_qdrant_client, sample_chunks_qdrant
-):
-    """Test that awrite calls awrite_batch."""
-    handshake = QdrantHandshake(
-        collection_name="test", client=mock_qdrant_client, vector_size=2
-    )
-    handshake.awrite_batch = AsyncMock(
-        return_value="async_batch_result"
-    )  # Mock awrite_batch
-
-    result = await handshake.awrite(
-        sample_chunks_qdrant[0], extra_metadata={"async_single": True}
-    )
-
-    handshake.awrite_batch.assert_awaited_once_with(
-        [sample_chunks_qdrant[0]], extra_metadata={"async_single": True}
-    )
-    assert result == "async_batch_result"
-
+# --- Test Async Methods (Integration with :memory: client) ---
 
 @pytest.mark.asyncio
-async def test_awrite_batch_success(mock_qdrant_client, sample_chunks_qdrant):
+async def test_awrite_calls_awrite_batch(qdrant_handshake, sample_chunks_qdrant):
+    """Test that awrite calls awrite_batch and successfully writes a single chunk."""
+    chunk_to_write = sample_chunks_qdrant[1] # Use a different chunk
+    extra_meta = {"async_single": True}
+
+    result = await qdrant_handshake.awrite(
+        chunk_to_write, extra_metadata=extra_meta
+    ) # wait=False is default for async
+
+    # Check result
+    assert result is not None
+
+    # Verify the point exists (use sync client for verification for simplicity)
+    # Note: In-memory client state is shared between sync/async calls
+    retrieved_points = qdrant_handshake.client.retrieve(
+        collection_name=qdrant_handshake.collection_name,
+        ids=[chunk_to_write.id],
+        with_payload=True,
+        with_vectors=True,
+    )
+    assert len(retrieved_points) == 1
+    point = retrieved_points[0]
+    assert point.id == chunk_to_write.id
+    np.testing.assert_array_equal(point.vector, chunk_to_write.embedding)
+    assert point.payload["type"] == chunk_to_write.metadata["type"]
+    assert point.payload["async_single"] is True
+
+
+@pytest.mark.asyncio
+async def test_awrite_batch_success(qdrant_handshake, sample_chunks_qdrant):
     """Test successful async batch write operation."""
-    handshake = QdrantHandshake(
-        collection_name="async_q_coll", client=mock_qdrant_client, vector_size=2
-    )
-    mock_points = [MagicMock(), MagicMock()]
-    handshake._prepare_qdrant_points = MagicMock(return_value=mock_points)
-    # Ensure the client's upsert is awaitable and returns something
-    mock_qdrant_client.upsert = AsyncMock(return_value="async_upsert_done")
-
-    result = await handshake.awrite_batch(
-        sample_chunks_qdrant, extra_metadata={"async_run": 1}
+    extra_meta = {"async_batch_run": 1}
+    result = await qdrant_handshake.awrite_batch(
+        sample_chunks_qdrant, extra_metadata=extra_meta
     )
 
-    handshake._prepare_qdrant_points.assert_called_once_with(
-        sample_chunks_qdrant, extra_metadata={"async_run": 1}
+    # Check result
+    assert result is not None
+
+    # Verify points exist
+    ids_to_check = [c.id for c in sample_chunks_qdrant]
+    retrieved_points = qdrant_handshake.client.retrieve(
+        collection_name=qdrant_handshake.collection_name,
+        ids=ids_to_check,
+        with_payload=True,
     )
-    # Qdrant client's async upsert might implicitly handle wait=False
-    mock_qdrant_client.upsert.assert_awaited_once_with(
-        collection_name="async_q_coll",
-        points=mock_points,
-        wait=False,  # awrite_batch defaults to wait=False
-    )
-    assert result == "async_upsert_done"
+    assert len(retrieved_points) == len(sample_chunks_qdrant)
+    retrieved_ids = {p.id for p in retrieved_points}
+    assert retrieved_ids == set(ids_to_check)
+    # Check extra metadata on one point
+    assert retrieved_points[1].payload["async_batch_run"] == 1
 
 
 @pytest.mark.asyncio
-async def test_awrite_batch_no_chunks(mock_qdrant_client):
+async def test_awrite_batch_no_chunks(qdrant_handshake):
     """Test awrite_batch when no chunks are provided."""
-    handshake = QdrantHandshake(
-        collection_name="async_q_coll", client=mock_qdrant_client, vector_size=2
-    )
-    handshake._prepare_qdrant_points = MagicMock(
-        return_value=[]
-    )  # Simulate no points prepared
-    mock_qdrant_client.upsert = AsyncMock()  # Reset mock
+    result = await qdrant_handshake.awrite_batch([])
+    assert result is None # Should do nothing and return None
 
-    result = await handshake.awrite_batch([])
-
-    handshake._prepare_qdrant_points.assert_called_once_with(
-        [], extra_metadata=None
+    # Verify collection is still empty
+    count = qdrant_handshake.client.count(
+        collection_name=qdrant_handshake.collection_name
     )
-    mock_qdrant_client.upsert.assert_not_awaited()
-    assert result is None
+    assert count.count == 0

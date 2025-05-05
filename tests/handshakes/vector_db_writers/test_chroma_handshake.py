@@ -32,27 +32,29 @@ def ephemeral_chroma_client():
 @pytest.fixture
 def sample_chunks_chroma():
     """Fixture for sample Chunk objects for Chroma tests."""
-    chunks = [
-        Chunk(
-            text="Chroma chunk 1.",
-            token_count=3,
-            start_index=0,
-            end_index=16,
-        ),
-        Chunk(
-            text="Chroma chunk 2.",
-            token_count=3,
-            start_index=17,
-            end_index=33,
-        ),
-    ]
-    chunks[0].id = "ch1"
-    chunks[0].embedding = np.array([0.1, 0.2], dtype=np.float32)
-    chunks[1].id = "ch2"
-    chunks[1].embedding = np.array([0.3, 0.4], dtype=np.float32)
-    chunks[0].custom_field = "value1"
-    chunks[1].custom_field = "value2"
-    return chunks
+    chunk1 = Chunk(
+        text="Chroma chunk 1.",
+        token_count=3,
+        start_index=0,
+        end_index=16,
+    )
+    chunk1.id = "ch1"
+    chunk1.embedding = np.array([0.1, 0.2], dtype=np.float32)
+    # Assign metadata as attributes
+    chunk1.custom_field = "value1"
+
+    chunk2 = Chunk(
+        text="Chroma chunk 2.",
+        token_count=3,
+        start_index=17,
+        end_index=33,
+    )
+    chunk2.id = "ch2"
+    chunk2.embedding = np.array([0.3, 0.4], dtype=np.float32)
+    # Assign metadata as attributes
+    chunk2.custom_field = "value2"
+
+    return [chunk1, chunk2]
 
 
 @pytest.fixture
