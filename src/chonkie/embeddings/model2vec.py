@@ -1,7 +1,7 @@
 """Model2Vec embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
 from .base import BaseEmbeddings
 
