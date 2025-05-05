@@ -25,6 +25,13 @@ from .genie import (
     BaseGenie,
     GeminiGenie,
 )
+from . import handshakes
+from .handshakes import (
+    BaseVectorWriter,
+    ChromaHandshake,
+    QdrantHandshake,
+    TurbopufferHandshake,
+)
 from .refinery import (
     BaseRefinery,
     EmbeddingsRefinery,
@@ -50,7 +57,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -113,6 +120,14 @@ __all__ += [
     "BaseRefinery",
     "OverlapRefinery",
     "EmbeddingsRefinery",
+]
+
+# Add all handshake classes to __all__
+__all__ += [
+    "BaseVectorWriter",
+    "ChromaHandshake",
+    "QdrantHandshake",
+    "TurbopufferHandshake",
 ]
 
 # Add all utils classes to __all__

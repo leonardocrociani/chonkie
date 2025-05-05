@@ -60,6 +60,7 @@ jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 genie = ["pydantic", "google-genai"]
+handshakes = ["chromadb>=1.0.7", "qdrant-client>=1.14.2", "turbopuffer>=0.2.2"]
 all = [
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
@@ -78,6 +79,9 @@ all = [
     "google-genai",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
+    "chromadb>=1.0.7", 
+    "qdrant-client>=1.14.2", 
+    "turbopuffer>=0.2.2",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -105,6 +109,7 @@ packages = [
     "chonkie.genie",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
+    "chonkie.handshakes",
 ]
 
 [tool.ruff]
