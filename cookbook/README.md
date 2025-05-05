@@ -1,5 +1,6 @@
 <div align='center'>
 
+![Chonkie Logo](../assets/chonkbook_logo_transparent_bg.png)
 # 🦛 Chonkbook 📚
 
 _A collection of examples, tutorials, and projects using Chonkie_

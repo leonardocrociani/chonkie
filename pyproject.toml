@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.0.6"
+version = "1.0.7"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -22,6 +22,10 @@ keywords = [
     "machine-learning",
 ]
 authors = [
+    { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
+    { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
+]
+maintainers = [
     { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
     { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
 ]
@@ -47,6 +51,8 @@ dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
+"Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
+
 
 [project.optional-dependencies]
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
@@ -61,6 +67,8 @@ jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 genie = ["pydantic", "google-genai"]
+chroma = ["chromadb"]
+qdrant = ["qdrant-client"]
 all = [
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
@@ -79,6 +87,8 @@ all = [
     "google-genai",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
+    "chromadb",
+    "qdrant-client",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -107,6 +117,9 @@ packages = [
     "chonkie.utils",
     "chonkie.refinery",
     "chonkie.genie",
+    "chonkie.friends",
+    "chonkie.friends.porters",
+    "chonkie.friends.handshakes",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
 ]
@@ -125,5 +138,4 @@ disallow_untyped_defs = true
 ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
-warn_return_any = true
 show_error_codes = true
