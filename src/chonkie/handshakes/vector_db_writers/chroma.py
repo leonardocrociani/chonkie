@@ -10,6 +10,7 @@ try:
     import chromadb
     from chromadb import Collection
     from chromadb.config import Settings
+    from chromadb.utils import embedding_functions
 except ImportError:
     raise ImportError(
         "chromadb is not installed. Please install it to use ChromaHandshake: "
@@ -27,11 +28,11 @@ class ChromaHandshake(BaseVectorWriter):
         client_settings: Optional[Settings] = None,
         id_generator: Optional[Callable[..., str]] = None,
         metadata_fields: Optional[List[str]] = None,
-        create_collection_if_not_exists: bool = True,
+        create_collection_if_not_exists: bool = False,
         collection_metadata: Optional[Dict[str, Any]] = None,
         embedding_function: Optional[
             Any
-        ] = chromadb.utils.embedding_functions.DefaultEmbeddingFunction(),  # Use Chroma's default if none provided by user chunks
+        ] = embedding_functions.DefaultEmbeddingFunction(),  # Use Chroma's default if none provided by user chunks
     ) -> None:
         """Initialize the ChromaHandshake.
 
@@ -40,7 +41,7 @@ class ChromaHandshake(BaseVectorWriter):
             client (Optional[chromadb.ClientAPI]): An existing ChromaDB client instance.
                 If None, a new client will be created based on client_settings.
             client_settings (Optional[Settings]): Settings for creating a new ChromaDB client.
-                Used only if `client` is None. Defaults to ephemeral client.
+                Used only if `client` is None. Defaults to ephemeral (in-memory) client.
             id_generator (Optional[Callable[..., str]]): Function to generate document IDs.
             metadata_fields (Optional[List[str]]): Specific chunk attributes for metadata.
             create_collection_if_not_exists (bool): Create the collection if it doesn't exist.

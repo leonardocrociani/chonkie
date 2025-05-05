@@ -51,8 +51,8 @@ class TurbopufferHandshake(BaseVectorWriter):
         self, chunks: Sequence[Chunk], **kwargs: Any
     ) -> Dict[str, Any]:
         """Prepare data in Turbopuffer's expected dictionary format."""
-        ids, _, embeddings, metadatas = self._prepare_data(
-            chunks,
+        ids, texts, embeddings, metadatas = self._prepare_data(
+            chunks=chunks,
             embedding_required=True, # Turbopuffer requires embeddings
             extra_metadata=kwargs.pop("extra_metadata", None)
         )
@@ -65,6 +65,7 @@ class TurbopufferHandshake(BaseVectorWriter):
         data = {
             "ids": ids,
             "vectors": embeddings,
+            "texts": texts,
             "attributes": {},
         }
 
