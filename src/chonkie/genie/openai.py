@@ -86,7 +86,7 @@ class OpenAIGenie(BaseGenie):
             from openai import OpenAI
             from pydantic import BaseModel
         else:
-            raise ImportError("One or more of the required modules are not available: [pydantic, openai]")
+            raise ImportError("One or more of the required modules are not available: [pydantic, openai]", "Please install the dependencies via `pip install chonkie[openai]`")
 
     def __repr__(self) -> str:
         """Return a string representation of the OpenAIGenie instance."""
