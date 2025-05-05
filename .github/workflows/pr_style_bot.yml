@@ -12,6 +12,6 @@ jobs:
   style:
     uses: huggingface/huggingface_hub/.github/workflows/style-bot-action.yml@main
     with:
-      python_quality_dependencies: "[quality]"
+      python_quality_dependencies: "[dev]"
     secrets:
       bot_token: ${{ secrets.GITHUB_TOKEN }}
