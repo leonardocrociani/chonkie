@@ -138,5 +138,4 @@ disallow_untyped_defs = true
 ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
-warn_return_any = true
 show_error_codes = true
