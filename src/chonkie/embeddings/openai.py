@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from .base import BaseEmbeddings
 
@@ -12,8 +12,8 @@ if TYPE_CHECKING:
         import numpy as np
         import tiktoken
     except ImportError:
-        np = Any # type: ignore
-        tiktoken = Any # type: ignore
+        np = Any
+        tiktoken = Any 
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
