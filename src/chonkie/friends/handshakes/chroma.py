@@ -2,12 +2,13 @@
 
 import importlib.util as importutil
 import warnings
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Sequence, Union, Dict, List
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.refinery import EmbeddingsRefinery
 from chonkie.types import Chunk
+
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
@@ -15,14 +16,59 @@ from .utils import generate_random_collection_name
 if TYPE_CHECKING:
     try:
         import chromadb
+        import numpy as np
     except ImportError:
         chromadb = Any
+        np = Any
 
-# NOTE: We're doing a bit of a hack here to work with embeddings from inside Chonkie
-#  since we can't have a EmbeddingFunction without having ChromaDB in the base install. 
-# So we put the input of EmbeddingsRefinery to have "input" and not "chunks" so it 
-# looks and feels like a normal chromadb.EmbeddingFunction. 
-# Personally, I don't quite like this, but it's the best we can do for now. 
+
+# NOTE: This is a bit of a hack to work with Chroma's EmbeddingFunction interface
+# since we can't have a EmbeddingFunction without having ChromaDB in the base install. 
+# So we create a local class (which we don't pass to our namespace) that mimics the 
+# interface of chromadb.EmbeddingFunction. It has a __call__ that takes in a input
+# and returns a numpy array. 
+
+# Since chromadb.Documents and chromadb.Embeddings are just strings and numpy arrays respectively,
+# we can just return the numpy array from __call__ and be done with it. 
+
+class ChromaEmbeddingFunction:
+    """Chroma Embedding Function.
+    
+    Embeds the text of the chunks using the embedding model and 
+    adds the embeddings to the chunks for use in downstream tasks
+    like upserting into a vector database.
+
+    Args:
+        embedding_model: The embedding model to use.
+        **kwargs: Additional keyword arguments.
+
+    """
+
+    def __init__(
+        self,
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
+        **kwargs: Dict[str, Any]
+    ) -> None:
+        """Initialize the ChromaEmbeddingFunction."""
+        super().__init__()
+
+        # Check if the model is a string
+        if isinstance(embedding_model, str):
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
+        elif isinstance(embedding_model, BaseEmbeddings):
+            self.embedding_model = embedding_model
+        else:
+            raise ValueError("Model must be a string or a BaseEmbeddings instance.")
+
+    def __call__(self, input: Union[str, List[str]]) -> Union["np.ndarray", List["np.ndarray"]]:
+        """Call the ChromaEmbeddingFunction."""
+        if isinstance(input, str):
+            return self.embedding_model.embed(input)
+        elif isinstance(input, list):
+            return self.embedding_model.embed_batch(input)
+        else:
+            raise ValueError("Input must be a string or a list of strings.")
+
 
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
@@ -30,7 +76,7 @@ class ChromaHandshake(BaseHandshake):
     def __init__(self, 
                 client: Optional["chromadb.Client"] = None,
                 collection_name: Union[str, Literal["random"]] = "random", 
-                embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings, EmbeddingsRefinery] = "minishlab/potion-retrieval-32M"
+                embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M"
                 ) -> None:
         """Initialize the Chroma Handshake."""
         # Warn the user that ChromaHandshake is experimental
@@ -48,21 +94,18 @@ class ChromaHandshake(BaseHandshake):
             self.client = client
 
         # Initialize the EmbeddingRefinery internally!
-        if isinstance(embedding_model, EmbeddingsRefinery):
-            self.embedding_refinery = embedding_model
-        else:
-            self.embedding_refinery = EmbeddingsRefinery(embedding_model)
+        self.embedding_function = ChromaEmbeddingFunction(embedding_model)
 
         # If the collection name is not random, create the collection
         if collection_name != "random":
             self.collection_name = collection_name
-            self.collection = self.client.get_or_create_collection(self.collection_name)
+            self.collection = self.client.get_or_create_collection(self.collection_name, embedding_function=self.embedding_function)
         else:
             # Keep generating random collection names until we find one that doesn't exist
             while True:
                 self.collection_name = generate_random_collection_name()
                 try:
-                    self.collection = self.client.get_or_create_collection(self.collection_name)
+                    self.collection = self.client.create_collection(self.collection_name, embedding_function=self.embedding_function)
                     break
                 except Exception:
                     pass
@@ -116,7 +159,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,
+            metadatas=metadata, # type: ignore
         )
 
         print(f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}")
