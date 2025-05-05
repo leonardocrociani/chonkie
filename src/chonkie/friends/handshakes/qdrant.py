@@ -1,7 +1,16 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Union,
+)
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -26,6 +35,10 @@ class QdrantHandshake(BaseHandshake):
     Args:
         client: Optional[qdrant_client.QdrantClient]: The Qdrant client to use.
         collection_name: Union[str, Literal["random"]]: The name of the collection to use.
+        embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
+        url: Optional[str]: The URL to the Qdrant Server.
+        api_key: Optional[str]: The API key to the Qdrant Server. Only needed for Qdrant Cloud.
+        path: Optional[str]: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
     
     """
 
@@ -34,17 +47,20 @@ class QdrantHandshake(BaseHandshake):
                 collection_name: Union[str, Literal["random"]] = "random", 
                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
                 url: Optional[str] = None,
-                api_key: Optional[str] = None,
                 path: Optional[str] = None,
+                api_key: Optional[str] = None,
+                **kwargs: Dict[str, Any]
                 ) -> None:
         """Initialize the Qdrant Handshake.
         
         Args:
             client: Optional[qdrant_client.QdrantClient]: The Qdrant client to use.
             collection_name: Union[str, Literal["random"]]: The name of the collection to use.
+            embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
             url: Optional[str]: The URL to the Qdrant Server.
             path: Optional[str]: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
             api_key: Optional[str]: The API key to the Qdrant Server. Only needed for Qdrant Cloud.
+            **kwargs: Additional keyword arguments to pass to the Qdrant client.
 
         """
         super().__init__()
@@ -55,14 +71,14 @@ class QdrantHandshake(BaseHandshake):
         # Initialize the Qdrant client
         if client is None:
             if url is not None and api_key is not None:
-                self.client = qdrant_client.QdrantClient(url=url, api_key=api_key)
+                self.client = qdrant_client.QdrantClient(url=url, api_key=api_key, **kwargs)
             elif url is not None:
-                self.client = qdrant_client.QdrantClient(url=url)
+                self.client = qdrant_client.QdrantClient(url=url, **kwargs)
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=path)
+                self.client = qdrant_client.QdrantClient(path=path, **kwargs)
             else:
                 # If no client is provided, create an ephemeral collection
-                self.client = qdrant_client.QdrantClient(":memory:")
+                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)
         else:
             self.client = client
 
