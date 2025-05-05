@@ -28,7 +28,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Lint with Ruff
-        run: ruff check --fix
+        run: ruff check
         continue-on-error: true
 
       - name: Cache Hugging Face models
