@@ -1,7 +1,9 @@
 """Module for 🦛 Chonkie's friends 🥰 — Porters and Handshakes."""
 
-from .handshakes.base import BaseVectorWriter
+from .handshakes.base import BaseHandshake
+from .porters.base import BasePorter
 
 __all__ = [
-    "BaseVectorWriter",
+    "BasePorter",
+    "BaseHandshake",
 ]

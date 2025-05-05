@@ -1,6 +1,5 @@
 """Base class for Handshakes."""
 
-import uuid
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -18,10 +17,7 @@ from chonkie.types import Chunk
 
 
 class BaseHandshake(ABC):
-    """Abstract base class for Handshakes.
-    
-    Handsh
-    """
+    """Abstract base class for Handshakes."""
 
     @abstractmethod
     def write(self, chunk: Chunk) -> Any:
