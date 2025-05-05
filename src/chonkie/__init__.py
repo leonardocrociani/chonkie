@@ -32,6 +32,7 @@ from .friends import (
 from .genie import (
     BaseGenie,
     GeminiGenie,
+    OpenAIGenie,
 )
 from .refinery import (
     BaseRefinery,
@@ -138,6 +139,7 @@ __all__ += [
 __all__ += [
     "BaseGenie",
     "GeminiGenie",
+    "OpenAIGenie",
 ]
 
 # Add all friends classes to __all__
