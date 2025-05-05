@@ -1,5 +1,6 @@
 """Main package for Chonkie."""
 
+from . import handshakes
 from .chunker import (
     BaseChunker,
     CodeChunker,
@@ -25,7 +26,6 @@ from .genie import (
     BaseGenie,
     GeminiGenie,
 )
-from . import handshakes
 from .handshakes import (
     BaseVectorWriter,
     ChromaHandshake,
