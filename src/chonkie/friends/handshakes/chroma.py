@@ -2,7 +2,7 @@
 
 import importlib.util as importutil
 import warnings
-from typing import Literal, Sequence, Union
+from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -11,6 +11,12 @@ from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+if TYPE_CHECKING:
+    try:
+        import chromadb
+    except ImportError:
+        chromadb = Any
 
 # NOTE: We're doing a bit of a hack here to work with embeddings from inside Chonkie
 #  since we can't have a EmbeddingFunction without having ChromaDB in the base install. 
@@ -22,6 +28,7 @@ class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
     def __init__(self, 
+                client: Optional["chromadb.Client"] = None,
                 collection_name: Union[str, Literal["random"]] = "random", 
                 embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings, EmbeddingsRefinery] = "minishlab/potion-retrieval-32M"
                 ) -> None:
@@ -35,7 +42,10 @@ class ChromaHandshake(BaseHandshake):
         self._import_dependencies()
 
         # Initialize Chroma client
-        self.client = chromadb.Client()
+        if client is None:
+            self.client = chromadb.Client()
+        else:
+            self.client = client
 
         # Initialize the EmbeddingRefinery internally!
         if isinstance(embedding_model, EmbeddingsRefinery):
@@ -74,7 +84,7 @@ class ChromaHandshake(BaseHandshake):
                               "Please install it with `pip install chonkie[chroma]`.")
 
 
-    def _generate_index_name(self, index: int, chunk: Chunk) -> str:
+    def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique index name for the Chunk."""
         return str(
             uuid5(
@@ -96,15 +106,15 @@ class ChromaHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
-        # Generate the index names and metadata
-        index_names = [self._generate_index_name(index, chunk) for index, chunk in enumerate(chunks)]
+        # Generate the ids and metadata
+        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
         
         # Write the Chunks to the Chroma collection
         # Since this uses the `upsert` method, if the same index and same chunk text already exist, it will update the existing Chunk — which would only be the case if the Chunk has a different embedding
         self.collection.upsert(
-            ids=index_names,
+            ids=ids,
             documents=texts,
             metadatas=metadata,
         )
