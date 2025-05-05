@@ -107,9 +107,11 @@ packages = [
     "chonkie.utils",
     "chonkie.refinery",
     "chonkie.genie",
+    "chonkie.friends",
+    "chonkie.friends.porters",
+    "chonkie.friends.handshakes",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
-    "chonkie.handshakes",
 ]
 
 [tool.ruff]
