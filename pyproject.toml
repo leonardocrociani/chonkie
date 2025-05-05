@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.0.6"
+version = "1.0.7"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -22,6 +22,10 @@ keywords = [
     "machine-learning",
 ]
 authors = [
+    { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
+    { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
+]
+maintainers = [
     { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
     { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
 ]
@@ -47,6 +51,8 @@ dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
+"Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
+
 
 [project.optional-dependencies]
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
@@ -107,6 +113,9 @@ packages = [
     "chonkie.utils",
     "chonkie.refinery",
     "chonkie.genie",
+    "chonkie.friends",
+    "chonkie.friends.porters",
+    "chonkie.friends.handshakes",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
 ]
