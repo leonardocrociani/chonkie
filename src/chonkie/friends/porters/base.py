@@ -16,3 +16,7 @@ class BasePorter(ABC):
     def export(self, chunks: List[Chunk]) -> None:
         """Export the chunks to the desired format."""
         raise NotImplementedError("Subclasses must implement this method.")
+
+    def __call__(self, chunks: List[Chunk]) -> None:
+        """Export the chunks to the desired format."""
+        return self.export(chunks)
