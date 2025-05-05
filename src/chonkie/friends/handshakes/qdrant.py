@@ -1,6 +1,7 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
 import importlib.util as importutil
+import warnings
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -63,6 +64,9 @@ class QdrantHandshake(BaseHandshake):
             **kwargs: Additional keyword arguments to pass to the Qdrant client.
 
         """
+        # Warn the user that QdrantHandshake is experimental
+        warnings.warn("Chonkie's QdrantHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.", FutureWarning)
+
         super().__init__()
 
         # Lazy importing the dependencies
