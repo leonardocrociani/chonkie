@@ -21,7 +21,7 @@ class OpenAIGenie(BaseGenie):
     """OpenAI's Genie."""
 
     def __init__(self,
-                 model: str = "gpt-4o-2024-08-06",
+                 model: str = "gpt-4.1",
                  base_url: Optional[str] = None,
                  api_key: Optional[str] = None):
         """Initialize the OpenAIGenie class.
@@ -84,13 +84,7 @@ class OpenAIGenie(BaseGenie):
         if self._is_available():
             global OpenAI, BaseModel
             from openai import OpenAI
-            # Reuse Pydantic BaseModel if already imported or import fresh
-            try:
-                from pydantic import BaseModel as PydanticBaseModelImport
-                BaseModel = PydanticBaseModelImport
-            except ImportError:
-                 raise ImportError("Pydantic is required but not installed.")
-
+            from pydantic import BaseModel
         else:
             raise ImportError("One or more of the required modules are not available: [pydantic, openai]")
 
