@@ -25,6 +25,10 @@ authors = [
     { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
     { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
 ]
+maintainers = [
+    { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
+    { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
+]
 
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -47,6 +51,8 @@ dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
+"Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
+
 
 [project.optional-dependencies]
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
