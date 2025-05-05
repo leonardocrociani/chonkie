@@ -35,6 +35,15 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Tokenizers](#tokenizers)
 - [Embeddings](#embeddings)
   - [Custom Embeddings](#custom-embeddings)
+- [Genies](#genies)
+  - [`GeminiGenie`](#geminigenie)
+  - [`OpenAIGenie`](#openaigenie)
+- [Porters](#porters)
+  - [`JSONPorter`](#jsonporter)
+- [Handshakes](#handshakes)
+  - [`ChromaHandshake`](#chromahandshake)
+  - [`QdrantHandshake`](#qdranthandshake)
+  - [`TurbopufferHandshake`](#turbopufferhandshake)
 - [Package Versioning](#package-versioning)
 
 ## 📦 Installation
@@ -808,6 +817,557 @@ class MyEmbeddings(BaseEmbeddings):
 
 Of course the above example is a bit contrived, but you get the idea. Once you're done, you can use the above `Embeddings` class with the `SemanticChunker` or `LateChunker` classes, and it will work as expected!
 
+
+## Genies
+
+Genies are Chonkie's interface for interacting with Large Language Models (LLMs). They can be integrated into advanced chunking strategies (like the `SlumberChunker`) or used for other LLM-powered tasks within your data processing pipeline. Genies handle the communication with different LLM providers, offering a consistent way to generate text or structured JSON output.
+
+Currently, Chonkie provides Genies for Google's Gemini models and OpenAI's models (including compatible APIs).
+
+### `GeminiGenie`
+
+The `GeminiGenie` class provides an interface to interact with Google's Gemini models via the `google-genai` library.
+
+Requires `pip install "chonkie[genie]"`.
+
+**Parameters:**
+
+- `model (str)`: The specific Gemini model to use. Defaults to `"gemini-2.5-pro-preview-03-25"`.
+- `api_key (Optional[str])`: Your Google AI API key. If not provided, it will attempt to read from the `GEMINI_API_KEY` environment variable. Defaults to `None`.
+
+**Methods:**
+
+- `generate(prompt: str) -> str`: Sends the prompt to the specified Gemini model and returns the generated text response.
+- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the Gemini model, requesting a JSON output that conforms to the schema. Returns the parsed JSON as a Python dictionary.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Text Generation with `GeminiGenie`</strong></summary>
+
+```python
+# Requires "chonkie[genie]"
+# Ensure GEMINI_API_KEY environment variable is set or pass api_key argument.
+import os
+from chonkie.genie import GeminiGenie
+
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("Please set GEMINI_API_KEY or provide the api_key argument.")
+
+# Initialize the genie
+genie = GeminiGenie(api_key=api_key)
+
+# Generate text
+prompt = "Explain the concept of chunking in simple terms."
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Generating Structured JSON with `GeminiGenie`</strong></summary>
+
+```python
+# Requires "chonkie[genie]"
+# Ensure GEMINI_API_KEY environment variable is set or pass api_key argument.
+import os
+from chonkie.genie import GeminiGenie
+from pydantic import BaseModel, Field # Requires pydantic
+
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("Please set GEMINI_API_KEY or provide the api_key argument.")
+
+# Define a Pydantic schema for the desired JSON structure
+class SummarySchema(BaseModel):
+    title: str = Field(description="A concise title for the text.")
+    key_points: list[str] = Field(description="A list of 3-5 key points.")
+    sentiment: str = Field(description="Overall sentiment (e.g., positive, negative, neutral).")
+
+# Initialize the genie
+genie = GeminiGenie(api_key=api_key, model="gemini-1.5-flash") # Example using a different model
+
+# Generate JSON
+text_to_summarize = "Chonkie is a great library for text chunking. It's fast, lightweight, and easy to use. Highly recommended!"
+prompt = f"Summarize the following text according to the provided schema:\n\n{text_to_summarize}"
+
+json_response = genie.generate_json(prompt, schema=SummarySchema)
+
+print(json_response)
+# Example Output:
+# {'title': 'Chonkie Library Review', 'key_points': ["Fast and lightweight", "Easy to use", "Highly recommended"], 'sentiment': 'positive'}
+```
+
+</details>
+
+### `OpenAIGenie`
+
+The `OpenAIGenie` class provides an interface to interact with OpenAI's models (like GPT-4) or any LLM provider that offers an OpenAI-compatible API endpoint.
+
+Requires `pip install "chonkie[openai]"`.
+
+**Parameters:**
+
+- `model (str)`: The specific model identifier to use (e.g., `"gpt-4o"`, `"gpt-3.5-turbo"`). Defaults to `"gpt-4.1"`.
+- `base_url (Optional[str])`: The base URL for the API endpoint. If `None`, it defaults to OpenAI's standard API URL. Use this to connect to custom or self-hosted OpenAI-compatible APIs. Defaults to `None`.
+- `api_key (Optional[str])`: Your API key for the service (OpenAI or the custom provider). If not provided, it will attempt to read from the `OPENAI_API_KEY` environment variable. Defaults to `None`.
+
+**Methods:**
+
+- `generate(prompt: str) -> str`: Sends the prompt to the specified model via the configured endpoint and returns the generated text response.
+- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the model, requesting a JSON output that conforms to the schema using OpenAI's JSON mode (or compatible feature). Returns the parsed JSON as a Python dictionary.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Text Generation with `OpenAIGenie` (OpenAI)</strong></summary>
+
+```python
+# Requires "chonkie[openai]"
+# Ensure OPENAI_API_KEY environment variable is set or pass api_key argument.
+import os
+from chonkie.genie import OpenAIGenie
+
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("Please set OPENAI_API_KEY or provide the api_key argument.")
+
+# Initialize the genie for OpenAI
+genie = OpenAIGenie(api_key=api_key, model="gpt-4o") # Using gpt-4o
+
+# Generate text
+prompt = "What are the benefits of using a dedicated chunking library?"
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Generating Structured JSON with `OpenAIGenie` (OpenAI)</strong></summary>
+
+```python
+# Requires "chonkie[openai]"
+# Ensure OPENAI_API_KEY environment variable is set or pass api_key argument.
+import os
+from chonkie.genie import OpenAIGenie
+from pydantic import BaseModel, Field # Requires pydantic
+
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("Please set OPENAI_API_KEY or provide the api_key argument.")
+
+# Define a Pydantic schema
+class AnalysisSchema(BaseModel):
+    language: str = Field(description="The primary language detected in the text.")
+    topics: list[str] = Field(description="A list of main topics discussed.")
+
+# Initialize the genie
+genie = OpenAIGenie(api_key=api_key, model="gpt-4o")
+
+# Generate JSON
+text_to_analyze = "El hipopótamo Chonkie es muy rápido para procesar texto en español."
+prompt = f"Analyze the following text and provide the output in the specified JSON format:\n\n{text_to_analyze}"
+
+json_response = genie.generate_json(prompt, schema=AnalysisSchema)
+
+print(json_response)
+# Example Output:
+# {'language': 'Spanish', 'topics': ['Chonkie', 'text processing', 'speed']}
+```
+
+</details>
+
+<details>
+<summary><strong>3. Using `OpenAIGenie` with a Custom OpenAI-Compatible API (e.g., OpenRouter)</strong></summary>
+
+```python
+# Requires "chonkie[openai]"
+# Ensure your custom provider's API key is set (e.g., OPENROUTER_API_KEY)
+import os
+from chonkie.genie import OpenAIGenie
+
+# Replace with your actual API key and provider details
+# Example uses OpenRouter
+custom_api_key = os.getenv("OPENROUTER_API_KEY")
+if not custom_api_key:
+    raise ValueError("Please set the API key for your custom provider.")
+
+custom_base_url = "https://openrouter.ai/api/v1"
+# Example using a model available on OpenRouter
+custom_model = "mistralai/mistral-7b-instruct"
+
+# Initialize the genie for the custom provider
+genie = OpenAIGenie(
+    model=custom_model,
+    base_url=custom_base_url,
+    api_key=custom_api_key
+)
+
+# Generate text
+prompt = "Tell me a fun fact about hippos."
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+## Porters
+
+Porters are responsible for exporting chunked data into various formats, often for saving to files or further processing outside of immediate database insertion.
+
+### `JSONPorter`
+
+The `JSONPorter` converts a list of `Chunk` objects into a JSON or JSON Lines (JSONL) format and saves it to a specified file. This is useful for storing chunked data locally or for interoperability with other systems that consume JSON data.
+
+**Parameters:**
+
+- `lines (bool)`: If `True`, exports the chunks in JSON Lines format (one JSON object per line). If `False`, exports as a single JSON array containing all chunk objects. Defaults to `True`.
+
+**Methods:**
+
+- `export(chunks: list[Chunk], file: str = "chunks.jsonl") -> None`: Converts the list of `Chunk` objects into the specified JSON format (`lines=True` for JSONL, `lines=False` for standard JSON array) and writes the output to the specified `file`. The default filename changes based on the `lines` parameter during initialization (`.jsonl` if `lines=True`, `.json` if `lines=False`).
+
+**Examples:**
+
+<details>
+<summary><strong>1. Exporting Chunks to JSON Lines (Default)</strong></summary>
+
+```python
+from chonkie import TokenChunker, JSONPorter
+
+# Sample Chunks
+chunker = TokenChunker(chunk_size=50)
+text = "This text will be chunked and exported to a JSON Lines file. Each chunk is a line."
+chunks = chunker(text)
+
+# Initialize porter (lines=True by default)
+porter = JSONPorter()
+
+# Export to chunks.jsonl
+porter.export(chunks)
+
+print("Chunks exported to chunks.jsonl")
+
+# You can optionally specify a different filename:
+# porter.export(chunks, file="my_chunks.jsonl")
+```
+*Output file (`chunks.jsonl`):*
+```json
+{"text": "This text will be chunked and exported to a JSON Lines file.", "token_count": 14, "start_index": 0, "end_index": 60}
+{"text": "Each chunk is a line.", "token_count": 6, "start_index": 61, "end_index": 83}
+```
+
+</details>
+
+<details>
+<summary><strong>2. Exporting Chunks to a Standard JSON Array</strong></summary>
+
+```python
+from chonkie import SentenceChunker, JSONPorter
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=30)
+text = "Exporting as a single JSON array. All chunks will be in one list. Set lines=False."
+chunks = chunker(text)
+
+# Initialize porter with lines=False
+porter = JSONPorter(lines=False)
+
+# Export to chunks.json (default filename when lines=False)
+porter.export(chunks)
+
+print("Chunks exported to chunks.json")
+
+# Optionally specify a different filename:
+# porter.export(chunks, file="my_chunks_array.json")
+```
+*Output file (`chunks.json`):*
+```json
+[
+    {
+        "text": "Exporting as a single JSON array.",
+        "token_count": 8,
+        "start_index": 0,
+        "end_index": 32
+    },
+    {
+        "text": "All chunks will be in one list.",
+        "token_count": 8,
+        "start_index": 33,
+        "end_index": 64
+    },
+    {
+        "text": "Set lines=False.",
+        "token_count": 4,
+        "start_index": 65,
+        "end_index": 81
+    }
+]
+```
+
+</details>
+
+## Handshakes
+
+Handshakes are Chonkie's way of connecting your chunked data to downstream applications, particularly vector databases. They handle the final step of preparing and exporting `Chunk` objects, often involving embedding the chunk text and formatting the data according to the target database's requirements. Handshakes typically require specific database client libraries to be installed.
+
+### `ChromaHandshake`
+
+The `ChromaHandshake` facilitates exporting `Chunk` objects into a ChromaDB collection. It handles embedding the chunks using a specified model and upserting them into the target collection.
+
+This handshake requires the `chromadb` library. You can install it with `pip install "chonkie[chroma]"`.
+
+**Parameters:**
+
+- `client (Optional[chromadb.Client])`: An existing ChromaDB client instance. If `None`, a new client will be created. If `path` is also `None`, an in-memory client is used; otherwise, a persistent client is created at the specified `path`.
+- `collection_name (Union[str, Literal["random"]])`: The name of the ChromaDB collection to use. If `"random"`, a unique name will be generated. Defaults to `"random"`.
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model to use for generating chunk embeddings before upserting. Can be a string identifier (like `"minishlab/potion-retrieval-32M"`) resolved by `AutoEmbeddings` or an instantiated `BaseEmbeddings` object. Defaults to `"minishlab/potion-retrieval-32M"`.
+- `path (Optional[str])`: The local filesystem path for a persistent ChromaDB client. If provided and `client` is `None`, a `PersistentClient` will be used. Defaults to `None`.
+
+**Methods:**
+
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> None`: Embeds the provided chunk(s) using the specified `embedding_model` and upserts them into the target ChromaDB collection. It generates unique IDs for each chunk based on its content and index, and stores chunk metadata (start/end index, token count) alongside the text and embedding.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Usage with In-Memory ChromaDB</strong></summary>
+
+```python
+# Requires "chonkie[chroma]" and an embedding model dependency (e.g., "chonkie[st]")
+from chonkie import TokenChunker, ChromaHandshake
+
+# Sample Chunks (replace with actual chunker output)
+chunker = TokenChunker(chunk_size=64)
+text = "This text will be chunked and sent to ChromaDB. It demonstrates the basic handshake usage."
+chunks = chunker(text)
+
+# Initialize handshake with default embedding model and a random collection name
+handshake = ChromaHandshake()
+
+# Write the chunks to the automatically created Chroma collection
+handshake.write(chunks)
+
+print(f"Chunks written to Chroma collection: {handshake.collection_name}")
+```
+
+</details>
+
+<details>
+<summary><strong>2. Using a Persistent ChromaDB Collection and Specific Model</strong></summary>
+
+```python
+# Requires "chonkie[chroma, st]"
+import os
+from chonkie import SentenceChunker, ChromaHandshake
+
+# Ensure the path exists
+db_path = "./chroma_db"
+os.makedirs(db_path, exist_ok=True)
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=30)
+text = "Persistent storage is useful. We'll use a specific embedding model here. The handshake manages the connection."
+chunks = chunker(text)
+
+# Initialize handshake for a persistent DB and specific embedding model
+handshake = ChromaHandshake(
+    collection_name="my_persistent_docs",
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2", # Example model
+    path=db_path
+)
+
+# Write the chunks
+handshake.write(chunks)
+
+print(f"Chunks written to persistent Chroma collection '{handshake.collection_name}' at {db_path}")
+
+# You can verify by creating another client instance pointing to the same path
+# import chromadb
+# client = chromadb.PersistentClient(path=db_path)
+# collection = client.get_collection("my_persistent_docs")
+# print(collection.count())
+```
+
+</details>
+
+### `QdrantHandshake`
+
+The `QdrantHandshake` exports `Chunk` objects to a Qdrant vector collection. It embeds the chunks and uploads them as points with associated payloads (metadata).
+
+This handshake requires the `qdrant-client` library. You can install it with `pip install "chonkie[qdrant]"`.
+
+**Parameters:**
+
+- `client (Optional[qdrant_client.QdrantClient])`: An existing Qdrant client instance. If `None`, a new client is created based on `url`, `api_key`, or `path`. If all are `None`, an in-memory client (`:memory:`) is used.
+- `collection_name (Union[str, Literal["random"]])`: The name of the Qdrant collection. If `"random"`, a unique name is generated. Defaults to `"random"`.
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model for generating chunk embeddings. Defaults to `"minishlab/potion-retrieval-32M"`.
+- `url (Optional[str])`: The URL of the Qdrant server. Used if `client` is `None`.
+- `api_key (Optional[str])`: API key for Qdrant Cloud. Used if `client` is `None` and `url` points to a cloud instance.
+- `path (Optional[str])`: Path for a local Qdrant collection persistence. Used if `client` and `url` are `None`.
+- `**kwargs (Dict[str, Any])`: Additional arguments passed to the `qdrant_client.QdrantClient` constructor when a client is created internally.
+
+**Methods:**
+
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> None`: Embeds the chunks and upserts them as `PointStruct` objects into the target Qdrant collection. Each point includes a vector (embedding), a payload (text, indices, token count), and a generated UUID.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Usage with In-Memory Qdrant</strong></summary>
+
+```python
+# Requires "chonkie[qdrant]" and an embedding model dependency (e.g., "chonkie[st]")
+from chonkie import TokenChunker, QdrantHandshake
+
+# Sample Chunks
+chunker = TokenChunker(chunk_size=50)
+text = "Sending these chunks to an in-memory Qdrant instance via the handshake. Quick and easy for testing."
+chunks = chunker(text)
+
+# Initialize handshake (will use :memory: Qdrant client)
+handshake = QdrantHandshake(embedding_model="sentence-transformers/all-MiniLM-L6-v2") # Example model
+
+# Write the chunks
+handshake.write(chunks)
+
+print(f"Chunks written to Qdrant collection: {handshake.collection_name}")
+# Note: Data is lost when the script ends for in-memory instances.
+```
+
+</details>
+
+<details>
+<summary><strong>2. Connecting to a Local Qdrant Instance</strong></summary>
+
+```python
+# Requires "chonkie[qdrant, st]"
+# Assumes a local Qdrant server is running on default port 6333
+from chonkie import SentenceChunker, QdrantHandshake
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=40)
+text = "Connecting to a running Qdrant server. Ensure it's accessible at the specified URL. This data will persist."
+chunks = chunker(text)
+
+# Initialize handshake to connect to local Qdrant
+handshake = QdrantHandshake(
+    collection_name="local_docs_collection",
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+    url="http://localhost:6333" # Default Qdrant URL
+)
+
+# Write the chunks
+handshake.write(chunks)
+
+print(f"Chunks written to Qdrant collection '{handshake.collection_name}' on server.")
+
+# You could verify using a qdrant_client directly:
+# import qdrant_client
+# client = qdrant_client.QdrantClient(url="http://localhost:6333")
+# count = client.count(collection_name="local_docs_collection")
+# print(f"Collection count: {count.count}")
+```
+
+</details>
+
+### `TurbopufferHandshake`
+
+The `TurbopufferHandshake` uploads `Chunk` objects to a Turbopuffer namespace. It handles embedding and formatting the data for Turbopuffer's API.
+
+This handshake requires the `turbopuffer` library. You can install it with `pip install "chonkie[turbopuffer]"`. It also requires a Turbopuffer API key, which can be provided directly or set as the `TURBOPUFFER_API_KEY` environment variable.
+
+**Parameters:**
+
+- `namespace (Optional[tpuf.Namespace])`: An existing `turbopuffer.Namespace` object. If `None`, a new namespace is created or connected based on `namespace_name`.
+- `namespace_name (Union[str, Literal["random"]])`: The name of the Turbopuffer namespace. If `"random"`, a unique name is generated. Defaults to `"random"`. Used only if `namespace` is `None`.
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model for generating chunk embeddings. Defaults to `"minishlab/potion-retrieval-32M"`.
+- `api_key (Optional[str])`: Your Turbopuffer API key. If `None`, it attempts to read from the `TURBOPUFFER_API_KEY` environment variable. Required.
+
+**Methods:**
+
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> None`: Embeds the chunks and uploads them to the specified Turbopuffer namespace using the `upsert_columns` method. It includes generated IDs, embeddings, text, and metadata.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Usage with Turbopuffer</strong></summary>
+
+```python
+# Requires "chonkie[turbopuffer]" and embedding model deps (e.g., "chonkie[st]")
+# Make sure TURBOPUFFER_API_KEY environment variable is set, or pass api_key argument.
+import os
+from chonkie import TokenChunker, TurbopufferHandshake
+
+# Check if API key is set (replace with your actual key if not using env var)
+# api_key = "YOUR_TURBOPUFFER_API_KEY"
+api_key = os.getenv("TURBOPUFFER_API_KEY")
+if not api_key:
+    raise ValueError("Please set TURBOPUFFER_API_KEY or provide the api_key argument.")
+
+# Sample Chunks
+chunker = TokenChunker(chunk_size=70)
+text = "Uploading chunks to Turbopuffer. This requires an API key. A new namespace will be created if 'random' is used."
+chunks = chunker(text)
+
+# Initialize handshake (uses random namespace name by default)
+handshake = TurbopufferHandshake(
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2", # Example model
+    api_key=api_key
+)
+
+# Write the chunks
+handshake.write(chunks)
+
+print(f"Chunks written to Turbopuffer namespace: {handshake.namespace.name}")
+```
+
+</details>
+
+<details>
+<summary><strong>2. Using a Specific Turbopuffer Namespace</strong></summary>
+
+```python
+# Requires "chonkie[turbopuffer, st]"
+import os
+from chonkie import SentenceChunker, TurbopufferHandshake
+
+api_key = os.getenv("TURBOPUFFER_API_KEY")
+if not api_key:
+    raise ValueError("Please set TURBOPUFFER_API_KEY or provide the api_key argument.")
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=50)
+text = "Targeting a specific namespace in Turbopuffer. Ensure the namespace exists or will be created by Turbopuffer."
+chunks = chunker(text)
+
+# Initialize handshake with a specific namespace name
+namespace_name = "my-chonkie-docs"
+handshake = TurbopufferHandshake(
+    namespace_name=namespace_name,
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+    api_key=api_key
+)
+
+# Write the chunks
+handshake.write(chunks)
+
+print(f"Chunks written to Turbopuffer namespace: {handshake.namespace.name}")
+
+# You could potentially verify using the turbopuffer client directly
+# import turbopuffer as tpuf
+# tpuf.api_key = api_key
+# ns = tpuf.Namespace(namespace_name)
+# print(f"Namespace '{ns.name}' vectors approx count: {ns.dimensions()}") # dimensions might give an idea if data exists
+```
+
+</details>
 
 
 ## Package Versioning
