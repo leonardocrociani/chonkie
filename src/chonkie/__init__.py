@@ -28,6 +28,7 @@ from .friends import (
     ChromaHandshake,
     JSONPorter,
     QdrantHandshake,
+    TurbopufferHandshake,
 )
 from .genie import (
     BaseGenie,
@@ -149,4 +150,5 @@ __all__ += [
     "JSONPorter",
     "ChromaHandshake",
     "QdrantHandshake",
+    "TurbopufferHandshake",
 ]

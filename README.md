@@ -116,7 +116,7 @@ More on these methods and the approaches taken inside the [docs](https://docs.ch
 
 ## Integrations
 
-Chonkie boasts 11+ integrations across tokenizers and embedding providers, ensuring it fits seamlessly into your existing workflow.
+Chonkie boasts 17+ integrations across tokenizers and embedding providers, ensuring it fits seamlessly into your existing workflow.
 
 <details>
 <summary><strong>🪓 Slice 'n' Dice! Chonkie supports 5+ ways to tokenize! </strong></summary>
@@ -161,6 +161,54 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 | `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]` |
 
 </details>
+
+<details>
+<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 2+ LLM providers!</strong></summary>
+
+Genies provide interfaces to interact with Large Language Models (LLMs) for advanced chunking strategies or other tasks within the pipeline.
+
+| Genie Name   | Class         | Description                      | Optional Install     |
+|--------------|---------------|----------------------------------|----------------------|
+| `gemini`     | `GeminiGenie` | Interact with Google Gemini APIs. | `chonkie[gemini]`    |
+| `openai`     | `OpenAIGenie` | Interact with OpenAI APIs.       | `chonkie[openai]`    |
+
+You can also use the `OpenAIGenie` to interact with any LLM provider that supports the OpenAI API format, by simply changing the `model`, `base_url`, and `api_key` parameters. For example, here's how to use the `OpenAIGenie` to interact with the `Llama-4-Maverick` model via OpenRouter:
+
+```python
+from chonkie import OpenAIGenie
+
+genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key="your_api_key")
+```
+
+</details>
+
+<details>
+<summary><strong>🐴 Exporting CHONKs! Chonkie supports 1+ Porter!</strong></summary>
+
+Porters help you save your chunks easily.
+
+| Porter Name | Class        | Description                 | Optional Install |
+|-------------|--------------|-----------------------------|-----------------|
+| `json`      | `JSONPorter` | Export chunks to a JSON file. | `default`        |
+
+</details>
+
+<details>
+<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 3+ vector stores!</strong></summary>
+
+Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
+
+| Handshake Name | Class                 | Description                             | Optional Install          |
+|----------------|-----------------------|-----------------------------------------|---------------------------|
+| `chroma`       | `ChromaHandshake`     | Ingest chunks into ChromaDB.            | `chonkie[chroma]`         |
+| `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
+| `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[turbopuffer]`    |
+
+</details>
+
+
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 
