@@ -23,7 +23,7 @@ class EmbeddingsRefinery(BaseRefinery):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings],
+        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings] = "minishlab/potion-retrieval-32M",
         **kwargs: Dict[str, Any]
     ) -> None:
         """Initialize the EmbeddingRefinery."""
