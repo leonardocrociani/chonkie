@@ -21,8 +21,8 @@ Want to add your integration? Simply [raise an issue](https://github.com/chonkie
 | Integration | Description | Repository |
 |-------------|-------------|------------|
 | ⚡️ FlashRAG | A Python toolkit for the reproduction and development of Retrieval Augmented Generation (RAG) research. | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](https://github.com/RUC-NLPIR/FlashRAG) |
-| 📄 txtai | All-in-one embeddings database for semantic search, LLM orchestration and language model workflows | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](https://github.com/MODSetter/SurfSense) |
-| 🏄 SurfSense | Highly Customizable AI Research Agent just like NotebookLM or Perplexity, connected to external sources such as search engines (Tavily), Slack, Notion, YouTube and more. | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](https://github.com/RUC-NLPIR/FlashRAG) |
+| 📄 txtai | All-in-one embeddings database for semantic search, LLM orchestration and language model workflows | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](https://github.com/neuml/txtai) |
+| 🏄 SurfSense | Highly Customizable AI Research Agent just like NotebookLM or Perplexity, connected to external sources such as search engines (Tavily), Slack, Notion, YouTube and more. | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](https://github.com/MODSetter/SurfSense) |
 | [Add your integration here!](../CONTRIBUTING.md) | Share your Chonkie integration with the community | [![GitHub](https://img.shields.io/badge/GitHub-181717?style=plastic&logo=github&logoColor=white&labelColor=464646)](../CONTRIBUTING.md) |
 
 ## 📚 Community Blogs & Resources
