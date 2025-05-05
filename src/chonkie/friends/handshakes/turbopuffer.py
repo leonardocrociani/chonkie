@@ -36,6 +36,9 @@ class TurbopufferHandshake(BaseHandshake):
             api_key: The API key to use.
 
         """
+        # Warn the user that TurbopufferHandshake is experimental
+        warnings.warn("Chonkie's TurbopufferHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.", FutureWarning)
+        
         super().__init__()
 
         # Lazy import the dependencies
