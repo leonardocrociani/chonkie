@@ -22,6 +22,10 @@ from .embeddings import (
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
 )
+from .friends import (
+    BaseHandshake,
+    BasePorter,
+)
 from .genie import (
     BaseGenie,
     GeminiGenie,
@@ -140,4 +144,10 @@ __all__ += [
 __all__ += [
     "BaseGenie",
     "GeminiGenie",
+]
+
+# Add all friends classes to __all__
+__all__ += [
+    "BasePorter",
+    "BaseHandshake",
 ]
