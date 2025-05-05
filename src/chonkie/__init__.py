@@ -27,6 +27,7 @@ from .friends import (
     BasePorter,
     ChromaHandshake,
     JSONPorter,
+    QdrantHandshake,
 )
 from .genie import (
     BaseGenie,
@@ -145,4 +146,5 @@ __all__ += [
     "BaseHandshake",
     "JSONPorter",
     "ChromaHandshake",
+    "QdrantHandshake",
 ]

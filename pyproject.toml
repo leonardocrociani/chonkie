@@ -68,6 +68,7 @@ semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 genie = ["pydantic", "google-genai"]
 chroma = ["chromadb"]
+qdrant = ["qdrant-client"]
 all = [
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
@@ -86,6 +87,8 @@ all = [
     "google-genai",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
+    "chromadb",
+    "qdrant-client",
 ]
 dev = [
     "datasets>=1.14.0",
