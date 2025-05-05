@@ -4,6 +4,7 @@
 from .handshakes.base import BaseHandshake
 from .handshakes.chroma import ChromaHandshake
 from .handshakes.qdrant import QdrantHandshake
+from .handshakes.turbopuffer import TurbopufferHandshake
 
 # Add all the porters here.
 from .porters.base import BasePorter
@@ -14,5 +15,6 @@ __all__ = [
     "BaseHandshake",
     "ChromaHandshake",
     "QdrantHandshake",
+    "TurbopufferHandshake",
     "JSONPorter",
 ]
