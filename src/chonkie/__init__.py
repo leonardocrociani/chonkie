@@ -25,6 +25,7 @@ from .embeddings import (
 from .friends import (
     BaseHandshake,
     BasePorter,
+    JSONPorter,
 )
 from .genie import (
     BaseGenie,
@@ -141,4 +142,5 @@ __all__ += [
 __all__ += [
     "BasePorter",
     "BaseHandshake",
+    "JSONPorter",
 ]
