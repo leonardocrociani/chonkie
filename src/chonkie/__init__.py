@@ -21,6 +21,7 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+    VoyageAIEmbeddings,
 )
 from .friends import (
     BaseHandshake,
@@ -111,6 +112,7 @@ __all__ += [
     "CohereEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
+    "VoyageAIEmbeddings",
 ]
 
 # Add all refinery classes to __all__
