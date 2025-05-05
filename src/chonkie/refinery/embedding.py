@@ -48,6 +48,14 @@ class EmbeddingsRefinery(BaseRefinery):
         for chunk, embed in zip(chunks, embeds):
             chunk.embedding = embed
         return chunks
+    
+    # NOTE: The __call__ method here is taking in "input" and not "chunks"
+    # because we want to be able to use the EmbeddingRefinery as a EmbeddingFunction 
+    # in ChromaHandshake -> which seems to only accept a __call__ method with "input"
+    # and not "chunks"
+    def __call__(self, input: List[Chunk]) -> List[Chunk]:
+        """Call the EmbeddingRefinery."""
+        return self.refine(input)
 
     def __repr__(self) -> str:
         """Represent the EmbeddingRefinery."""
