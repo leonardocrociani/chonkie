@@ -69,14 +69,33 @@ class ChromaEmbeddingFunction:
 
 
 class ChromaHandshake(BaseHandshake):
-    """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
+    """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
+    
+    This handshake is experimental and may change in the future. Not all Chonkie features are supported yet.
+
+    Args:
+        client: The Chroma client to use.
+        collection_name: The name of the collection to use.
+        embedding_model: The embedding model to use.
+        path: The path to the Chroma collection locally. If provided, it will create a Persistent Chroma Client.
+
+    """
 
     def __init__(self, 
                 client: Optional["chromadb.Client"] = None,
                 collection_name: Union[str, Literal["random"]] = "random", 
-                embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M"
+                embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M", 
+                path: Optional[str] = None,
                 ) -> None:
-        """Initialize the Chroma Handshake."""
+        """Initialize the Chroma Handshake.
+        
+        Args:
+            client: The Chroma client to use.
+            collection_name: The name of the collection to use.
+            embedding_model: The embedding model to use.
+            path: The path to the Chroma collection locally. If provided, it will create a Persistent Chroma Client.
+
+        """
         # Warn the user that ChromaHandshake is experimental
         warnings.warn("Chonkie's ChromaHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.", FutureWarning)
                     
@@ -86,8 +105,10 @@ class ChromaHandshake(BaseHandshake):
         self._import_dependencies()
 
         # Initialize Chroma client
-        if client is None:
+        if client is None and path is None:
             self.client = chromadb.Client()
+        elif client is None and path is not None:
+            self.client = chromadb.PersistentClient(path=path)
         else:
             self.client = client
 
