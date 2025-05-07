@@ -1,7 +1,7 @@
 """Document type for Chonkie."""
 
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional, Dict, Any
 
 from .base import Chunk
 
@@ -17,10 +17,14 @@ class Document:
     with different chunkers.
 
     Args:
-        text: The text of the document.
+        id: The id of the document. If not provided, a random uuid will be generated.
+        text: The complete text of the document.
         chunks: The chunks of the document.
-
+        metadata: Any additional metadata you want to store about the document.
+        
     """
 
-    text: str
-    chunks: List[Chunk]
+    id: Optional[str] = field(default_factory=str)
+    text: str = field(default_factory=str)
+    chunks: List[Chunk] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
