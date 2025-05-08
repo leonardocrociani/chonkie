@@ -1,3 +1,4 @@
+"""Test the QdrantHandshake class."""
 import os
 import uuid
 from typing import List
