@@ -21,6 +21,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
     
     Args:
         model: The model to use.
+        tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
+        dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
         base_url: The base URL to use.
         api_key: The API key to use.
         organization: The organization to use.
@@ -28,7 +30,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         timeout: The timeout to use.
         batch_size: The batch size to use.
         show_warnings: Whether to show warnings about token usage.
-        
+
     """
 
     AVAILABLE_MODELS = {
