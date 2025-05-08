@@ -3,7 +3,7 @@
 Documents allows chonkie to work together with other libraries that have their own 
 document types — ensuring that the transition between libraries is as seamless as possible!
 
-Additionally, documents are used to link together mulitple sources of metadata that can be 
+Additionally, documents are used to link together multiple sources of metadata that can be 
 leveraged in downstream use-cases. One example of this would be in-line images, which are
 stored as base64 encoded strings in the `metadata` field.
 
