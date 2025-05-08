@@ -28,6 +28,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         timeout: The timeout to use.
         batch_size: The batch size to use.
         show_warnings: Whether to show warnings about token usage.
+        
     """
 
     AVAILABLE_MODELS = {
