@@ -1,15 +1,16 @@
-import pytest
-import uuid
-from typing import List, Union
 import os
+import uuid
+from typing import List
+
+import pytest
 
 # Assuming qdrant_client is installed as per the request
 import qdrant_client
-from qdrant_client.http.models import Distance, PointStruct, VectorParams
+from qdrant_client.http.models import Distance, VectorParams
 
+from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.friends.handshakes.qdrant import QdrantHandshake
 from chonkie.types import Chunk
-from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 
 # Define the default model name for clarity
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
