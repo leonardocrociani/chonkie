@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .base import BaseEmbeddings
 
@@ -41,6 +41,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
+        tokenizer: Optional[str] = None,
+        dimension: Optional[int] = None,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
         max_retries: int = 3,
@@ -53,6 +55,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         Args:
             model: Name of the OpenAI embedding model to use
+            tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
+            dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
             base_url: The base URL to use.
             api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
             max_retries: Maximum number of retries for failed requests
@@ -70,10 +74,22 @@ class OpenAIEmbeddings(BaseEmbeddings):
         # Initialize the model
         self.model = model
         self.base_url = base_url
-        self._dimension = self.AVAILABLE_MODELS[model]
-        self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
         self._batch_size = batch_size
         self._show_warnings = show_warnings
+
+        # Do something for the tokenizer
+        if tokenizer is not None: 
+            self._tokenizer = tokenizer
+        elif model in self.AVAILABLE_MODELS:
+            self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
+        else:
+            raise ValueError(f"Tokenizer not found for model {model}. Please provide a tokenizer.")
+
+        # Do something for the dimension
+        if dimension is not None:
+            self._dimension = dimension
+        elif model in self.AVAILABLE_MODELS:
+            self._dimension = self.AVAILABLE_MODELS[model]
 
         # Setup OpenAI client
         self.client = OpenAI(               # type: ignore
