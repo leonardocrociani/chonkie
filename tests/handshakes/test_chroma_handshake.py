@@ -1,6 +1,5 @@
 """Test the ChromaHandshake class."""
 import uuid
-from pathlib import Path
 from typing import List
 
 import pytest
@@ -8,11 +7,13 @@ import pytest
 # Try to import chromadb, skip tests if unavailable
 try:
     import chromadb
-    # Import the specific error type
-    from chromadb.errors import NotFoundError
+
     # Keep client types for reference but won't use for isinstance
     from chromadb import Client as ChromaClientType
     from chromadb import PersistentClient as ChromaPersistentClientType
+
+    # Import the specific error type
+    from chromadb.errors import NotFoundError
 except ImportError:
     chromadb = None
     # Define dummy types/exceptions if import fails
@@ -20,11 +21,11 @@ except ImportError:
     ChromaClientType = type(None)
     ChromaPersistentClientType = type(None)
 
+import chromadb
+
 from chonkie import ChromaHandshake
 from chonkie.friends.handshakes.chroma import ChromaEmbeddingFunction
 from chonkie.types import Chunk
-
-import chromadb
 
 # Mark all tests in this module to be skipped if chromadb is not installed
 pytestmark = pytest.mark.skipif(chromadb is None, reason="chromadb not installed")
