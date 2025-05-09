@@ -11,6 +11,8 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
 
+from xml.etree import ElementTree as ET
+
 # PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
 
 # The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
@@ -32,13 +34,31 @@ from .base import BaseChunker
 # </passages>
 # """
 
-PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
+# PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
+
+# <rules>
+# Follow the following rules while finding the splitting passage:
+# - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
+# - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
+# - If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
+# </rules>
+
+# <passages>
+# {passages}
+# </passages>
+# """
+
+# NOTE: Prompt templates here are starting to get a bit out of hand. We should probably refactor them into a seperate
+# place to store them all! Possibly with the hubbie? 
+
+
+JSON_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
 <rules>
 Follow the following rules while finding the splitting passage:
 - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
 - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
-- If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
+- If no clear `split_index` is found, return N + 1, where N is the index of the last passage.
 </rules>
 
 <passages>
@@ -46,18 +66,45 @@ Follow the following rules while finding the splitting passage:
 </passages>
 """
 
+XML_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
+
+<rules>
+Follow the following rules while finding the splitting passage:
+- Reason about which split index should be first one and return the final index in the <index></index> XML tag. Only return the index number between the <index> XML tag and nothing else. 
+- Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
+- If no clear `split_index` is found, return N + 1, where N is the index of the last passage.
+</rules>
+
+<passages>
+{passages}
+</passages>
+"""
 
 class SlumberChunker(BaseChunker):
-    """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
+    """SlumberChunker is a chunker based on the LumberChunker — but slightly different.
+    
+    Args:
+        genie (Optional[BaseGenie]): The genie to use.
+        tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+        chunk_size (int): The size of the chunks to create.
+        rules (RecursiveRules): The rules to use to split the candidate chunks.
+        candidate_size (int): The size of the candidate splits that the chunker will consider.
+        min_characters_per_chunk (int): The minimum number of characters per chunk.
+        extract_mode (Literal["xml", "json"]): The mode to use to extract the index from the generated string.
+        return_type (Literal["chunks", "texts"]): The type of output to return.
+        verbose (bool): Whether to print verbose output.
+    
+    """
 
     def __init__(self,
-                 genie: Optional[BaseGenie] = None, 
+                 genie: Optional[BaseGenie] = None,
                  tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
                  chunk_size: int = 1024,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
                  min_characters_per_chunk: int = 24,
-                 return_type: Literal["chunks", "texts"] = "chunks", 
+                 extract_mode: Literal["xml", "json"] = "xml",
+                 return_type: Literal["chunks", "texts"] = "chunks",
                  verbose: bool = True):
         """Initialize the SlumberChunker.
 
@@ -68,6 +115,7 @@ class SlumberChunker(BaseChunker):
             rules (RecursiveRules): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
+            extract_mode (Literal["xml", "json"]): The mode to use to extract the index from the generated string.
             return_type (Literal["chunks", "texts"]): The type of output to return.
             verbose (bool): Whether to print verbose output.
 
@@ -76,6 +124,7 @@ class SlumberChunker(BaseChunker):
         super().__init__(tokenizer_or_token_counter)
 
         # Lazily import the dependencies
+        self.extract_mode = extract_mode
         self._import_dependencies()
 
         # If the genie is not provided, use the default GeminiGenie
@@ -92,11 +141,14 @@ class SlumberChunker(BaseChunker):
         self.verbose = verbose
 
         # Set the parameters for the defualt prompt template
-        self.template = PROMPT_TEMPLATE
+        if self.extract_mode == "json":
+            self.template = JSON_PROMPT_TEMPLATE
+        else:
+            self.template = XML_PROMPT_TEMPLATE
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
 
-        # Set the _use_multiprocessing to False, since we don't know the 
+        # Set the _use_multiprocessing to False, since we don't know the
         # behaviour of the Genie under multiprocessing conditions
         self._use_multiprocessing = False
 
@@ -136,7 +188,7 @@ class SlumberChunker(BaseChunker):
                 for i in range(0, len(encoded), self.chunk_size)
             ]
             splits = self.tokenizer.decode_batch(token_splits)
-        
+
         # Merge short splits
         current = ""
         merged = []
@@ -170,18 +222,18 @@ class SlumberChunker(BaseChunker):
                          offset,
                          offset + len(text),
                          self.tokenizer.count_tokens(text))]
-        
+
         # Do the first split based on the level provided
         splits = self._split_text(text, self.rules.levels[level])
 
         # Calculate the token_count of each of the splits
         token_counts = self.tokenizer.count_tokens_batch(splits)
 
-        # Loop throught the splits to see if any split 
+        # Loop throught the splits to see if any split
         chunks = []
         current_offset = offset
         for split, token_count in zip(splits, token_counts):
-            # If the token_count is more than the self.candidate_size, 
+            # If the token_count is more than the self.candidate_size,
             # then call the recursive_split function on it with a higher level
             if token_count > self.candidate_size:
                 child_chunks = self._recursive_split(split, level + 1, current_offset)
@@ -191,19 +243,35 @@ class SlumberChunker(BaseChunker):
                                     current_offset,
                                     current_offset + len(split),
                                     token_count))
-            
+
             # Add the offset as the length of the split
             current_offset += len(split)
 
         return chunks
-      
+
     def _prepare_splits(self, splits: List[Chunk]) -> List[str]:
         """Prepare the splits for the chunker."""
         return [f"ID {i}: " + split.text.replace('\n', '').strip() for (i, split) in enumerate(splits)]
-    
+
     def _get_cumulative_token_counts(self, splits: List[Chunk]) -> List[int]:
         """Get the cumulative token counts for the splits."""
         return list(accumulate([0] + [split.token_count for split in splits]))
+
+    def _extract_index_from_xml(self, xml_string: str) -> int:
+        """Get the integer index extracted from the generated XML string."""
+        wrapped_xml_string = f"<root>{xml_string}</root>"
+        try:
+          root = ET.fromstring(wrapped_xml_string)
+          index_element = root.find('index')
+          if index_element is not None:
+            try:
+              return int(index_element.text) # type: ignore
+            except ValueError:
+              raise ValueError("Index is not an integer or is not found in the XML string")
+          else: 
+            raise ValueError("No <index> tag found in the XML string")
+        except ET.ParseError:
+          raise ValueError("Invalid XML string")
 
     # TODO: Fix the type error later
     def chunk(self, text: str) -> List[Chunk]: # type: ignore
@@ -215,7 +283,7 @@ class SlumberChunker(BaseChunker):
 
         # Calculate the cumulative token counts for each split
         cumulative_token_counts = self._get_cumulative_token_counts(splits)
-        
+
         # If self.verbose has been set to True, show a TQDM progress bar for the text
         if self.verbose:
             progress_bar = tqdm(
@@ -224,12 +292,12 @@ class SlumberChunker(BaseChunker):
                 unit="split",
                 bar_format="{desc} ch{bar:20}nk {percentage:3.0f}% • {n_fmt}/{total_fmt} splits processed [{elapsed}<{remaining}, {rate_fmt}] 🌱",
                 ascii=" o",
-            ) 
+            )
 
-        # Pass the self.chunk_size amount of context through the Genie, 
+        # Pass the self.chunk_size amount of context through the Genie,
         # so we can contol how much context the Genie gets as well.
         # This is especially useful for models that don't have long context
-        # or exhibit weakend reasoning ability over longer texts. 
+        # or exhibit weakend reasoning ability over longer texts.
         chunks = []
         current_pos = 0
         current_token_count = 0
@@ -240,23 +308,30 @@ class SlumberChunker(BaseChunker):
             if group_end_index == current_pos:
                 group_end_index += 1
 
-            prompt = self.template.format(passages="\n".join(prepared_split_texts[current_pos:group_end_index]))
-            response = int(self.genie.generate_json(prompt, Split)['split_index'])
+            prompt = self.template.format(passages="\n\n".join(prepared_split_texts[current_pos:group_end_index]))
+            
+            if self.extract_mode == "json":
+              pred_index = int(self.genie.generate_json(prompt, Split)['split_index'])
+            else:
+              try:
+                pred_index = self._extract_index_from_xml(self.genie.generate(prompt))
+              # If it fails, retry it till it succeeds!
+              except: 
+                 continue
 
-            # Make sure that the response doesn't bug out and return a index smaller 
-            # than the current position
-            if current_pos >= response:
-                response = current_pos + 1
+            # Make sure that the response doesn't bug out and return a index smaller than the current position
+            if current_pos >= pred_index:
+                pred_index = current_pos + 1
 
             chunks.append(Chunk(
-                text="".join([split.text for split in splits[current_pos: response]]),
+                text="".join([split.text for split in splits[current_pos: pred_index]]),
                 start_index=splits[current_pos].start_index,
-                end_index=splits[response - 1].end_index,
-                token_count = sum([split.token_count for split in splits[current_pos: response]])
+                end_index=splits[pred_index - 1].end_index,
+                token_count = sum([split.token_count for split in splits[current_pos: pred_index]])
             ))
 
-            current_token_count = cumulative_token_counts[response]
-            current_pos = response
+            current_token_count = cumulative_token_counts[pred_index]
+            current_pos = pred_index
 
             if self.verbose:
                 progress_bar.update(current_pos - progress_bar.n)
@@ -265,15 +340,16 @@ class SlumberChunker(BaseChunker):
 
     def _import_dependencies(self) -> None:
         """Import the dependencies for the SlumberChunker."""
-        try: 
-            global BaseModel, Split
-            from pydantic import BaseModel
+        try:
+            if self.extract_mode == "json":
+              global BaseModel, Split
+              from pydantic import BaseModel
 
-            class Split(BaseModel): # type: ignore
-                split_index: int
-    
+              class Split(BaseModel): # type: ignore
+                  split_index: int
+
         except ImportError:
-            raise ImportError("The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.")
+            raise ImportError("The SlumberChunker requires the pydantic library to be installed for `extract_mode=\"json\". Please install it using `pip install chonkie[genie]`.")
 
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""
