@@ -12,6 +12,12 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
 
+# NOTE: Prompt templates here are starting to get a bit out of hand. We should probably refactor them into a seperate
+# place to store them all! Possibly with the hubbie? 
+
+# NOTE: Also, there needs to be better handling for errors on the Genie side. For example, if the Genie returns an 
+# invalid JSON, we should retry it. And if the Genie returns a NoneType, we should retry it. Lastly, if the Genie is hitting rate limits, we should stop and retry later.
+
 # PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
 
 # The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
@@ -46,9 +52,6 @@ from .base import BaseChunker
 # {passages}
 # </passages>
 # """
-
-# NOTE: Prompt templates here are starting to get a bit out of hand. We should probably refactor them into a seperate
-# place to store them all! Possibly with the hubbie? 
 
 
 JSON_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
