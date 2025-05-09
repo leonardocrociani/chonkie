@@ -3,6 +3,7 @@
 from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, Callable, List, Literal, Optional, Union
+from xml.etree import ElementTree as ET
 
 from tqdm import tqdm
 
@@ -10,8 +11,6 @@ from chonkie.genie import BaseGenie, GeminiGenie
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
-
-from xml.etree import ElementTree as ET
 
 # PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
 
