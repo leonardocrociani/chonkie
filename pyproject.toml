@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "1.0.7"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { file = "LICENSE" }
+license = "MIT"
 keywords = [
     "chunking",
     "rag",
@@ -31,7 +31,6 @@ maintainers = [
 ]
 
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
@@ -52,7 +51,6 @@ dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 "Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
-
 
 [project.optional-dependencies]
 # Optional dependencies for the utils
@@ -114,6 +112,7 @@ dev = [
     "coverage",
     "ruff>=0.0.265",
     "mypy>=1.11.0",
+    "cython>=3.0.0",
 ]
 
 [tool.pytest.ini_options]
@@ -137,6 +136,12 @@ packages = [
     "chonkie.cloud",
     "chonkie.cloud.chunker",
 ]
+
+[tool.setuptools.package-data]
+"chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd"]
+
+[tool.setuptools.dynamic]
+version = {attr = "chonkie.__version__"}
 
 [tool.ruff]
 exclude = ["*.ipynb"]
