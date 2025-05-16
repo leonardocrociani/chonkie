@@ -905,22 +905,42 @@ print(json_response)
 
 ### `OpenAIGenie`
 
+---
+
 The `OpenAIGenie` class provides an interface to interact with OpenAI's models (like GPT-4) or any LLM provider that offers an OpenAI-compatible API endpoint.
 
-Requires `pip install "chonkie[openai]"`.
+**Installation:**
 
-**Parameters:**
+`OpenAIGenie` requires `openai` optional dependency to be installed. You can install it via the following command:
 
-- `model (str)`: The specific model identifier to use (e.g., `"gpt-4o"`, `"gpt-3.5-turbo"`). Defaults to `"gpt-4.1"`.
-- `base_url (Optional[str])`: The base URL for the API endpoint. If `None`, it defaults to OpenAI's standard API URL. Use this to connect to custom or self-hosted OpenAI-compatible APIs. Defaults to `None`.
-- `api_key (Optional[str])`: Your API key for the service (OpenAI or the custom provider). If not provided, it will attempt to read from the `OPENAI_API_KEY` environment variable. Defaults to `None`.
+```bash
+pip install "chonkie[openai]"
+```
 
-**Methods:**
+**Class Definition:**
 
-- `generate(prompt: str) -> str`: Sends the prompt to the specified model via the configured endpoint and returns the generated text response.
-- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the model, requesting a JSON output that conforms to the schema using OpenAI's JSON mode (or compatible feature). Returns the parsed JSON as a Python dictionary.
+```python
+class OpenAIGenie(BaseGenie):
+
+    # Class Attributes
+    model: str = "gpt-4.1" # The specific model identifier to use (e.g., "gpt-4o", "gpt-3.5-turbo"). Defaults to "gpt-4.1".
+    base_url: Optional[str] = None # The base URL for the API endpoint. If None, defaults to OpenAI's standard API URL. Use this to connect to custom or self-hosted OpenAI-compatible APIs. Defaults to None.
+    api_key: Optional[str] = None # Your API key for the service (OpenAI or the custom provider). If not provided, reads from OPENAI_API_KEY env var. Defaults to None.
+    client: Optional[OpenAI] = None # The OpenAI client instance. If None, a new client will be created. Defaults to None.
+
+    # Class Methods
+    def generate(self, prompt: str) -> str:
+        """Sends the prompt to the specified model via the configured endpoint and returns the generated text response."""
+        ...
+
+    def generate_json(self, prompt: str, schema: BaseModel) -> Dict[str, Any]:
+        """Sends the prompt and a Pydantic BaseModel schema to the model, requesting a JSON output that conforms to the schema."""
+        ...
+```
 
 **Examples:**
+
+Here are some examples of how to use the `OpenAIGenie` class.
 
 <details>
 <summary><strong>1. Basic Text Generation with `OpenAIGenie` (OpenAI)</strong></summary>
