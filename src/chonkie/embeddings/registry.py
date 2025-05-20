@@ -157,8 +157,8 @@ class EmbeddingsRegistry:
             return embeddings_cls(object, **kwargs)
         else:
             # Loop through all the registered embeddings and check if the object is an instance of any of them
-            for type, embeddings_cls in cls.type_registry.items():
-                if type in str(type(object)):
+            for type_alias, embeddings_cls in cls.type_registry.items():
+                if type_alias in str(type(object)):
                     return embeddings_cls(object, **kwargs)
         raise ValueError(f"Unsupported object type for embeddings: {object}")
 
