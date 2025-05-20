@@ -118,7 +118,7 @@ class EmbeddingsRegistry:
         """
         # Firstly, we'll try to see if the provider alias is provided
         if "://" in identifier:
-            provider, model_name = identifier.split("://")
+            provider, model_name = identifier.split("://", 1)
             if provider in cls.provider_registry:
                 return cls.provider_registry[provider]
 
