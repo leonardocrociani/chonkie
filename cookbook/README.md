@@ -42,6 +42,7 @@ Share your knowledge and experiences with Chonkie! Whether it's a blog post, vid
 | Blog | [Ingest (almost) any non-PDF document in a vector database, effortlessly](https://dev.to/astrabert/ingest-almost-any-non-pdf-document-in-a-vector-database-effortlessly-547c) | Clelia (Astra) Bertelli | Introduction to the ingest-anything library, a tool that allows you to ingest (almost) any non-PDF document in a vector database, effortlessly. |
 | Blog | [Semantic Chunking PDFs In The Cloud With Chonkie](https://medium.com/javascript-in-plain-english/semantic-chunking-pdfs-in-the-cloud-with-chonkie-36211ca3d39d) | Michael Ryaboy | Utilizing Chonkie Cloud to help frontend engineers to use semantic chunking and build RAG pipelines easily |
 | Project | [Chunk Explorer](https://github.com/dantetemplar/chunk-explorer) | Ruslan Bel'kov | A powerful tool for exploring and visualizing different text chunking strategies, designed to help you understand how various text splitters work with different types of content. |
+| Project | [RAGHub](https://github.com/Andrew-Jang/RAGHub) | Andrew Jang | A living collection of new and emerging frameworks, projects, and resources in the Retrieval-Augmented Generation (RAG) ecosystem |
 
 Have content to share? Open an issue with your resource and we'll get it added to the cookbook!
 
