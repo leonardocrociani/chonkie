@@ -62,6 +62,9 @@ class AutoEmbeddings:
         if isinstance(model, BaseEmbeddings):
             return model
         elif isinstance(model, str):
+            # Initializing the embedding instance
+            embeddings_instance = None
+
             # Check if the user passed in a provider alias
             if "://" in model:
                 provider, model_name = model.split("://")
@@ -98,8 +101,8 @@ class AutoEmbeddings:
             if embeddings_instance:
                 return embeddings_instance
 
+            # If registry lookup and instantiation failed, return the default SentenceTransformerEmbeddings
             from .sentence_transformer import SentenceTransformerEmbeddings
-
             try:
                 return SentenceTransformerEmbeddings(model, **kwargs)
             except Exception as e:
