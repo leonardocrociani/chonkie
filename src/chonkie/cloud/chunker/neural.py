@@ -40,7 +40,7 @@ class NeuralChunker(CloudChunker):
         self.api_key = api_key or os.getenv("CHONKIE_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "No API key provided. Please set the CHONKIE_API_KEY environment variable"
+                "No API key provided. Please set the CHONKIE_API_KEY environment variable "
                 + "or pass an API key to the NeuralChunker constructor."
             )
 
@@ -58,16 +58,23 @@ class NeuralChunker(CloudChunker):
         self.stride = stride if stride is not None else self.SUPPORTED_MODEL_STRIDES[model]
         self.return_type = return_type
 
-        response = requests.get(f"{self.BASE_URL}/")
-        if response.status_code != 200:
+        # Check if the Chonkie API is reachable
+        try:
+            response = requests.get(f"{self.BASE_URL}/")
+            if response.status_code != 200:
+                raise ValueError(
+                    "Oh no! You caught Chonkie at a bad time. It seems to be down right now. Please try again in a short while."
+                    + "If the issue persists, please contact support at support@chonkie.ai."
+                )
+        except Exception as error:
             raise ValueError(
-                "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
-                + "Please try again in a short while."
+                "Failed to connect to the Chonkie API. Please retry your request. "
                 + "If the issue persists, please contact support at support@chonkie.ai."
-            )
+            ) from error
 
     def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
         """Chunk the text into a list of chunks."""
+        # Create the payload
         payload = {
             "text": text,
             "model": self.model,
@@ -75,21 +82,20 @@ class NeuralChunker(CloudChunker):
             "stride": self.stride,
             "return_type": self.return_type,
         }
-        response = requests.post(
-            f"{self.BASE_URL}/{self.VERSION}/chunk/neural",
-            json=payload,
-            headers={"Authorization": f"Bearer {self.api_key}"},
-        )
-
+        
+        # Send the request to the Chonkie API
         try:
+            response = requests.post(
+                f"{self.BASE_URL}/{self.VERSION}/chunk/neural",
+                json=payload,
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
             result: List[Dict] = cast(List[Dict], response.json())
         except Exception as error:
             raise ValueError(
-                "Oh no! The Chonkie API returned an invalid response."
-                + "Please try again in a short while."
+                "Failed to connect to the Chonkie API. Please retry your request."
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
-
         return result
 
     def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
