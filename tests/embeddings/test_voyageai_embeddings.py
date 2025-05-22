@@ -165,7 +165,7 @@ def test_dimension_property(dummy_embedding_model: VoyageAIEmbeddings) -> None:
 
 def test_is_available(dummy_embedding_model: VoyageAIEmbeddings) -> None:
     """Test that VoyageAIEmbeddings correctly checks if it is available."""
-    assert dummy_embedding_model.is_available() is True
+    assert dummy_embedding_model._is_available() is True
 
 def test_repr(dummy_embedding_model: VoyageAIEmbeddings) -> None:
     """Test that VoyageAIEmbeddings correctly returns a string representation."""
