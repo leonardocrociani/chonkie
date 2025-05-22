@@ -13,7 +13,6 @@ class NeuralChunker(CloudChunker):
 
     BASE_URL = "https://api.chonkie.ai"
     VERSION = "v1"
-    API_KEY = os.getenv("CHONKIE_API_KEY")
     DEFAULT_MODEL = "mirth/chonky_distilbert_base_uncased_1"
 
     SUPPORTED_MODELS = [
