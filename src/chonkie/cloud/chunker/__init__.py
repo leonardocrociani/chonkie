@@ -2,10 +2,12 @@
 
 from .base import CloudChunker
 from .late import LateChunker
+from .neural import NeuralChunker
 from .recursive import RecursiveChunker
 from .sdpm import SDPMChunker
 from .semantic import SemanticChunker
 from .sentence import SentenceChunker
+from .slumber import SlumberChunker
 from .token import TokenChunker
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "SentenceChunker",
     "LateChunker",
     "SDPMChunker",
+    "NeuralChunker",
+    "SlumberChunker",
 ]
