@@ -71,7 +71,7 @@ class AutoEmbeddings:
                 embeddings_cls = EmbeddingsRegistry.get_provider(provider)
                 if embeddings_cls:
                     try:
-                        return embeddings_cls(model_name, **kwargs)
+                        return embeddings_cls(model_name, **kwargs)  # type: ignore
                     except Exception as error:
                         raise ValueError(f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}")
                 else:
