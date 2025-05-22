@@ -67,7 +67,7 @@ class NeuralChunker(CloudChunker):
                 )
         except Exception as error:
             raise ValueError(
-                "Failed to connect to the Chonkie API. Please retry your request. "
+                "Oh no! You caught Chonkie at a bad time. It seems to be down right now. Please try again in a short while."
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
@@ -92,8 +92,8 @@ class NeuralChunker(CloudChunker):
             result: List[Dict] = cast(List[Dict], response.json())
         except Exception as error:
             raise ValueError(
-                "Failed to connect to the Chonkie API. Please retry your request."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                "Oh no! The Chonkie API returned an invalid response. Please ensure your input is correct and try again. "
+                + "If the problem continues, contact support at support@chonkie.ai."
             ) from error
         return result
 
