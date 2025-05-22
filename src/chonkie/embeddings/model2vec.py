@@ -96,4 +96,4 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     def __repr__(self) -> str:
         """Representation of the Model2VecEmbeddings instance."""
-        return f"Model2VecEmbeddings(model_name_or_path={self.model_name_or_path})"
+        return f"Model2VecEmbeddings(model={self.model_name_or_path})"
