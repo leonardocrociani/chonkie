@@ -123,11 +123,11 @@ def test_dimension_property(embedding_model: CohereEmbeddings) -> None:
 
 
 def test_is_available() -> None:
-    """Test is_available method."""
+    """Test _is_available method."""
     if find_spec("cohere") is not None:
-        assert CohereEmbeddings.is_available() is True
+        assert CohereEmbeddings._is_available() is True
     else:
-        assert CohereEmbeddings.is_available() is False
+        assert CohereEmbeddings._is_available() is False
 
 
 @pytest.mark.skipif(

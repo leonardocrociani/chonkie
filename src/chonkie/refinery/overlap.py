@@ -71,7 +71,7 @@ class OverlapRefinery(BaseRefinery):
         self.sep = '✄'
 
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the refinery is available."""
         return True
 

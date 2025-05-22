@@ -72,9 +72,9 @@ def test_overlap_refinery_initialization_with_invalid_inplace() -> None:
 
 
 def test_overlap_refinery_is_available() -> None:
-    """Test the OverlapRefinery.is_available method."""
+    """Test the OverlapRefinery._is_available method."""
     refinery = OverlapRefinery()
-    assert refinery.is_available() is True
+    assert refinery._is_available() is True
 
 
 def test_overlap_refinery_refine_empty_chunks() -> None:

@@ -192,7 +192,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Return a tiktoken tokenizer object."""
         return self._tokenizer
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the OpenAI package is available."""
         # We should check for OpenAI package alongside Numpy and tiktoken
         return (
@@ -207,7 +207,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if self.is_available():
+        if self._is_available():
             global np, tiktoken, OpenAI
             import numpy as np
             import tiktoken
