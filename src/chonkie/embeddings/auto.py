@@ -72,8 +72,8 @@ class AutoEmbeddings:
                 if embeddings_cls:
                     try:
                         return embeddings_cls(model_name, **kwargs)
-                    except Exception:
-                        raise ValueError(f"Failed to load {model} with {embeddings_cls.__name__}. Please check the model name and try again.")
+                    except Exception as error:
+                        raise ValueError(f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}")
                 else:
                     raise ValueError(f"No provider found for {provider}. Please check the provider name and try again.")
             else:
