@@ -15,7 +15,6 @@ class SlumberChunker(CloudChunker):
 
     BASE_URL = "https://api.chonkie.ai"
     VERSION = "v1"
-    API_KEY = os.getenv("CHONKIE_API_KEY")
 
     def __init__(
         self,
@@ -66,19 +65,12 @@ class SlumberChunker(CloudChunker):
         try:
             response = requests.get(f"{self.BASE_URL}/")
             response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
-        except requests.exceptions.RequestException as e:
+        except requests.exceptions.RequestException as error:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down or unreachable."
                 + " Please try again in a short while."
                 + " If the issue persists, please contact support at support@chonkie.ai."
-            ) from e
-        
-        if response.status_code != 200:
-            raise ValueError(
-                f"Oh no! You caught Chonkie at a bad time. API returned status {response.status_code}."
-                + " Please try again in a short while."
-                + " If the issue persists, please contact support at support@chonkie.ai."
-            )
+            ) from error
 
 
     def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
