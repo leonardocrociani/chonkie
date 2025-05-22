@@ -33,12 +33,17 @@ class BaseTokenizer(ABC):
         """Initialize the BaseTokenizer."""
         self.vocab: list[str] = []
         self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
+        # Note: Using a lambda here would cause pickling issues:
         # self.token2id: Dict[str, int] = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
         self.vocab.append(" ")  # Add space to the vocabulary
 
     def defaulttoken2id(self) -> int:
-        """Return the default token ID."""
+        """Return the default token ID.
+        
+        This method is used as the default_factory for defaultdict.
+        Using a named method instead of a lambda ensures the object can be pickled.
+        """
         return len(self.vocab)
     @abstractmethod
     def __repr__(self) -> str:
