@@ -77,6 +77,7 @@ You can install optional features using the `pip install "chonkie[feature]"` syn
 | `voyageai` | Use Voyage AI's embedding models.                                                                       |
 | `cohere`   | Integrate with Cohere's embedding models.                                                               |
 | `jina`     | Use Jina AI's embedding models.                                                                         |
+| `gemini`   | Use Google's Gemini embedding models.                                                                   |
 | `semantic` | Enable semantic chunking capabilities, potentially leveraging `model2vec`.                              |
 | `neural`   | Utilize local Hugging Face `transformers` models (with `torch`) for advanced NLP tasks.                 |
 | `genie`    | Integrate with Google's Generative AI (Gemini) models for advanced functionalities.                     |
@@ -736,6 +737,7 @@ Chonkie has quite a few usecases for embeddings —— `SemanticChunker` uses th
 - `SentenceTransformerEmbeddings` (`sentence-transformers`): Uses a `SentenceTransformer` model to embed text.
 - `OpenAIEmbeddings` (`openai`): Uses the OpenAI embedding API to embed text.
 - `CohereEmbeddings` (`cohere`): Uses Cohere's embedding API to embed text.
+- `GeminiEmbeddings` (`gemini`): Uses Google's Gemini embedding API to embed text.
 - `JinaEmbeddings` (`jina`): Uses Jina's embedding API to embed text.
 - `VoyageAIEmbeddings` (`voyageai`): Uses the Voyage AI embedding API to embed text.
 
@@ -745,10 +747,13 @@ Given that it has a bunch of different embedding models, it becomes challenging 
 from chonkie import AutoEmbeddings
 
 # Since this model is registered with the Registry, we can use the string directly
-embeddings = AutoEmbeddings("minishlab/potion-base-8M")
+embeddings = AutoEmbeddings.get_embedding("minishlab/potion-base-32M")
 
-# If it's not registered, we can use the full URI
+# If it's not registered, we can use the full URI with the provider name
 embeddings = AutoEmbeddings.get_embedding("model2vec://minishlab/potion-base-32M")
+
+# You can also load the same model with different providers as long as they support the same model
+embeddings = AutoEmbeddings.get_embedding("st://minishlab/potion-base-32M")
 ```
 
 If you're trying to load a model from a local path, it's recommended to use the `SentenceTransformerEmbeddings` class. With the `AutoEmbeddings` class, you can pass in the `model` object initialized with the `SentenceTransformer` class as well, and it will return chonkie's `SentenceTransformerEmbeddings` object. 
@@ -763,7 +768,7 @@ All `Embeddings` classes have the following methods:
 - `embed(text: str) -> List[float]`: Embeds a string into a list of floats.
 - `embed_batch(texts: List[str]) -> List[List[float]]`: Embeds a list of strings into a list of lists of floats.
 - `get_tokenizer_or_token_counter() -> Any`: Returns the tokenizer or token counter object.
-- `__call__(text: str) -> List[float]`: Embeds a string into a list of floats.
+- `__call__(text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]`: Embeds a string or a list of strings into a list of floats.
 
 **Example:**
 
@@ -771,10 +776,13 @@ All `Embeddings` classes have the following methods:
 from chonkie import AutoEmbeddings
 
 # Get the embeddings for a model
-embeddings = AutoEmbeddings("minishlab/potion-base-8M")
+embeddings = AutoEmbeddings.get_embedding("minishlab/potion-base-32M")
 
 # Embed a string
-embedding = embeddings("Hello, world!")
+embedding = embeddings.embed("Hello, world!")
+
+# Embed a list of strings
+embeddings = embeddings.embed_batch(["Hello, world!", "Hello, world!"])
 ```
 
 ### Custom Embeddings
