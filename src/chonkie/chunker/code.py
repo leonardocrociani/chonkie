@@ -14,14 +14,8 @@ from chonkie.tokenizer import Tokenizer
 from chonkie.types.code import CodeChunk
 
 if TYPE_CHECKING:
-    try: 
-        from tree_sitter import Node, Parser, Tree
-        from tree_sitter_language_pack import SupportedLanguage
-    except ImportError:
-        Node = Any
-        Parser = Any
-        Tree = Any
-        SupportedLanguage = Any
+    from tree_sitter import Node, Parser, Tree
+    from tree_sitter_language_pack import SupportedLanguage
 
 
 class CodeChunker(BaseChunker):

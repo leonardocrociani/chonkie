@@ -6,14 +6,9 @@ from typing import TYPE_CHECKING, Any, List, Union
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    try:
-        import numpy as np
-        from model2vec import StaticModel
-        from tokenizers import Tokenizer
-    except ImportError:
-        np = Any  # type: ignore
-        StaticModel = Any  # type: ignore
-        Tokenizer = Any  # type: ignore
+    import numpy as np
+    from model2vec import StaticModel
+    from tokenizers import Tokenizer
 
 
 class Model2VecEmbeddings(BaseEmbeddings):

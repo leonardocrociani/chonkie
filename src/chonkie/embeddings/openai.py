@@ -8,12 +8,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    try:
-        import numpy as np
-        import tiktoken
-    except ImportError:
-        np = Any
-        tiktoken = Any 
+    import numpy as np
+    import tiktoken 
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
