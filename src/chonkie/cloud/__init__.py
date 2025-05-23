@@ -2,6 +2,7 @@
 
 from .chunker import (
     CloudChunker,
+    CodeChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
@@ -20,6 +21,7 @@ __all__ = [
     "SentenceChunker",
     "LateChunker",
     "SDPMChunker",
+    "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
 ]
