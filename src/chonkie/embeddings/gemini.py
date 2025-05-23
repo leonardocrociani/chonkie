@@ -41,10 +41,8 @@ class GeminiEmbeddings(BaseEmbeddings):
         api_key: Optional[str] = None,
         task_type: str = "SEMANTIC_SIMILARITY",
         max_retries: int = 3,
-        timeout: float = 60.0,
         batch_size: int = 100,
         show_warnings: bool = True,
-        **kwargs: Dict[str, Any],
     ):
         """Initialize Gemini embeddings.
 
