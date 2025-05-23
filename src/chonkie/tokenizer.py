@@ -8,22 +8,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Callable, Dict, Sequence, Union
 
 if TYPE_CHECKING:
-    # check if we can import tiktoken
-    try:
-        import tiktoken
-    except ImportError:
-        tiktoken = Any  # type: ignore # fallback to Any
-    #  check if we can import tokenizers
-    try:
-        import tokenizers
-    except ImportError:
-        tokenizers = Any  # type: ignore # fallback to Any
-
-    # check if we can import transformers
-    try:
-        import transformers
-    except ImportError:
-        transformers = Any  # type: ignore # fallback to Any
+    import tiktoken
+    import tokenizers
+    import transformers
 
 
 class BaseTokenizer(ABC):

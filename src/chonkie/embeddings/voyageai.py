@@ -9,15 +9,9 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    try: 
-        import numpy as np
-        import voyageai
-        from tokenizers import Tokenizer
-
-    except ImportError:
-        np = Any # type: ignore
-        Tokenizer = Any # type: ignore
-        voyageai = Any # type: ignore
+    import numpy as np
+    import voyageai
+    from tokenizers import Tokenizer
 
 class VoyageAIEmbeddings(BaseEmbeddings):
     """Voyage Embeddings client for interfacing with the VoyageAI API."""
