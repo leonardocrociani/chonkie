@@ -86,7 +86,7 @@ class CodeChunker(BaseChunker):
             self.parser = get_parser(language) # type: ignore
         
         # Set the use_multiprocessing flag
-        self._use_multiprocessing = True
+        self._use_multiprocessing = False
 
     def _import_dependencies(self) -> None:
         """Import the dependencies for the CodeChunker."""
