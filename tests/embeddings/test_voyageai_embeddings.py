@@ -2,6 +2,7 @@
 
 import os
 import warnings
+from typing import Union
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -275,7 +276,7 @@ class TestVoyageAIEmbeddingsAPIMocking:
         """Test asynchronous batch embedding."""
         texts = ["Text 1", "Text 2", "Text 3"]
         
-        async def mock_process_batch(batch: list, input_type: str | None = None) -> list:
+        async def mock_process_batch(batch: list, input_type: Union[str, None] = None) -> list:
             return [np.array([0.1] * 1024, dtype=np.float32) for _ in batch]
         
         with patch.object(embeddings, '_VoyageAIEmbeddings__process_batch', side_effect=mock_process_batch):
