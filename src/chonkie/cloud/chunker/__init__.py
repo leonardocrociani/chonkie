@@ -1,6 +1,7 @@
 """Module for Chonkie Cloud Chunkers."""
 
 from .base import CloudChunker
+from .code import CodeChunker
 from .late import LateChunker
 from .neural import NeuralChunker
 from .recursive import RecursiveChunker
@@ -18,6 +19,7 @@ __all__ = [
     "SentenceChunker",
     "LateChunker",
     "SDPMChunker",
+    "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
 ]
