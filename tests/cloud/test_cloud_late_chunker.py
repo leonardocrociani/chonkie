@@ -1,6 +1,7 @@
 """Test the Chonkie Cloud Late Chunker."""
 
 import os
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -8,22 +9,68 @@ from chonkie.cloud.chunker import LateChunker  # Corrected import
 from chonkie.types import RecursiveLevel, RecursiveRules
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_late_chunker_initialization() -> None:
+@pytest.fixture
+def mock_api_response():
+    """Mock successful API response."""
+    def _mock_response(text_input, chunk_count=1):
+        if isinstance(text_input, str):
+            if not text_input.strip():
+                return []
+            # Single text input
+            return [{
+                "text": text_input,
+                "token_count": max(1, len(text_input.split())),
+                "start_index": 0,
+                "end_index": len(text_input),
+                "embedding": [0.1] * 384  # Mock embedding
+            }]
+        else:
+            # Batch input
+            results = []
+            for text in text_input:
+                if not text.strip():
+                    results.append([])
+                else:
+                    results.append([{
+                        "text": text,
+                        "token_count": max(1, len(text.split())),
+                        "start_index": 0,
+                        "end_index": len(text),
+                        "embedding": [0.1] * 384
+                    }])
+            return results  # Return the list of lists directly for batch response
+    return _mock_response
+
+
+@pytest.fixture
+def mock_requests_get():
+    """Mock requests.get for API availability check."""
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_get.return_value = mock_response
+        yield mock_get
+
+
+@pytest.fixture
+def mock_requests_post():
+    """Mock requests.post for API chunking calls."""
+    with patch('requests.post') as mock_post:
+        yield mock_post
+
+
+def test_cloud_late_chunker_initialization(mock_requests_get) -> None:
     """Test that the late chunker can be initialized."""
     # Check if chunk_size < 0 raises an error (inherited from superclass validation)
     with pytest.raises(ValueError):
-        LateChunker(chunk_size=-1)
+        LateChunker(chunk_size=-1, api_key="test_key")
 
     # Check if min_characters_per_chunk < 1 raises an error (inherited from superclass validation)
     with pytest.raises(ValueError):
-        LateChunker(min_characters_per_chunk=-1)
+        LateChunker(min_characters_per_chunk=-1, api_key="test_key")
 
     # Check default initialization
-    chunker = LateChunker()
+    chunker = LateChunker(api_key="test_key")
     assert chunker.embedding_model == "sentence-transformers/all-MiniLM-L6-v2"
     assert chunker.chunk_size == 512
     assert chunker.min_characters_per_chunk == 24  # Default for LateChunker
@@ -40,6 +87,7 @@ def test_cloud_late_chunker_initialization() -> None:
         chunk_size=256,
         min_characters_per_chunk=10,
         rules=custom_rules,
+        api_key="test_key"
     )
     assert custom_chunker.embedding_model == "custom-model"
     assert custom_chunker.chunk_size == 256
@@ -47,15 +95,17 @@ def test_cloud_late_chunker_initialization() -> None:
     assert custom_chunker.rules == custom_rules
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_late_chunker_single_text() -> None:
+def test_cloud_late_chunker_single_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the Late Chunker works with a single text."""
-    late_chunker = LateChunker(chunk_size=512) # Using default embedding model
-
     text = "This is a test sentence for the late chunker. It has several parts."
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(text)
+    mock_requests_post.return_value = mock_response
+    
+    late_chunker = LateChunker(chunk_size=512, api_key="test_key") # Using default embedding model
     result = late_chunker(text)
 
     assert isinstance(result, list)
@@ -71,23 +121,25 @@ def test_cloud_late_chunker_single_text() -> None:
             assert "token_count" in chunk # Assuming API returns token_count
             assert isinstance(chunk["token_count"], int)
             # Embedding presence could also be checked if guaranteed
-            # assert "embedding" in chunk
-            # assert isinstance(chunk["embedding"], list)
+            assert "embedding" in chunk
+            assert isinstance(chunk["embedding"], list)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_late_chunker_batch_texts() -> None:
+def test_cloud_late_chunker_batch_texts(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the Late Chunker works with a batch of texts."""
-    late_chunker = LateChunker(chunk_size=256) # Smaller chunk size for variety
-
     texts = [
         "First document for batch processing.",
         "Second document, slightly longer to see if it splits.",
         "Third one.",
     ]
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(texts)
+    mock_requests_post.return_value = mock_response
+    
+    late_chunker = LateChunker(chunk_size=256, api_key="test_key") # Smaller chunk size for variety
     result = late_chunker(texts)
 
     assert isinstance(result, list)
@@ -113,23 +165,21 @@ def test_cloud_late_chunker_batch_texts() -> None:
                 assert isinstance(chunk["end_index"], int)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_late_chunker_empty_text() -> None:
+def test_cloud_late_chunker_empty_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the Late Chunker works with an empty text."""
-    late_chunker = LateChunker()
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response("")
+    mock_requests_post.return_value = mock_response
+    
+    late_chunker = LateChunker(api_key="test_key")
     result = late_chunker("")
     assert isinstance(result, list)
     assert len(result) == 0
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_late_chunker_from_recipe() -> None:
+def test_cloud_late_chunker_from_recipe(mock_requests_get) -> None:
     """Test creating a LateChunker from a recipe."""
     # Assuming 'default' recipe exists and is valid
     chunker = LateChunker.from_recipe(
@@ -138,6 +188,7 @@ def test_cloud_late_chunker_from_recipe() -> None:
         embedding_model="test-recipe-model",
         chunk_size=128,
         min_characters_per_chunk=5,
+        api_key="test_key"
     )
     assert isinstance(chunker, LateChunker)
     assert chunker.embedding_model == "test-recipe-model"
@@ -153,4 +204,22 @@ def test_cloud_late_chunker_from_recipe() -> None:
     # This depends on whether RecursiveRules.from_recipe raises an error or returns default.
     # If RecursiveRules.from_recipe raises ValueError for bad recipe:
     with pytest.raises(ValueError): # Or FileNotFoundError, depending on implementation
-        LateChunker.from_recipe(name="non_existent_recipe")
+        LateChunker.from_recipe(name="non_existent_recipe", api_key="test_key")
+
+
+@pytest.mark.skipif(
+    "CHONKIE_API_KEY" not in os.environ,
+    reason="CHONKIE_API_KEY is not set",
+)
+def test_cloud_late_chunker_real_api() -> None:
+    """Test with real API if CHONKIE_API_KEY is available."""
+    late_chunker = LateChunker(chunk_size=512)
+    text = "This is a test sentence for the late chunker. It has several parts."
+    result = late_chunker(text)
+
+    assert isinstance(result, list)
+    if result:
+        for chunk in result:
+            assert isinstance(chunk, dict)
+            assert "text" in chunk
+            assert "token_count" in chunk
