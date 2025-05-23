@@ -3,7 +3,7 @@
 import os
 from importlib.util import find_spec
 from typing import List
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest

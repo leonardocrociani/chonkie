@@ -1,8 +1,7 @@
 """Tests for GeminiGenie class."""
 
 import os
-from typing import Any, Dict
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -174,7 +173,7 @@ class TestGeminiGenieUtilities:
             mock_find_spec.side_effect = lambda x: Mock() if x in ["pydantic", "google"] else None
             
             # Test the actual _is_available method directly
-            with patch.object(GeminiGenie, '_is_available', return_value=True) as mock_is_available:
+            with patch.object(GeminiGenie, '_is_available', return_value=True):
                 with patch.object(GeminiGenie, '_import_dependencies'):
                     with patch.dict(os.environ, {'GEMINI_API_KEY': 'test_key'}):
                         genie = GeminiGenie()
@@ -186,7 +185,7 @@ class TestGeminiGenieUtilities:
             mock_find_spec.return_value = None
             
             # Test the actual _is_available method directly
-            with patch.object(GeminiGenie, '_is_available', return_value=False) as mock_is_available:
+            with patch.object(GeminiGenie, '_is_available', return_value=False):
                 with patch.object(GeminiGenie, '_import_dependencies'):
                     with patch.dict(os.environ, {'GEMINI_API_KEY': 'test_key'}):
                         genie = GeminiGenie()
