@@ -54,3 +54,4 @@ Thumbs.db
 notebooks/*
 src/chonkie/chunker/c_extensions/token_chunker.cpython-310-darwin.so
 CLAUDE.md
+.temp/*
