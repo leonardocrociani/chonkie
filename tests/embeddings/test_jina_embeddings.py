@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any
+from typing import Any, Generator
 from unittest.mock import Mock, patch
 
 import numpy as np
@@ -13,7 +13,7 @@ from chonkie.embeddings.jina import JinaEmbeddings
 
 
 @pytest.fixture(autouse=True)
-def mock_tokenizer():
+def mock_tokenizer() -> Generator[Any, None, None]:
     """Mock tokenizer initialization to avoid internet dependency in CI."""
     with patch('tokenizers.Tokenizer.from_pretrained') as mock_tokenizer:
         mock_tokenizer_instance = Mock()
