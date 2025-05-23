@@ -288,9 +288,7 @@ def test_cloud_code_chunker_whitespace_text() -> None:
         language="python",
     )
 
-    result = code_chunker("   \n\t\n  ")
-    # Should return empty list or minimal chunks
-    assert isinstance(result, list)
+    assert len(result) == 0  # Assuming whitespace-only input behaves like empty input
 
 
 @pytest.mark.skipif(
