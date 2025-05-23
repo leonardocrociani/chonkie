@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from .base import BaseEmbeddings
 
@@ -21,7 +21,6 @@ class GeminiEmbeddings(BaseEmbeddings):
         api_key: The API key to use.
         task_type: The task type for embeddings (SEMANTIC_SIMILARITY, CLASSIFICATION, etc.).
         max_retries: The maximum number of retries to use.
-        timeout: The timeout to use.
         batch_size: The batch size to use.
         show_warnings: Whether to show warnings about token usage.
 
@@ -51,10 +50,8 @@ class GeminiEmbeddings(BaseEmbeddings):
             api_key: Gemini API key (if not provided, looks for GEMINI_API_KEY env var)
             task_type: Task type for embeddings (SEMANTIC_SIMILARITY, CLASSIFICATION, etc.)
             max_retries: Maximum number of retries for failed requests
-            timeout: Timeout in seconds for API requests
             batch_size: Maximum number of texts to embed in one API call
             show_warnings: Whether to show warnings about token usage
-            **kwargs: Additional keyword arguments
 
         """
         super().__init__()
@@ -66,7 +63,6 @@ class GeminiEmbeddings(BaseEmbeddings):
         self.model = model if model else self.DEFAULT_MODEL
         self.task_type = task_type
         self._max_retries = max_retries
-        self._timeout = timeout
         self._batch_size = batch_size
         self._show_warnings = show_warnings
         self._chars_per_token = 6.5
