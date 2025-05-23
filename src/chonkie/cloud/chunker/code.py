@@ -16,7 +16,7 @@ class CodeChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, List] = "gpt2",
+        tokenizer_or_token_counter: str = "gpt2",
         chunk_size: int = 512,
         language: Union[Literal["auto"], str] = "auto",
         return_type: Literal["texts", "chunks"] = "chunks",
