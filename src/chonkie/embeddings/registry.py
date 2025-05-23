@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Pattern, Type, Union
 
 from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
+from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
@@ -223,3 +224,10 @@ EmbeddingsRegistry.register_model("voyage-code-3", VoyageAIEmbeddings)
 EmbeddingsRegistry.register_model("voyage-finance-2", VoyageAIEmbeddings)
 EmbeddingsRegistry.register_model("voyage-law-2", VoyageAIEmbeddings)
 EmbeddingsRegistry.register_model("voyage-code-2", VoyageAIEmbeddings)
+
+# Register Gemini embeddings
+EmbeddingsRegistry.register_provider("gemini", GeminiEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^text-embedding-004|^embedding-001|^gemini-embedding", GeminiEmbeddings)
+EmbeddingsRegistry.register_model("text-embedding-004", GeminiEmbeddings)
+EmbeddingsRegistry.register_model("embedding-001", GeminiEmbeddings)
+EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings)
