@@ -4,7 +4,6 @@ import os
 from unittest.mock import Mock, patch
 
 import pytest
-import requests
 
 from chonkie.cloud import CodeChunker
 

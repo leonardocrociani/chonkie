@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 import numpy as np
 import pytest
 import requests
-from tokenizers import Tokenizer
 
 from chonkie.embeddings.jina import JinaEmbeddings
 
