@@ -1,6 +1,7 @@
 """Test for the Chonkie Cloud Code Chunker class."""
 
 import os
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -52,18 +53,101 @@ console.log(calc.add(5, 3));
 """
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_initialization() -> None:
+@pytest.fixture
+def mock_api_response():
+    """Mock successful API response."""
+    def _mock_response(text_input, chunk_count=1):
+        if isinstance(text_input, str):
+            # Single text input - split into multiple chunks for longer text
+            if len(text_input) > 100:
+                # Create multiple chunks for longer text that can be perfectly reconstructed
+                chunks = []
+                chunk_size = len(text_input) // 3  # Split into roughly 3 chunks
+                for i in range(0, len(text_input), chunk_size):
+                    end_idx = min(i + chunk_size, len(text_input))
+                    chunk_text = text_input[i:end_idx]
+                    if chunk_text:  # Only add non-empty chunks
+                        chunks.append({
+                            "text": chunk_text,
+                            "token_count": max(1, len(chunk_text.split())),
+                            "start_index": i,
+                            "end_index": end_idx
+                        })
+                return chunks if chunks else [{
+                    "text": text_input,
+                    "token_count": max(1, len(text_input.split())),
+                    "start_index": 0,
+                    "end_index": len(text_input)
+                }]
+            else:
+                # Single chunk for short text
+                return [{
+                    "text": text_input,
+                    "token_count": max(1, len(text_input.split())),
+                    "start_index": 0,
+                    "end_index": len(text_input)
+                }]
+        else:
+            # Batch input
+            results = []
+            for text in text_input:
+                if len(text) > 100:
+                    # Multiple chunks for longer text that can be perfectly reconstructed
+                    chunks = []
+                    chunk_size = len(text) // 2
+                    for i in range(0, len(text), chunk_size):
+                        end_idx = min(i + chunk_size, len(text))
+                        chunk_text = text[i:end_idx]
+                        if chunk_text:
+                            chunks.append({
+                                "text": chunk_text,
+                                "token_count": max(1, len(chunk_text.split())),
+                                "start_index": i,
+                                "end_index": end_idx
+                            })
+                    results.append(chunks if chunks else [{
+                        "text": text,
+                        "token_count": max(1, len(text.split())),
+                        "start_index": 0,
+                        "end_index": len(text)
+                    }])
+                else:
+                    # Single chunk for short text
+                    results.append([{
+                        "text": text,
+                        "token_count": max(1, len(text.split())),
+                        "start_index": 0,
+                        "end_index": len(text)
+                    }])
+            return results
+    return _mock_response
+
+
+@pytest.fixture
+def mock_requests_get():
+    """Mock requests.get for API availability check."""
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_get.return_value = mock_response
+        yield mock_get
+
+
+@pytest.fixture
+def mock_requests_post():
+    """Mock requests.post for API chunking calls."""
+    with patch('requests.post') as mock_post:
+        yield mock_post
+
+
+def test_cloud_code_chunker_initialization(mock_requests_get) -> None:
     """Test that the code chunker can be initialized."""
     # Check if the chunk_size <= 0 raises an error
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1)
+        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1, api_key="test_key")
 
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=0)
+        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=0, api_key="test_key")
 
     # Check if the return_type is not "texts" or "chunks" raises an error
     with pytest.raises(ValueError):
@@ -71,13 +155,15 @@ def test_cloud_code_chunker_initialization() -> None:
             tokenizer_or_token_counter="gpt2",
             chunk_size=512,
             return_type="bad_return_type",
+            api_key="test_key"
         )
 
     # Finally, check if the attributes are set correctly
     chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2", 
         chunk_size=512, 
-        language="python"
+        language="python",
+        api_key="test_key"
     )
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 512
@@ -85,18 +171,22 @@ def test_cloud_code_chunker_initialization() -> None:
     assert chunker.return_type == "chunks"
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_simple() -> None:
+def test_cloud_code_chunker_simple(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the code chunker works with simple code."""
+    simple_code = "def hello():\n    print('Hello, world!')"
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(simple_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
+        api_key="test_key"
     )
-    simple_code = "def hello():\n    print('Hello, world!')"
     result = code_chunker(simple_code)
 
     # Check the result
@@ -112,16 +202,19 @@ def test_cloud_code_chunker_simple() -> None:
     assert isinstance(result[0]["end_index"], int)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_python_complex(python_code: str) -> None:
+def test_cloud_code_chunker_python_complex(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
     """Test that the code chunker works with complex Python code."""
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(python_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=50,
         language="python",
+        api_key="test_key"
     )
     result = code_chunker(python_code)
 
@@ -139,16 +232,19 @@ def test_cloud_code_chunker_python_complex(python_code: str) -> None:
     assert reconstructed == python_code
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_javascript(js_code: str) -> None:
+def test_cloud_code_chunker_javascript(mock_requests_get, mock_requests_post, mock_api_response, js_code: str) -> None:
     """Test that the code chunker works with JavaScript code."""
+    # Mock the post request response  
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(js_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=40,
         language="javascript",
+        api_key="test_key"
     )
     result = code_chunker(js_code)
 
@@ -164,16 +260,19 @@ def test_cloud_code_chunker_javascript(js_code: str) -> None:
     assert reconstructed == js_code
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_auto_language(python_code: str) -> None:
+def test_cloud_code_chunker_auto_language(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
     """Test that the code chunker works with auto language detection."""
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(python_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=100,
         language="auto",
+        api_key="test_key"
     )
     result = code_chunker(python_code)
 
@@ -188,18 +287,22 @@ def test_cloud_code_chunker_auto_language(python_code: str) -> None:
     assert reconstructed == python_code
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_no_nodes_support() -> None:
+def test_cloud_code_chunker_no_nodes_support(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the code chunker doesn't support nodes (API limitation)."""
+    simple_code = "def hello():\n    print('Hello, world!')"
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(simple_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
+        api_key="test_key"
     )
-    simple_code = "def hello():\n    print('Hello, world!')"
     result = code_chunker(simple_code)
 
     # Check the result - should not contain nodes since API doesn't support them
@@ -209,18 +312,22 @@ def test_cloud_code_chunker_no_nodes_support() -> None:
     # API doesn't support tree-sitter nodes, so they shouldn't be in response
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_batch(python_code: str, js_code: str) -> None:
+def test_cloud_code_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response, python_code: str, js_code: str) -> None:
     """Test that the code chunker works with a batch of texts."""
+    texts = [python_code, js_code, "def simple(): pass"]
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(texts)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=100,
         language="auto",
+        api_key="test_key"
     )
-    texts = [python_code, js_code, "def simple(): pass"]
     result = code_chunker(texts)
 
     # Check the result
@@ -240,19 +347,23 @@ def test_cloud_code_chunker_batch(python_code: str, js_code: str) -> None:
     )
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_return_type_texts() -> None:
+def test_cloud_code_chunker_return_type_texts(mock_requests_get, mock_requests_post) -> None:
     """Test that the code chunker works with return_type='texts'."""
+    simple_code = "def hello():\n    print('Hello, world!')"
+    
+    # Mock the post request response for texts return type
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [simple_code]  # Return type texts returns list of strings
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
         return_type="texts",
+        api_key="test_key"
     )
-    simple_code = "def hello():\n    print('Hello, world!')"
     result = code_chunker(simple_code)
 
     # Check the result
@@ -260,48 +371,63 @@ def test_cloud_code_chunker_return_type_texts() -> None:
     assert all(isinstance(item, str) for item in result)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_empty_text() -> None:
+def test_cloud_code_chunker_empty_text(mock_requests_get, mock_requests_post) -> None:
     """Test that the code chunker works with an empty text."""
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = []  # Empty response for empty input
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
+        api_key="test_key"
     )
 
     result = code_chunker("")
     assert len(result) == 0
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_whitespace_text() -> None:
+def test_cloud_code_chunker_whitespace_text(mock_requests_get, mock_requests_post) -> None:
     """Test that the code chunker works with whitespace-only text."""
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = []  # Empty response for whitespace input
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
+        api_key="test_key"
     )
 
+    result = code_chunker("   \n  \t  ")
     assert len(result) == 0  # Assuming whitespace-only input behaves like empty input
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_chunk_size_adherence(python_code: str) -> None:
+def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
     """Test that code chunks mostly adhere to chunk_size limits."""
     chunk_size = 30
+    
+    # Mock response with realistic chunk sizes
+    mock_response = Mock()
+    mock_response.status_code = 200
+    chunks = mock_api_response(python_code)
+    # Adjust token counts to be realistic for chunk size
+    for chunk in chunks:
+        chunk["token_count"] = min(chunk_size + 10, chunk["token_count"])  # Allow some tolerance
+    mock_response.json.return_value = chunks
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=chunk_size,
         language="python",
+        api_key="test_key"
     )
     result = code_chunker(python_code)
 
@@ -314,16 +440,19 @@ def test_cloud_code_chunker_chunk_size_adherence(python_code: str) -> None:
         assert result[-1]["token_count"] > 0
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_indices_continuity(python_code: str) -> None:
+def test_cloud_code_chunker_indices_continuity(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
     """Test that chunk indices are continuous."""
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(python_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=60,
         language="python",
+        api_key="test_key"
     )
     result = code_chunker(python_code)
 
@@ -338,11 +467,7 @@ def test_cloud_code_chunker_indices_continuity(python_code: str) -> None:
     assert current_index == len(python_code)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_code_chunker_different_tokenizers() -> None:
+def test_cloud_code_chunker_different_tokenizers(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the code chunker works with different tokenizers."""
     simple_code = "def hello():\n    print('Hello, world!')"
     
@@ -350,10 +475,17 @@ def test_cloud_code_chunker_different_tokenizers() -> None:
     tokenizers = ["gpt2", "cl100k_base"]
     
     for tokenizer in tokenizers:
+        # Mock the post request response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_api_response(simple_code)
+        mock_requests_post.return_value = mock_response
+        
         code_chunker = CodeChunker(
             tokenizer_or_token_counter=tokenizer,
             chunk_size=512,
             language="python",
+            api_key="test_key"
         )
         result = code_chunker(simple_code)
         
@@ -361,3 +493,24 @@ def test_cloud_code_chunker_different_tokenizers() -> None:
         assert len(result) >= 1
         assert all(isinstance(chunk, dict) for chunk in result)
         assert all("text" in chunk for chunk in result)
+
+
+@pytest.mark.skipif(
+    "CHONKIE_API_KEY" not in os.environ,
+    reason="CHONKIE_API_KEY is not set - Skipping real API test",
+)
+def test_cloud_code_chunker_real_api() -> None:
+    """Test with real API if CHONKIE_API_KEY is available."""
+    code_chunker = CodeChunker(
+        tokenizer_or_token_counter="gpt2",
+        chunk_size=512,
+        language="python",
+    )
+    simple_code = "def hello():\n    print('Hello, world!')"
+    result = code_chunker(simple_code)
+
+    # Check the result
+    assert isinstance(result, list) and len(result) >= 1
+    assert isinstance(result[0], dict)
+    assert "text" in result[0]
+    assert "token_count" in result[0]

@@ -2,15 +2,25 @@
 
 import json
 import os
-from typing import Any
-from unittest.mock import patch
+from typing import Any, Generator
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
 import requests
-from tokenizers import Tokenizer
 
 from chonkie.embeddings.jina import JinaEmbeddings
+
+
+@pytest.fixture(autouse=True)
+def mock_tokenizer() -> Generator[Any, None, None]:
+    """Mock tokenizer initialization to avoid internet dependency in CI."""
+    with patch('tokenizers.Tokenizer.from_pretrained') as mock_tokenizer:
+        mock_tokenizer_instance = Mock()
+        mock_tokenizer_instance.encode.return_value = Mock(ids=[1, 2, 3, 4, 5])
+        mock_tokenizer_instance.encode_batch.return_value = [Mock(ids=[1, 2, 3]), Mock(ids=[4, 5, 6])]
+        mock_tokenizer.return_value = mock_tokenizer_instance
+        yield mock_tokenizer
 
 
 class TestJinaEmbeddingsInitialization:
@@ -109,7 +119,9 @@ class TestJinaEmbeddingsProperties:
         """Test get_tokenizer_or_token_counter returns tokenizer instance."""
         tokenizer = embeddings.get_tokenizer_or_token_counter()
         assert tokenizer is embeddings._tokenizer
-        assert isinstance(tokenizer, Tokenizer)
+        # Since we're using a mock, check that it has the expected methods
+        assert hasattr(tokenizer, "encode")
+        assert hasattr(tokenizer, "encode_batch")
 
     def test_available_models_contains_expected_models(self) -> None:
         """Test that AVAILABLE_MODELS contains expected models."""
