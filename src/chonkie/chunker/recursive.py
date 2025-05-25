@@ -22,6 +22,13 @@ try:
 except ImportError:
     SPLIT_AVAILABLE = False
 
+# Import optimized merge functions
+try:
+    from .c_extensions.merge import _merge_splits as _merge_splits_cython
+    MERGE_CYTHON_AVAILABLE = True
+except ImportError:
+    MERGE_CYTHON_AVAILABLE = False
+
 
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
@@ -226,7 +233,30 @@ class RecursiveChunker(BaseChunker):
         token_counts: list[int],
         combine_whitespace: bool = False,
     ) -> Tuple[List[str], List[int]]:
-        """Merge short splits."""
+        """
+        Merge short splits into larger chunks.
+        
+        Uses optimized Cython implementation when available, with Python fallback.
+        """
+        if MERGE_CYTHON_AVAILABLE:
+            # Use optimized Cython implementation
+            return _merge_splits_cython(
+                splits, 
+                token_counts, 
+                self.chunk_size, 
+                combine_whitespace
+            )
+        else:
+            # Fallback to original Python implementation
+            return self._merge_splits_fallback(splits, token_counts, combine_whitespace)
+    
+    def _merge_splits_fallback(
+        self,
+        splits: list[str],
+        token_counts: list[int],
+        combine_whitespace: bool = False,
+    ) -> Tuple[List[str], List[int]]:
+        """Original Python implementation of _merge_splits (fallback)."""
         if not splits or not token_counts:
             return [], []
 

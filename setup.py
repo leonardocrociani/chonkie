@@ -9,6 +9,10 @@ extensions = [
     Extension(
         "chonkie.chunker.c_extensions.split",
         ["src/chonkie/chunker/c_extensions/split.pyx"],
+    ),
+    Extension(
+        "chonkie.chunker.c_extensions.merge",
+        ["src/chonkie/chunker/c_extensions/merge.pyx"],
     )
 ]
 
