@@ -233,8 +233,7 @@ class RecursiveChunker(BaseChunker):
         token_counts: list[int],
         combine_whitespace: bool = False,
     ) -> Tuple[List[str], List[int]]:
-        """
-        Merge short splits into larger chunks.
+        """Merge short splits into larger chunks.
         
         Uses optimized Cython implementation when available, with Python fallback.
         """
