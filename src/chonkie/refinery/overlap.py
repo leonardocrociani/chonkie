@@ -1,6 +1,7 @@
 """Refinery for adding overlap to chunks."""
 
 import warnings
+from functools import lru_cache
 from typing import Any, Callable, Dict, List, Literal, Union
 
 from chonkie.refinery.base import BaseRefinery
@@ -14,11 +15,14 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 # TODO: Add support for `justified` method which is the best of
 # both prefix and suffix overlap.
 
-# TODO: The OverlapRefinery is so slow right now (TwT)
-# We need to find a way to speed it up.
 
 class OverlapRefinery(BaseRefinery):
-    """Refinery for adding overlap to chunks."""
+    """Refinery for adding overlap to chunks.
+    
+    Uses LRU caching (maxsize=8192) for tokenization operations to improve
+    performance when processing similar text repeatedly. The cache can be
+    monitored with cache_info() and cleared with clear_cache() if needed.
+    """
 
     def __init__(
         self,
@@ -70,14 +74,41 @@ class OverlapRefinery(BaseRefinery):
         self.rules = rules
         self.sep = '✄'
         
-        # Performance optimization: Add caches for repeated operations
-        self._token_cache: Dict[str, list] = {}  # Cache for tokenizer.encode() results
-        self._count_cache: Dict[str, int] = {}  # Cache for token count results
+        # Performance optimization: Set cache size for LRU caches  
+        self._cache_size = 8192
+        
+        # Create LRU cached methods
+        self._get_tokens_cached = lru_cache(maxsize=self._cache_size)(self._get_tokens_impl)
+        self._count_tokens_cached = lru_cache(maxsize=self._cache_size)(self._count_tokens_impl)
 
 
     def _is_available(self) -> bool:
         """Check if the refinery is available."""
         return True
+
+    def _get_tokens_impl(self, text: str) -> list:
+        """Implementation for getting tokens."""
+        return self.tokenizer.encode(text)
+
+    def _count_tokens_impl(self, text: str) -> int:
+        """Implementation for counting tokens."""
+        return len(self.tokenizer.encode(text))
+
+    def clear_cache(self) -> None:
+        """Clear the LRU caches to free memory."""
+        if hasattr(self, '_get_tokens_cached'):
+            self._get_tokens_cached.cache_clear()
+        if hasattr(self, '_count_tokens_cached'):
+            self._count_tokens_cached.cache_clear()
+
+    def cache_info(self) -> dict:
+        """Get cache information for monitoring."""
+        info = {}
+        if hasattr(self, '_get_tokens_cached'):
+            info['tokens_cache'] = self._get_tokens_cached.cache_info()._asdict()
+        if hasattr(self, '_count_tokens_cached'):
+            info['count_cache'] = self._count_tokens_cached.cache_info()._asdict()
+        return info
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel, effective_context_size: int) -> list[str]:
         """Split the text into chunks using the delimiters."""
@@ -108,33 +139,8 @@ class OverlapRefinery(BaseRefinery):
         return splits
 
     def _get_token_counts_cached(self, splits: List[str]) -> List[int]:
-        """Get token counts with caching for performance optimization."""
-        cached_counts = []
-        uncached_texts = []
-        uncached_indices = []
-        
-        # Separate cached and uncached texts
-        for i, split in enumerate(splits):
-            if split in self._count_cache:
-                cached_counts.append((i, self._count_cache[split]))
-            else:
-                uncached_texts.append(split)
-                uncached_indices.append(i)
-        
-        # Batch process uncached texts
-        if uncached_texts:
-            new_counts = list(self.tokenizer.count_tokens_batch(uncached_texts))
-            # Cache the results
-            for text, count in zip(uncached_texts, new_counts):
-                self._count_cache[text] = count
-            
-            # Add to cached_counts
-            for idx, count in zip(uncached_indices, new_counts):
-                cached_counts.append((idx, count))
-        
-        # Sort by original index and extract counts
-        cached_counts.sort(key=lambda x: x[0])
-        return [count for _, count in cached_counts]
+        """Get token counts with LRU caching for performance optimization."""
+        return [self._count_tokens_cached(split) for split in splits]
 
     def _group_splits(self, splits: List[str], token_counts: List[int], effective_context_size: int) -> List[str]:
         """Group the splits.
@@ -173,12 +179,8 @@ class OverlapRefinery(BaseRefinery):
             The overlap context.
 
         """
-        # Performance optimization: Cache tokenization results
-        if chunk.text in self._token_cache:
-            tokens = self._token_cache[chunk.text]
-        else:
-            tokens = self.tokenizer.encode(chunk.text)
-            self._token_cache[chunk.text] = tokens
+        # Performance optimization: Use LRU cached tokenization
+        tokens = self._get_tokens_cached(chunk.text)
             
         if effective_context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
@@ -294,13 +296,9 @@ class OverlapRefinery(BaseRefinery):
                 # because they should represent the original document positions.
                 # The context is additional information, not part of the original chunk position.
 
-                # Performance optimization: Update the token count with caching
+                # Performance optimization: Update the token count with LRU caching
                 if self.tokenizer:
-                    if context in self._count_cache:
-                        context_tokens = self._count_cache[context]
-                    else:
-                        context_tokens = self.tokenizer.count_tokens(context)
-                        self._count_cache[context] = context_tokens
+                    context_tokens = self._count_tokens_cached(context)
                     chunk.token_count += context_tokens
 
         return chunks
@@ -320,12 +318,8 @@ class OverlapRefinery(BaseRefinery):
             The overlap context.
         
         """
-        # Performance optimization: Cache tokenization results
-        if chunk.text in self._token_cache:
-            tokens = self._token_cache[chunk.text]
-        else:
-            tokens = self.tokenizer.encode(chunk.text)
-            self._token_cache[chunk.text] = tokens
+        # Performance optimization: Use LRU cached tokenization
+        tokens = self._get_tokens_cached(chunk.text)
             
         if effective_context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
@@ -394,13 +388,9 @@ class OverlapRefinery(BaseRefinery):
                 # because they should represent the original document positions.
                 # The context is additional information, not part of the original chunk position.
 
-                # Performance optimization: Update the token count with caching
+                # Performance optimization: Update the token count with LRU caching
                 if self.tokenizer:
-                    if context in self._count_cache:
-                        context_tokens = self._count_cache[context]
-                    else:
-                        context_tokens = self.tokenizer.count_tokens(context)
-                        self._count_cache[context] = context_tokens
+                    context_tokens = self._count_tokens_cached(context)
                     chunk.token_count += context_tokens
 
         return chunks
