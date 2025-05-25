@@ -6,14 +6,9 @@ from typing import TYPE_CHECKING, Any, List, Union
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    try:
-        import numpy as np
-        from model2vec import StaticModel
-        from tokenizers import Tokenizer
-    except ImportError:
-        np = Any  # type: ignore
-        StaticModel = Any  # type: ignore
-        Tokenizer = Any  # type: ignore
+    import numpy as np
+    from model2vec import StaticModel
+    from tokenizers import Tokenizer
 
 
 class Model2VecEmbeddings(BaseEmbeddings):
@@ -74,7 +69,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
         return self.model.tokenizer
 
     @classmethod
-    def is_available(cls) -> bool:
+    def _is_available(cls) -> bool:
         """Check if model2vec is available."""
         return importutil.find_spec("model2vec") is not None
 
@@ -85,7 +80,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if cls.is_available():
+        if cls._is_available():
             global np, StaticModel
             import numpy as np
             from model2vec import StaticModel
