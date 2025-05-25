@@ -50,5 +50,7 @@ Thumbs.db
 # Project specific
 /tmp/*
 /tests/data/*
+/.temp/*
 notebooks/*
 src/chonkie/chunker/c_extensions/token_chunker.cpython-310-darwin.so
+CLAUDE.md

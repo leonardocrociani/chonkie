@@ -17,6 +17,13 @@ from chonkie.utils import Hubbie
 
 from .base import BaseChunker
 
+# Import the unified split function
+try:
+    from .c_extensions.split import split_text
+    SPLIT_AVAILABLE = True
+except ImportError:
+    SPLIT_AVAILABLE = False
+
 
 class SentenceChunker(BaseChunker):
     """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
@@ -152,7 +159,7 @@ class SentenceChunker(BaseChunker):
 
 
     def _split_text(self, text: str) -> List[str]:
-        """Fast sentence splitting while maintaining accuracy.
+        """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
 
@@ -163,43 +170,55 @@ class SentenceChunker(BaseChunker):
             List of sentences
 
         """
-        t = text
-        for c in self.delim:
-            if self.include_delim == "prev":
-                t = t.replace(c, c + self.sep)
-            elif self.include_delim == "next":
-                t = t.replace(c, self.sep + c)
-            else:
-                t = t.replace(c, self.sep)
+        if SPLIT_AVAILABLE:
+            # Use optimized Cython split function
+            return split_text(
+                text=text,
+                delim=self.delim,
+                include_delim=self.include_delim,
+                min_characters_per_segment=self.min_characters_per_sentence,
+                whitespace_mode=False,
+                character_fallback=True
+            )
+        else:
+            # Fallback to original Python implementation
+            t = text
+            for c in self.delim:
+                if self.include_delim == "prev":
+                    t = t.replace(c, c + self.sep)
+                elif self.include_delim == "next":
+                    t = t.replace(c, self.sep + c)
+                else:
+                    t = t.replace(c, self.sep)
 
-        # Initial split
-        splits = [s for s in t.split(self.sep) if s != ""]
+            # Initial split
+            splits = [s for s in t.split(self.sep) if s != ""]
 
-        # Combine short splits with previous sentence
-        current = ""
-        sentences = []
-        for s in splits:
-            # If the split is short, add to current and if long add to sentences
-            if len(s) < self.min_characters_per_sentence:
-                current += s
-            elif current:
-                current += s
+            # Combine short splits with previous sentence
+            current = ""
+            sentences = []
+            for s in splits:
+                # If the split is short, add to current and if long add to sentences
+                if len(s) < self.min_characters_per_sentence:
+                    current += s
+                elif current:
+                    current += s
+                    sentences.append(current)
+                    current = ""
+                else:
+                    sentences.append(s)
+
+                # At any point if the current sentence is longer than the min_characters_per_sentence,
+                # add it to the sentences
+                if len(current) >= self.min_characters_per_sentence:
+                    sentences.append(current)
+                    current = ""
+
+            # If there is a current split, add it to the sentences
+            if current:
                 sentences.append(current)
-                current = ""
-            else:
-                sentences.append(s)
 
-            # At any point if the current sentence is longer than the min_characters_per_sentence,
-            # add it to the sentences
-            if len(current) >= self.min_characters_per_sentence:
-                sentences.append(current)
-                current = ""
-
-        # If there is a current split, add it to the sentences
-        if current:
-            sentences.append(current)
-
-        return sentences
+            return sentences
 
     def _prepare_sentences(self, text: str) -> List[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
