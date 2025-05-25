@@ -1,7 +1,7 @@
 """Refinery for adding overlap to chunks."""
 
 import warnings
-from typing import Any, Callable, List, Literal, Union
+from typing import Any, Callable, Dict, List, Literal, Union
 
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
@@ -69,6 +69,11 @@ class OverlapRefinery(BaseRefinery):
         self.inplace = inplace
         self.rules = rules
         self.sep = '✄'
+        
+        # Performance optimization: Add caches for repeated operations
+        self._token_cache: Dict[str, list] = {}  # Cache for tokenizer.encode() results
+        self._count_cache: Dict[str, int] = {}  # Cache for token count results
+        self._calculated_context_size: Union[int, None] = None  # Cache for float context size calculation
 
 
     def _is_available(self) -> bool:
@@ -94,15 +99,44 @@ class OverlapRefinery(BaseRefinery):
         else:
             # Encode, Split, and Decode
             encoded = self.tokenizer.encode(text)
+            context_size_int = int(self.context_size) if isinstance(self.context_size, (int, float)) else self.context_size
             token_splits = [
-                encoded[i : i + self.context_size]
-                for i in range(0, len(encoded), self.context_size)]
-            splits = self.tokenizer.decode_batch(token_splits)
+                encoded[i : i + context_size_int]
+                for i in range(0, len(encoded), context_size_int)]
+            splits = list(self.tokenizer.decode_batch(token_splits))
 
         # Some splits may not be meaningful yet.
         # This will be handled during chunk creation.
         return splits
 
+    def _get_token_counts_cached(self, splits: List[str]) -> List[int]:
+        """Get token counts with caching for performance optimization."""
+        cached_counts = []
+        uncached_texts = []
+        uncached_indices = []
+        
+        # Separate cached and uncached texts
+        for i, split in enumerate(splits):
+            if split in self._count_cache:
+                cached_counts.append((i, self._count_cache[split]))
+            else:
+                uncached_texts.append(split)
+                uncached_indices.append(i)
+        
+        # Batch process uncached texts
+        if uncached_texts:
+            new_counts = list(self.tokenizer.count_tokens_batch(uncached_texts))
+            # Cache the results
+            for text, count in zip(uncached_texts, new_counts):
+                self._count_cache[text] = count
+            
+            # Add to cached_counts
+            for idx, count in zip(uncached_indices, new_counts):
+                cached_counts.append((idx, count))
+        
+        # Sort by original index and extract counts
+        cached_counts.sort(key=lambda x: x[0])
+        return [count for _, count in cached_counts]
 
     def _group_splits(self, splits: List[str], token_counts: List[int]) -> List[str]:
         """Group the splits.
@@ -139,7 +173,13 @@ class OverlapRefinery(BaseRefinery):
             The overlap context.
 
         """
-        tokens = self.tokenizer.encode(chunk.text)
+        # Performance optimization: Cache tokenization results
+        if chunk.text in self._token_cache:
+            tokens = self._token_cache[chunk.text]
+        else:
+            tokens = self.tokenizer.encode(chunk.text)
+            self._token_cache[chunk.text] = tokens
+            
         if self.context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
             return chunk.text
@@ -162,14 +202,21 @@ class OverlapRefinery(BaseRefinery):
         if text == "":
             return ""
             
+        # Check if we've exceeded the available recursive levels
+        if level >= len(self.rules):
+            return text
+            
         # Split the Chunk text based on the recursive rules
-        splits = self._split_text(text, self.rules[level])
+        recursive_level = self.rules[level]
+        if recursive_level is None:
+            return text
+        splits = self._split_text(text, recursive_level)
 
         if method == "prefix":
             splits = splits[::-1]
 
-        # Get the token counts
-        token_counts = self.tokenizer.count_tokens_batch(splits)
+        # Performance optimization: Get token counts with caching
+        token_counts = self._get_token_counts_cached(splits)
 
         # Group the splits
         grouped_splits = self._group_splits(splits, token_counts)
@@ -234,12 +281,18 @@ class OverlapRefinery(BaseRefinery):
             # Merge the context if merge is True
             if self.merge:
                 chunk.text = context + chunk.text
-                # Since the context is added as a prefix, we need to adjust the start index
-                chunk.start_index -= len(context)
+                # Note: We don't adjust start_index/end_index when adding context
+                # because they should represent the original document positions.
+                # The context is additional information, not part of the original chunk position.
 
-                # Update the token count if a tokenizer is passed
+                # Performance optimization: Update the token count with caching
                 if self.tokenizer:
-                    chunk.token_count += self.tokenizer.count_tokens(context)
+                    if context in self._count_cache:
+                        context_tokens = self._count_cache[context]
+                    else:
+                        context_tokens = self.tokenizer.count_tokens(context)
+                        self._count_cache[context] = context_tokens
+                    chunk.token_count += context_tokens
 
         return chunks
 
@@ -251,7 +304,13 @@ class OverlapRefinery(BaseRefinery):
         and selects exactly context_size tokens worth of text.
         
         """
-        tokens = self.tokenizer.encode(chunk.text)
+        # Performance optimization: Cache tokenization results
+        if chunk.text in self._token_cache:
+            tokens = self._token_cache[chunk.text]
+        else:
+            tokens = self.tokenizer.encode(chunk.text)
+            self._token_cache[chunk.text] = tokens
+            
         if self.context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
             return chunk.text
@@ -307,12 +366,18 @@ class OverlapRefinery(BaseRefinery):
             # Merge the context if merge is True
             if self.merge:
                 chunk.text = chunk.text + context
-                # Since the context is added as a suffix, we need to adjust the end index
-                chunk.end_index += len(context)
+                # Note: We don't adjust start_index/end_index when adding context
+                # because they should represent the original document positions.
+                # The context is additional information, not part of the original chunk position.
 
-                # Update the token count if a tokenizer is passed
+                # Performance optimization: Update the token count with caching
                 if self.tokenizer:
-                    chunk.token_count += self.tokenizer.count_tokens(context)
+                    if context in self._count_cache:
+                        context_tokens = self._count_cache[context]
+                    else:
+                        context_tokens = self.tokenizer.count_tokens(context)
+                        self._count_cache[context] = context_tokens
+                    chunk.token_count += context_tokens
 
         return chunks
 
@@ -323,9 +388,11 @@ class OverlapRefinery(BaseRefinery):
             chunks: The chunks to get the overlap context size for.
 
         """
-        # If the context size is a float, calculate the overlap context size
+        # Performance optimization: Cache float context size calculation
         if isinstance(self.context_size, float):
-            return int(self.context_size * max(chunk.token_count for chunk in chunks))
+            if self._calculated_context_size is None:
+                self._calculated_context_size = int(self.context_size * max(chunk.token_count for chunk in chunks))
+            return self._calculated_context_size
         else:
             return self.context_size
 

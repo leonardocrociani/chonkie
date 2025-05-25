@@ -1,6 +1,7 @@
 """Test for the Chonkie Cloud Code Chunker class."""
 
 import os
+from typing import Any, Callable, Dict, List, Union
 from unittest.mock import Mock, patch
 
 import pytest
@@ -54,9 +55,9 @@ console.log(calc.add(5, 3));
 
 
 @pytest.fixture
-def mock_api_response():
+def mock_api_response() -> Callable[[Union[str, List[str]], int], Union[List[Dict[str, Any]], List[List[Dict[str, Any]]]]]:
     """Mock successful API response."""
-    def _mock_response(text_input, chunk_count=1):
+    def _mock_response(text_input: Union[str, List[str]], chunk_count: int = 1) -> Union[List[Dict[str, Any]], List[List[Dict[str, Any]]]]:
         if isinstance(text_input, str):
             # Single text input - split into multiple chunks for longer text
             if len(text_input) > 100:
@@ -124,7 +125,7 @@ def mock_api_response():
 
 
 @pytest.fixture
-def mock_requests_get():
+def mock_requests_get() -> Any:
     """Mock requests.get for API availability check."""
     with patch('requests.get') as mock_get:
         mock_response = Mock()
@@ -134,13 +135,13 @@ def mock_requests_get():
 
 
 @pytest.fixture
-def mock_requests_post():
+def mock_requests_post() -> Any:
     """Mock requests.post for API chunking calls."""
     with patch('requests.post') as mock_post:
         yield mock_post
 
 
-def test_cloud_code_chunker_initialization(mock_requests_get) -> None:
+def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
     """Test that the code chunker can be initialized."""
     # Check if the chunk_size <= 0 raises an error
     with pytest.raises(ValueError):
@@ -171,7 +172,7 @@ def test_cloud_code_chunker_initialization(mock_requests_get) -> None:
     assert chunker.return_type == "chunks"
 
 
-def test_cloud_code_chunker_simple(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
     """Test that the code chunker works with simple code."""
     simple_code = "def hello():\n    print('Hello, world!')"
     
@@ -202,7 +203,7 @@ def test_cloud_code_chunker_simple(mock_requests_get, mock_requests_post, mock_a
     assert isinstance(result[0]["end_index"], int)
 
 
-def test_cloud_code_chunker_python_complex(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
+def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
     """Test that the code chunker works with complex Python code."""
     # Mock the post request response
     mock_response = Mock()
@@ -232,7 +233,7 @@ def test_cloud_code_chunker_python_complex(mock_requests_get, mock_requests_post
     assert reconstructed == python_code
 
 
-def test_cloud_code_chunker_javascript(mock_requests_get, mock_requests_post, mock_api_response, js_code: str) -> None:
+def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, js_code: str) -> None:
     """Test that the code chunker works with JavaScript code."""
     # Mock the post request response  
     mock_response = Mock()
@@ -260,7 +261,7 @@ def test_cloud_code_chunker_javascript(mock_requests_get, mock_requests_post, mo
     assert reconstructed == js_code
 
 
-def test_cloud_code_chunker_auto_language(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
+def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
     """Test that the code chunker works with auto language detection."""
     # Mock the post request response
     mock_response = Mock()
@@ -287,7 +288,7 @@ def test_cloud_code_chunker_auto_language(mock_requests_get, mock_requests_post,
     assert reconstructed == python_code
 
 
-def test_cloud_code_chunker_no_nodes_support(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
     """Test that the code chunker doesn't support nodes (API limitation)."""
     simple_code = "def hello():\n    print('Hello, world!')"
     
@@ -312,7 +313,7 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get, mock_requests_po
     # API doesn't support tree-sitter nodes, so they shouldn't be in response
 
 
-def test_cloud_code_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response, python_code: str, js_code: str) -> None:
+def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str, js_code: str) -> None:
     """Test that the code chunker works with a batch of texts."""
     texts = [python_code, js_code, "def simple(): pass"]
     
@@ -347,7 +348,7 @@ def test_cloud_code_chunker_batch(mock_requests_get, mock_requests_post, mock_ap
     )
 
 
-def test_cloud_code_chunker_return_type_texts(mock_requests_get, mock_requests_post) -> None:
+def test_cloud_code_chunker_return_type_texts(mock_requests_get: Any, mock_requests_post: Any) -> None:
     """Test that the code chunker works with return_type='texts'."""
     simple_code = "def hello():\n    print('Hello, world!')"
     
@@ -371,7 +372,7 @@ def test_cloud_code_chunker_return_type_texts(mock_requests_get, mock_requests_p
     assert all(isinstance(item, str) for item in result)
 
 
-def test_cloud_code_chunker_empty_text(mock_requests_get, mock_requests_post) -> None:
+def test_cloud_code_chunker_empty_text(mock_requests_get: Any, mock_requests_post: Any) -> None:
     """Test that the code chunker works with an empty text."""
     # Mock the post request response
     mock_response = Mock()
@@ -390,7 +391,7 @@ def test_cloud_code_chunker_empty_text(mock_requests_get, mock_requests_post) ->
     assert len(result) == 0
 
 
-def test_cloud_code_chunker_whitespace_text(mock_requests_get, mock_requests_post) -> None:
+def test_cloud_code_chunker_whitespace_text(mock_requests_get: Any, mock_requests_post: Any) -> None:
     """Test that the code chunker works with whitespace-only text."""
     # Mock the post request response
     mock_response = Mock()
@@ -409,7 +410,7 @@ def test_cloud_code_chunker_whitespace_text(mock_requests_get, mock_requests_pos
     assert len(result) == 0  # Assuming whitespace-only input behaves like empty input
 
 
-def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
+def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
     """Test that code chunks mostly adhere to chunk_size limits."""
     chunk_size = 30
     
@@ -440,7 +441,7 @@ def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get, mock_request
         assert result[-1]["token_count"] > 0
 
 
-def test_cloud_code_chunker_indices_continuity(mock_requests_get, mock_requests_post, mock_api_response, python_code: str) -> None:
+def test_cloud_code_chunker_indices_continuity(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
     """Test that chunk indices are continuous."""
     # Mock the post request response
     mock_response = Mock()
@@ -467,7 +468,7 @@ def test_cloud_code_chunker_indices_continuity(mock_requests_get, mock_requests_
     assert current_index == len(python_code)
 
 
-def test_cloud_code_chunker_different_tokenizers(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
     """Test that the code chunker works with different tokenizers."""
     simple_code = "def hello():\n    print('Hello, world!')"
     
