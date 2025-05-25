@@ -164,3 +164,87 @@ def _merge_splits(
     finally:
         # Always free allocated C memory
         free(cumulative_counts)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def find_merge_indices(
+    list token_counts,
+    int chunk_size,
+    int start_pos=0
+):
+    """
+    Optimized function to find merge indices using cumulative token counts and binary search.
+    
+    This generic function can be used by multiple chunkers (SentenceChunker, CodeChunker, etc.)
+    that need to find optimal merge points based on token counts and chunk size limits.
+    
+    Args:
+        token_counts (list): List of token counts for each element to be merged
+        chunk_size (int): Maximum tokens per merged chunk
+        start_pos (int): Starting position in the token_counts list
+    
+    Returns:
+        list: List of indices where merges should occur
+        
+    Example:
+        >>> token_counts = [10, 15, 20, 5, 8, 12]
+        >>> chunk_size = 30
+        >>> find_merge_indices(token_counts, chunk_size)
+        [2, 5, 6]  # Merge [0:2], [2:5], [5:6]
+    """
+    # Declare all C variables at function start
+    cdef int counts_len = len(token_counts)
+    cdef int* cumulative_counts
+    cdef int cumulative_sum = 0
+    cdef int i, token_count_val
+    cdef int current_pos = start_pos
+    cdef int target_cumulative, index
+    cdef int left, right, mid  # Binary search variables
+    
+    if counts_len == 0:
+        return []
+    
+    # Build cumulative counts using C array for fast access
+    cumulative_counts = <int*>malloc((counts_len + 1) * sizeof(int))
+    if cumulative_counts is NULL:
+        raise MemoryError("Failed to allocate memory for cumulative_counts")
+    
+    try:
+        cumulative_counts[0] = 0
+        for i in range(counts_len):
+            token_count_val = token_counts[i]
+            cumulative_sum += token_count_val
+            cumulative_counts[i + 1] = cumulative_sum
+        
+        # Find merge indices
+        merge_indices = []
+        
+        while current_pos < counts_len:
+            target_cumulative = cumulative_counts[current_pos] + chunk_size
+            
+            # Inline binary search for insertion point
+            left = current_pos
+            right = counts_len + 1
+            
+            while left < right:
+                mid = (left + right) // 2
+                if cumulative_counts[mid] < target_cumulative:
+                    left = mid + 1
+                else:
+                    right = mid
+            
+            # Apply same logic as chunkers: bisect_left(...) - 1, then bounds checking
+            index = min(left - 1, counts_len)
+            
+            # Ensure we make progress (at least one element per chunk)
+            if index <= current_pos:
+                index = current_pos + 1
+            
+            merge_indices.append(index)
+            current_pos = index
+        
+        return merge_indices
+    
+    finally:
+        free(cumulative_counts)

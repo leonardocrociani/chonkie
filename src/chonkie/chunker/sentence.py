@@ -17,6 +17,13 @@ from chonkie.utils import Hubbie
 
 from .base import BaseChunker
 
+# Import optimized merge functions
+try:
+    from .c_extensions.merge import find_merge_indices
+    MERGE_CYTHON_AVAILABLE = True
+except ImportError:
+    MERGE_CYTHON_AVAILABLE = False
+
 # Import the unified split function
 try:
     from .c_extensions.split import split_text
@@ -306,7 +313,6 @@ class SentenceChunker(BaseChunker):
             return []
 
         # Pre-calculate cumulative token counts for bisect
-        # Add 1 token for spaces between sentences
         token_sums = list(
             accumulate(
                 [s.token_count for s in sentences],
@@ -319,13 +325,26 @@ class SentenceChunker(BaseChunker):
         pos = 0
 
         while pos < len(sentences):
-            # Use bisect_left to find initial split point
-            target_tokens = token_sums[pos] + self.chunk_size
-            split_idx = bisect_left(token_sums, target_tokens) - 1
-            split_idx = min(split_idx, len(sentences))
+            # OPTIMIZATION: Use Cython for single bisect operation when available
+            if MERGE_CYTHON_AVAILABLE:
+                # Create a subset view for the Cython function to work on
+                remaining_token_counts = [s.token_count for s in sentences[pos:]]
+                if remaining_token_counts:
+                    merge_indices = find_merge_indices(remaining_token_counts, self.chunk_size, 0)
+                    if merge_indices:
+                        split_idx = pos + merge_indices[0]
+                    else:
+                        split_idx = len(sentences)
+                else:
+                    split_idx = len(sentences)
+            else:
+                # Use bisect_left to find initial split point (fallback)
+                target_tokens = token_sums[pos] + self.chunk_size
+                split_idx = bisect_left(token_sums, target_tokens) - 1
+                split_idx = min(split_idx, len(sentences))
 
-            # Ensure we include at least one sentence beyond pos
-            split_idx = max(split_idx, pos + 1)
+                # Ensure we include at least one sentence beyond pos
+                split_idx = max(split_idx, pos + 1)
 
             # Handle minimum sentences requirement
             if split_idx - pos < self.min_sentences_per_chunk:
