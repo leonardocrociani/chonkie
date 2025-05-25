@@ -7,7 +7,7 @@ icon: 'chart-tree-map'
 The `RecursiveChunker` recursively splits documents into smaller, semantically meaningful chunks using customizable hierarchical rules. It is ideal for long or structured documents (e.g., books, research papers, technical docs) where you want to preserve logical structure while respecting token limits.
 
 ## API Reference
-To use the `RecursiveChunker` via the API, check out the [API reference documentation](../../api-reference/recursive-chunker).
+To use the `RecursiveChunker` via the API, check out the [API reference documentation](/typescript-sdk/api-reference/recursive-chunker).
 
 ## Initialization
 
@@ -163,8 +163,6 @@ class RecursiveLevel {
 - `delimiters`: Custom string(s) to split on (cannot be used with `whitespace`).
 - `whitespace`: If true, splits on whitespace (cannot be used with `delimiters`).
 - `includeDelim`: Whether to include the delimiter with the previous chunk (`"prev"`, default) or the next chunk (`"next"`).
-
-See the [DOCS.md](https://github.com/chonkie-inc/chonkie-ts/blob/main/.temp/DOCS.md) for more on advanced rule customization.
 
 ---
 
