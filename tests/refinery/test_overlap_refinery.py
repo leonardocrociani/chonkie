@@ -216,8 +216,8 @@ def test_overlap_refinery_token_suffix_overlap_float_context(sample_chunks) -> N
     refinery = OverlapRefinery(context_size=0.3, mode="token", method="suffix")
     refined_chunks = refinery.refine(sample_chunks)
     
-    # The context size should be 0.3 * 7 = 2.1, which rounds down to 2
-    assert refinery.context_size == 2
+    # The context size should remain as the original float
+    assert refinery.context_size == 0.3
     
     # Check that the first chunk has the context from the second chunk
     assert hasattr(refined_chunks[0], "context")
@@ -411,8 +411,8 @@ def test_overlap_refinery_float_context_calculation() -> None:
     refinery = OverlapRefinery(context_size=0.5, mode="token", method="suffix")
     refined_chunks = refinery.refine(chunks)
     
-    # Should calculate context_size based on max token count
-    assert refinery.context_size == 5
+    # Should preserve the original float context_size
+    assert refinery.context_size == 0.5
     assert len(refined_chunks) == 3
 
 
@@ -756,3 +756,30 @@ def test_overlap_refinery_repr() -> None:
     assert "method=suffix" in repr_str
     assert "merge=True" in repr_str
     assert "inplace=True" in repr_str
+
+
+def test_overlap_refinery_float_context_size_preservation() -> None:
+    """Test that float context size is preserved and recalculated for each chunk set.""" 
+    refinery = OverlapRefinery(context_size=0.4, mode="token", method="suffix")
+    
+    # Original context_size should remain as float
+    assert refinery.context_size == 0.4
+    
+    # Test with different chunk sets to ensure recalculation
+    small_chunks = [
+        Chunk(text="Small", start_index=0, end_index=4, token_count=2),
+        Chunk(text="Test", start_index=5, end_index=8, token_count=1),
+    ]
+    
+    large_chunks = [
+        Chunk(text="This is a much longer text chunk", start_index=0, end_index=32, token_count=8),
+        Chunk(text="Another long chunk with more content", start_index=33, end_index=68, token_count=7),
+    ]
+    
+    # Process both sets
+    refinery.refine(small_chunks)
+    refinery.refine(large_chunks)
+    
+    # context_size should still be the original float
+    assert refinery.context_size == 0.4
+    assert isinstance(refinery.context_size, float)
