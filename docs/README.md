@@ -1,6 +1,6 @@
 <div align="center">
 
-![Chonkie Docs Logo](/logo/chonkie_docs_logo_tans_bg.png)
+![Chonkie Docs Logo](./logo/chonkie_docs_logo_tans_bg.png)
 
 # 🦛 Chonkie Docs ✨
 
@@ -14,8 +14,8 @@ Chonkie was built with the principle of being so simple that the documentation w
 
 If you find any incorrect documentation, please open an issue or submit a PR to fix it. You can:
 
-1. [Open an issue](https://github.com/bhavnicksm/chonkie/issues/new) describing the problem
-2. [Edit the docs directly](https://github.com/bhavnicksm/chonkie/tree/main/docs) and submit a pull request
+1. [Open an issue](https://github.com/chonkie-inc/chonkie/issues/new) describing the problem
+2. [Edit the docs directly](https://github.com/chonkie-inc/chonkie/tree/main/docs) and submit a pull request
 3. Use the "Suggest an edit" button at the bottom of any documentation page
 
 For pull requests, please:
