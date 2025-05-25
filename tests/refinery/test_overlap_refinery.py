@@ -242,18 +242,470 @@ def test_overlap_refinery_token_overlap_large_context(sample_chunks) -> None:
     assert refined_chunks[1].context != ""
 
 
-# Skip the recursive tests for now as they require more complex setup
-@pytest.mark.skip(reason="Recursive overlap requires more complex setup")
 def test_overlap_refinery_recursive_suffix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive-based suffix overlap."""
-    pass
+    refinery = OverlapRefinery(context_size=3, mode="recursive", method="suffix")
+    refined_chunks = refinery.refine(sample_chunks)
+    
+    # Check that the first chunk has context from the second chunk
+    assert hasattr(refined_chunks[0], "context")
+    assert refined_chunks[0].context != ""
+    
+    # Check that the second chunk has context from the third chunk
+    assert hasattr(refined_chunks[1], "context")
+    assert refined_chunks[1].context != ""
+    
+    # Check that the text is updated with the context (merge=True)
+    assert refined_chunks[0].text.endswith(refined_chunks[0].context)
+    assert refined_chunks[1].text.endswith(refined_chunks[1].context)
+    
+    # Check that the third chunk's text is not modified (it's the last one)
+    assert refined_chunks[2].text == "This is the third chunk of text."
 
 
-# Skip the recursive tests for now as they require more complex setup
-@pytest.mark.skip(reason="Recursive overlap requires more complex setup")
 def test_overlap_refinery_recursive_prefix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive-based prefix overlap."""
-    pass
+    refinery = OverlapRefinery(context_size=3, mode="recursive", method="prefix")
+    refined_chunks = refinery.refine(sample_chunks)
+    
+    # Check that the second chunk has context from the first chunk
+    assert hasattr(refined_chunks[1], "context")
+    assert refined_chunks[1].context != ""
+    
+    # Check that the third chunk has context from the second chunk
+    assert hasattr(refined_chunks[2], "context")
+    assert refined_chunks[2].context != ""
+    
+    # Check that the text is updated with the context (merge=True)
+    assert refined_chunks[1].text.startswith(refined_chunks[1].context)
+    assert refined_chunks[2].text.startswith(refined_chunks[2].context)
+    
+    # Check that the first chunk doesn't have context (it's the first one)
+    assert refined_chunks[0].text == "This is the first chunk of text."
+
+
+def test_overlap_refinery_recursive_no_merge(sample_chunks) -> None:
+    """Test the OverlapRefinery with recursive mode and no merge."""
+    refinery = OverlapRefinery(context_size=3, mode="recursive", method="suffix", merge=False)
+    refined_chunks = refinery.refine(sample_chunks)
+    
+    # Check that context is added but text is not merged
+    assert hasattr(refined_chunks[0], "context")
+    assert refined_chunks[0].context != ""
+    assert refined_chunks[0].text == "This is the first chunk of text."
+    
+    assert hasattr(refined_chunks[1], "context")
+    assert refined_chunks[1].context != ""
+    assert refined_chunks[1].text == "This is the second chunk of text."
+
+
+def test_overlap_refinery_recursive_large_context(sample_chunks) -> None:
+    """Test the OverlapRefinery with recursive mode and large context size."""
+    refinery = OverlapRefinery(context_size=100, mode="recursive", method="suffix")
+    
+    # Even with a large context size, the refinery should still work
+    refined_chunks = refinery.refine(sample_chunks)
+    
+    # Check that the chunks have context
+    assert hasattr(refined_chunks[0], "context")
+    assert hasattr(refined_chunks[1], "context")
+
+
+def test_overlap_refinery_recursive_with_custom_rules() -> None:
+    """Test the OverlapRefinery with custom recursive rules."""
+    from chonkie.types import RecursiveRules, RecursiveLevel
+    
+    # Create custom rules with only sentence-level splitting
+    custom_rules = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=[". ", "! ", "? "]),
+        RecursiveLevel(whitespace=True),
+    ])
+    
+    # Create chunks with sentence boundaries
+    chunks = [
+        Chunk(text="First sentence. Second sentence.", start_index=0, end_index=31, token_count=6),
+        Chunk(text="Third sentence. Fourth sentence.", start_index=32, end_index=63, token_count=6),
+    ]
+    
+    refinery = OverlapRefinery(
+        context_size=2, 
+        mode="recursive", 
+        method="suffix", 
+        rules=custom_rules
+    )
+    
+    refined_chunks = refinery.refine(chunks)
+    
+    # Check that context is added
+    assert hasattr(refined_chunks[0], "context")
+    assert refined_chunks[0].context != ""
+
+
+def test_overlap_refinery_recursive_exceeding_levels() -> None:
+    """Test the OverlapRefinery when recursive levels are exceeded."""
+    from chonkie.types import RecursiveRules, RecursiveLevel
+    
+    # Create minimal rules with only one level
+    minimal_rules = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=[". "]),
+    ])
+    
+    # Create a chunk with no sentence delimiters to force level exhaustion
+    chunks = [
+        Chunk(text="NoSentenceDelimitersHereJustOneString", start_index=0, end_index=37, token_count=10),
+        Chunk(text="AnotherChunkWithoutDelimiters", start_index=38, end_index=66, token_count=8),
+    ]
+    
+    refinery = OverlapRefinery(
+        context_size=5, 
+        mode="recursive", 
+        method="suffix", 
+        rules=minimal_rules
+    )
+    
+    # This should not raise an IndexError anymore
+    refined_chunks = refinery.refine(chunks)
+    
+    # Check that it completes successfully
+    assert len(refined_chunks) == 2
+    assert hasattr(refined_chunks[0], "context")
+
+
+def test_overlap_refinery_recursive_empty_text() -> None:
+    """Test the OverlapRefinery with empty text chunks."""
+    chunks = [
+        Chunk(text="", start_index=0, end_index=0, token_count=0),
+        Chunk(text="Some text here", start_index=1, end_index=14, token_count=3),
+    ]
+    
+    refinery = OverlapRefinery(context_size=2, mode="recursive", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    # Should handle empty chunks gracefully
+    assert len(refined_chunks) == 2
+
+
+def test_overlap_refinery_recursive_single_chunk() -> None:
+    """Test the OverlapRefinery with a single chunk in recursive mode."""
+    chunks = [
+        Chunk(text="Single chunk of text.", start_index=0, end_index=20, token_count=4),
+    ]
+    
+    refinery = OverlapRefinery(context_size=2, mode="recursive", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    # Single chunk should not have context added
+    assert len(refined_chunks) == 1
+    assert refined_chunks[0].text == "Single chunk of text."
+
+
+def test_overlap_refinery_float_context_calculation() -> None:
+    """Test that float context size calculation works correctly."""
+    chunks = [
+        Chunk(text="Small chunk", start_index=0, end_index=10, token_count=2),
+        Chunk(text="Medium sized chunk here", start_index=11, end_index=33, token_count=5),
+        Chunk(text="Very long chunk with many tokens here for testing", start_index=34, end_index=83, token_count=10),
+    ]
+    
+    # 0.5 * max(10) = 5 tokens
+    refinery = OverlapRefinery(context_size=0.5, mode="token", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    # Should calculate context_size based on max token count
+    assert refinery.context_size == 5
+    assert len(refined_chunks) == 3
+
+
+def test_overlap_refinery_very_small_chunks() -> None:
+    """Test with very small chunks that might cause issues."""
+    chunks = [
+        Chunk(text="A", start_index=0, end_index=0, token_count=1),
+        Chunk(text="B", start_index=1, end_index=1, token_count=1),
+        Chunk(text="C", start_index=2, end_index=2, token_count=1),
+    ]
+    
+    refinery = OverlapRefinery(context_size=1, mode="token", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    assert len(refined_chunks) == 3
+    # With single character chunks, context should still be added
+    assert hasattr(refined_chunks[0], "context")
+    assert hasattr(refined_chunks[1], "context")
+
+
+def test_overlap_refinery_context_larger_than_chunk() -> None:
+    """Test when context size is larger than the chunk itself."""
+    chunks = [
+        Chunk(text="Short", start_index=0, end_index=4, token_count=1),
+        Chunk(text="Also short", start_index=5, end_index=14, token_count=2),
+    ]
+    
+    # Context size larger than any chunk
+    refinery = OverlapRefinery(context_size=10, mode="token", method="suffix")
+    
+    # Should handle gracefully (with warnings)
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        refined_chunks = refinery.refine(chunks)
+    
+    assert len(refined_chunks) == 2
+
+
+def test_overlap_refinery_recursive_with_only_whitespace() -> None:
+    """Test recursive mode with text that only has whitespace delimiters."""
+    chunks = [
+        Chunk(text="word1 word2 word3", start_index=0, end_index=16, token_count=3),
+        Chunk(text="word4 word5 word6", start_index=17, end_index=33, token_count=3),
+    ]
+    
+    refinery = OverlapRefinery(context_size=2, mode="recursive", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    assert len(refined_chunks) == 2
+    assert hasattr(refined_chunks[0], "context")
+
+
+def test_overlap_refinery_invalid_refine_method() -> None:
+    """Test that invalid method parameter is caught."""
+    refinery = OverlapRefinery(context_size=2, mode="token", method="suffix")
+    # Manually set an invalid method to test the validation
+    refinery.method = "invalid_method"
+    
+    chunks = [
+        Chunk(text="Test chunk", start_index=0, end_index=9, token_count=2),
+    ]
+    
+    with pytest.raises(ValueError):
+        refinery.refine(chunks)
+
+
+def test_overlap_refinery_invalid_mode_in_overlap() -> None:
+    """Test that invalid mode parameter is caught in overlap methods."""
+    refinery = OverlapRefinery(context_size=2, mode="token", method="suffix")
+    # Manually set an invalid mode to test the validation
+    refinery.mode = "invalid_mode"
+    
+    chunks = [
+        Chunk(text="Test chunk", start_index=0, end_index=9, token_count=2),
+        Chunk(text="Another chunk", start_index=10, end_index=22, token_count=2),
+    ]
+    
+    with pytest.raises(ValueError):
+        refinery.refine(chunks)
+
+
+def test_overlap_refinery_stress_test_many_chunks() -> None:
+    """Stress test with many chunks."""
+    # Create 100 chunks
+    chunks = [
+        Chunk(text=f"Chunk number {i} with some text", start_index=i*30, end_index=(i+1)*30-1, token_count=6)
+        for i in range(100)
+    ]
+    
+    refinery = OverlapRefinery(context_size=2, mode="token", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    assert len(refined_chunks) == 100
+    # First 99 chunks should have context
+    for i in range(99):
+        assert hasattr(refined_chunks[i], "context")
+
+
+def test_overlap_refinery_recursive_stress_deep_nesting() -> None:
+    """Test recursive mode with content that forces deep recursion."""
+    from chonkie.types import RecursiveRules, RecursiveLevel
+    
+    # Create rules that will force deep recursion
+    deep_rules = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=["|||"]),  # Very unlikely delimiter
+        RecursiveLevel(delimiters=[":::"]),  # Another unlikely delimiter
+    ])
+    
+    # Text without these delimiters will force recursion to the end
+    chunks = [
+        Chunk(text="NoSpecialDelimitersHereAtAll", start_index=0, end_index=27, token_count=5),
+        Chunk(text="AnotherChunkWithoutDelimiters", start_index=28, end_index=56, token_count=5),
+    ]
+    
+    refinery = OverlapRefinery(
+        context_size=3, 
+        mode="recursive", 
+        method="suffix", 
+        rules=deep_rules
+    )
+    
+    # Should not crash and should return the text as-is when levels are exhausted
+    refined_chunks = refinery.refine(chunks)
+    assert len(refined_chunks) == 2
+
+
+def test_overlap_refinery_index_preservation() -> None:
+    """Test that start_index and end_index are preserved when adding context."""
+    chunks = [
+        Chunk(text="Hello world!", start_index=0, end_index=11, token_count=2),
+        Chunk(text="How are you", start_index=13, end_index=23, token_count=3),
+        Chunk(text="today?", start_index=25, end_index=30, token_count=1),
+    ]
+    
+    # Test suffix overlap - indices should remain unchanged
+    refinery_suffix = OverlapRefinery(context_size=1, mode="token", method="suffix")
+    suffix_chunks = refinery_suffix.refine([chunk.copy() for chunk in chunks])
+    
+    # Original indices should be preserved
+    assert suffix_chunks[0].start_index == 0
+    assert suffix_chunks[0].end_index == 11
+    assert suffix_chunks[1].start_index == 13
+    assert suffix_chunks[1].end_index == 23
+    assert suffix_chunks[2].start_index == 25
+    assert suffix_chunks[2].end_index == 30
+    
+    # Test prefix overlap - indices should remain unchanged
+    refinery_prefix = OverlapRefinery(context_size=1, mode="token", method="prefix")
+    prefix_chunks = refinery_prefix.refine([chunk.copy() for chunk in chunks])
+    
+    # Original indices should be preserved
+    assert prefix_chunks[0].start_index == 0
+    assert prefix_chunks[0].end_index == 11
+    assert prefix_chunks[1].start_index == 13
+    assert prefix_chunks[1].end_index == 23
+    assert prefix_chunks[2].start_index == 25
+    assert prefix_chunks[2].end_index == 30
+
+
+def test_overlap_refinery_recursive_index_preservation() -> None:
+    """Test that indices are preserved in recursive mode."""
+    chunks = [
+        Chunk(text="First sentence. Second part.", start_index=0, end_index=27, token_count=5),
+        Chunk(text="Third sentence here.", start_index=29, end_index=48, token_count=3),
+    ]
+    
+    refinery = OverlapRefinery(context_size=2, mode="recursive", method="suffix")
+    refined_chunks = refinery.refine(chunks)
+    
+    # Original indices should be preserved
+    assert refined_chunks[0].start_index == 0
+    assert refined_chunks[0].end_index == 27
+    assert refined_chunks[1].start_index == 29
+    assert refined_chunks[1].end_index == 48
+
+
+def test_overlap_refinery_recursive_delimiter_modes() -> None:
+    """Test recursive mode with different delimiter inclusion modes."""
+    from chonkie.types import RecursiveRules, RecursiveLevel
+    
+    chunks = [
+        Chunk(text="First. Second.", start_index=0, end_index=13, token_count=3),
+        Chunk(text="Third. Fourth.", start_index=15, end_index=28, token_count=3),
+    ]
+    
+    # Test include_delim="prev"
+    rules_prev = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=[". "], include_delim="prev"),
+    ])
+    refinery_prev = OverlapRefinery(context_size=2, mode="recursive", method="suffix", rules=rules_prev)
+    refined_prev = refinery_prev.refine([chunk.copy() for chunk in chunks])
+    assert len(refined_prev) == 2
+    
+    # Test include_delim="next" 
+    rules_next = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=[". "], include_delim="next"),
+    ])
+    refinery_next = OverlapRefinery(context_size=2, mode="recursive", method="suffix", rules=rules_next)
+    refined_next = refinery_next.refine([chunk.copy() for chunk in chunks])
+    assert len(refined_next) == 2
+    
+    # Test include_delim=None (removes delimiters)
+    rules_none = RecursiveRules(levels=[
+        RecursiveLevel(delimiters=[". "], include_delim=None),
+    ])
+    refinery_none = OverlapRefinery(context_size=2, mode="recursive", method="suffix", rules=rules_none)
+    refined_none = refinery_none.refine([chunk.copy() for chunk in chunks])
+    assert len(refined_none) == 2
+
+
+def test_overlap_refinery_empty_text_recursive() -> None:
+    """Test recursive overlap with empty text."""
+    from chonkie.types import RecursiveRules, RecursiveLevel
+    
+    # Test with empty text in chunks
+    chunks = [
+        Chunk(text="", start_index=0, end_index=0, token_count=0),
+        Chunk(text="Some text", start_index=1, end_index=9, token_count=2),
+    ]
+    
+    rules = RecursiveRules(levels=[RecursiveLevel(delimiters=[". "])])
+    refinery = OverlapRefinery(context_size=1, mode="recursive", method="suffix", rules=rules)
+    refined_chunks = refinery.refine(chunks)
+    
+    # Should handle empty text gracefully
+    assert len(refined_chunks) == 2
+    
+    # Test case where recursive overlap gets empty text internally
+    chunks2 = [
+        Chunk(text="No delimiters", start_index=0, end_index=12, token_count=2),
+        Chunk(text="", start_index=13, end_index=13, token_count=0),
+    ]
+    
+    # This should trigger the empty text case in _recursive_overlap
+    refined_chunks2 = refinery.refine(chunks2)
+    assert len(refined_chunks2) == 2
+
+
+def test_overlap_refinery_context_size_warnings() -> None:
+    """Test warnings when context size is larger than chunk."""
+    import warnings
+    
+    chunks = [
+        Chunk(text="A", start_index=0, end_index=0, token_count=1),
+        Chunk(text="B", start_index=1, end_index=1, token_count=1),
+    ]
+    
+    # Test suffix overlap with very large context size to trigger warnings
+    refinery_suffix = OverlapRefinery(context_size=100, mode="token", method="suffix")
+    
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        refined_chunks = refinery_suffix.refine(chunks)
+        
+        # Should have warnings about context size being too large
+        assert len(w) > 0
+        assert "Context size is greater than the chunk size" in str(w[0].message)
+    
+    assert len(refined_chunks) == 2
+    
+    # Test prefix overlap with very large context size to trigger warnings
+    # Use fresh chunks since the previous test may have modified them
+    fresh_chunks = [
+        Chunk(text="A", start_index=0, end_index=0, token_count=1),
+        Chunk(text="B", start_index=1, end_index=1, token_count=1),
+    ]
+    refinery_prefix = OverlapRefinery(context_size=100, mode="token", method="prefix")
+    
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        refined_chunks = refinery_prefix.refine(fresh_chunks)
+        
+        # Should have warnings about context size being too large
+        assert len(w) > 0
+        assert "Context size is greater than the chunk size" in str(w[0].message)
+    
+    assert len(refined_chunks) == 2
+
+
+def test_overlap_refinery_invalid_modes() -> None:
+    """Test error handling for invalid modes."""
+    chunks = [
+        Chunk(text="Test", start_index=0, end_index=3, token_count=1),
+        Chunk(text="More", start_index=4, end_index=7, token_count=1),
+    ]
+    
+    # Test invalid mode in get_prefix_overlap_context
+    refinery = OverlapRefinery(context_size=1, mode="token", method="prefix")
+    refinery.mode = "invalid_mode"
+    
+    with pytest.raises(ValueError, match="Mode must be one of: token, recursive"):
+        refinery.refine(chunks)
 
 
 def test_overlap_refinery_repr() -> None:
