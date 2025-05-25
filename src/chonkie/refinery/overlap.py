@@ -73,7 +73,6 @@ class OverlapRefinery(BaseRefinery):
         # Performance optimization: Add caches for repeated operations
         self._token_cache: Dict[str, list] = {}  # Cache for tokenizer.encode() results
         self._count_cache: Dict[str, int] = {}  # Cache for token count results
-        self._calculated_context_size: Union[int, None] = None  # Cache for float context size calculation
 
 
     def _is_available(self) -> bool:
@@ -388,11 +387,9 @@ class OverlapRefinery(BaseRefinery):
             chunks: The chunks to get the overlap context size for.
 
         """
-        # Performance optimization: Cache float context size calculation
+        # Calculate context size for each call (float context size depends on chunk set)
         if isinstance(self.context_size, float):
-            if self._calculated_context_size is None:
-                self._calculated_context_size = int(self.context_size * max(chunk.token_count for chunk in chunks))
-            return self._calculated_context_size
+            return int(self.context_size * max(chunk.token_count for chunk in chunks))
         else:
             return self.context_size
 
