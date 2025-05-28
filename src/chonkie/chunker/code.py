@@ -14,7 +14,7 @@ from chonkie.tokenizer import Tokenizer
 from chonkie.types.code import CodeChunk
 
 if TYPE_CHECKING:
-    from tree_sitter import Node, Parser, Tree
+    from tree_sitter import Node, Tree
     from tree_sitter_language_pack import SupportedLanguage
 
 
