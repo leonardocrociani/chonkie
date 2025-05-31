@@ -10,6 +10,7 @@ from .semantic import SemanticChunker
 from .sentence import SentenceChunker
 from .slumber import SlumberChunker
 from .token import TokenChunker
+from .validate_auth import ValidateAuth
 
 __all__ = [
     "CloudChunker",
@@ -22,4 +23,5 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "ValidateAuth"
 ]
