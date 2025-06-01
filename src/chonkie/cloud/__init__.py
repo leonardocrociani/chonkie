@@ -12,6 +12,7 @@ from .chunker import (
     SlumberChunker,
     TokenChunker,
 )
+from .auth import Auth
 
 __all__ = [
     "CloudChunker",
@@ -24,4 +25,5 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "Auth",
 ]

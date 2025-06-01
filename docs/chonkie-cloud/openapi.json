@@ -1147,13 +1147,7 @@
                             }
                         }
                     }
-                },
-                "x-code-samples": [
-                    {
-                        "lang": "python",
-                        "label": "Validate auth in python""source": "im"
-                    }
-                ]
+                }
             }
         },
         "/v1/chunk/sentence": {
