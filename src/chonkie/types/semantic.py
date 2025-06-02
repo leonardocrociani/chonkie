@@ -28,10 +28,11 @@ class SemanticSentence(Sentence):
 
     def to_dict(self) -> dict:
         """Return the SemanticSentence as a dictionary."""
-        result = cast(dict[str, Any], super().to_dict())
-        result["embedding"] = (
-            self.embedding.tolist() if self.embedding is not None else None
-        )
+        result = super().to_dict()
+        try:
+            result["embedding"] = self.embedding.tolist()
+        except AttributeError:
+            result["embedding"] = self.embedding
         return result
 
     @classmethod
