@@ -1,10 +1,10 @@
 """
 Embeddings Refinery for Chonkie Cloud
 """
-
+from .base import BaseRefinery
 import os
 from typing import Dict, List, Literal, Optional, Union, cast
-
+import requests
 
 class OverlapRefinery(BaseRefinery):
     """Overlap Refinery for Chonkie Cloud."""
@@ -23,7 +23,7 @@ class OverlapRefinery(BaseRefinery):
 
         Args:
             tokenizer_or_token_counter: The tokenizer or token counter to use.
-            context_size: The context size to use.
+            context_size: The context size to use. Must be a value between 0 and 1 for token mode and an integer for recursive mode.
             mode: The mode to use.
             method: The method to use.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes

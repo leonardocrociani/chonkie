@@ -1,10 +1,11 @@
 """
 Embeddings Refinery for Chonkie Cloud
 """
-
+from .base import BaseRefinery
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
-
+from typing import Dict, List, Optional, cast
+import requests
+import numpy as np
 
 class EmbeddingsRefinery(BaseRefinery):
     """Embeddings Refinery for Chonkie Cloud."""
@@ -57,7 +58,13 @@ class EmbeddingsRefinery(BaseRefinery):
 
         # Parse the response
         result: List[Dict] = cast(List[Dict], response.json())
+        # Take out the embeddings from each chunk
+        embeddings = [chunk.pop("embedding") for chunk in result]
+        # Convert the chunks back to their original type
         result_chunks = [og_type.from_dict(chunk) for chunk in result]
+        # Add the embeddings back to the chunks
+        for chunk, embedding in zip(result_chunks, embeddings):
+            chunk.embedding = np.array(embedding)
         return result_chunks
 
     def __call__(self, chunks):
