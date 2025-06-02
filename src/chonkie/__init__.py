@@ -11,6 +11,7 @@ from .chunker import (
     SentenceChunker,
     SlumberChunker,
     TokenChunker,
+    CodeChunkerV2,
 )
 from .embeddings import (
     AutoEmbeddings,
@@ -50,7 +51,9 @@ from .types import (
     Chunk,
     CodeChunk,
     Context,
+    LanguageConfig,
     LateChunk,
+    MergeRule,
     RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
@@ -58,6 +61,7 @@ from .types import (
     SemanticSentence,
     Sentence,
     SentenceChunk,
+    SplitRule,
 )
 from .utils import (
     Hubbie,
@@ -89,6 +93,9 @@ __all__ += [
     "SemanticSentence",
     "LateChunk",
     "CodeChunk",
+    "LanguageConfig",
+    "MergeRule",
+    "SplitRule",
 ]
 
 # Add all tokenizer classes to __all__
@@ -110,6 +117,7 @@ __all__ += [
     "CodeChunker",
     "SlumberChunker",
     "NeuralChunker",
+    "CodeChunkerV2",
 ]
 
 # Add all embeddings classes to __all__

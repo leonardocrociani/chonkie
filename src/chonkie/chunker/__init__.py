@@ -2,6 +2,7 @@
 
 from .base import BaseChunker
 from .code import CodeChunker
+from .codev2 import CodeChunkerV2
 from .late import LateChunker
 from .neural import NeuralChunker
 from .recursive import RecursiveChunker
@@ -20,6 +21,7 @@ __all__ = [
     "SDPMChunker",
     "LateChunker",
     "CodeChunker",
+    "CodeChunkerV2",
     "SlumberChunker",
     "NeuralChunker",
 ]
