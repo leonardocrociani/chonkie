@@ -56,7 +56,6 @@ class ChromaEmbeddingFunction:
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
-    @property
     def name(self) -> str:
         """Return the name of the embedding model for ChromaDB compatibility."""
         return self._model_name
