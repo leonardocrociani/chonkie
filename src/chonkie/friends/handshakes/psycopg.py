@@ -11,7 +11,6 @@ from chonkie.types import Chunk
 from .base import BaseHandshake
 
 if TYPE_CHECKING:
-    import numpy as np
     import psycopg
 
 
@@ -98,8 +97,9 @@ class PsycopgHandshake(BaseHandshake):
                 "Please install them with `pip install chonkie[psycopg]`."
             )
         
-        global psycopg, register_vector
+        global psycopg, register_vector, Json
         import psycopg
+        from psycopg.types.json import Json
         from pgvector.psycopg import register_vector
 
     def _setup_database(self) -> None:
@@ -163,6 +163,7 @@ class PsycopgHandshake(BaseHandshake):
             
         Returns:
             List[str]: List of IDs of the inserted chunks.
+
         """
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -197,7 +198,7 @@ class PsycopgHandshake(BaseHandshake):
                     chunk.start_index,
                     chunk.end_index,
                     chunk.token_count,
-                    metadata
+                    Json(metadata)
                 ))
                 
                 inserted_ids.append(chunk_id)
@@ -279,6 +280,7 @@ class PsycopgHandshake(BaseHandshake):
             index_type: Type of index to create ('hnsw' or 'ivfflat').
             distance_metric: Distance metric for the index ('l2', 'cosine', 'inner_product').
             **index_params: Additional parameters for the index.
+
         """
         # Map distance metrics to operator classes
         opclasses = {

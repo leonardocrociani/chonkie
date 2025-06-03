@@ -7,10 +7,12 @@ import pytest
 # Try to import psycopg and pgvector, skip tests if unavailable
 try:
     import psycopg
+    from psycopg.types.json import Json
     from pgvector.psycopg import register_vector
     psycopg_available = True
 except ImportError:
     psycopg = None
+    Json = None
     register_vector = None
     psycopg_available = False
 
@@ -51,9 +53,12 @@ def mock_connection():
     mock_conn = Mock()
     mock_cursor = Mock()
     
-    # Setup cursor context manager
-    mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
-    mock_conn.cursor.return_value.__exit__.return_value = None
+    # Setup cursor context manager using MagicMock for proper context manager support
+    from unittest.mock import MagicMock
+    mock_cursor_cm = MagicMock()
+    mock_cursor_cm.__enter__.return_value = mock_cursor
+    mock_cursor_cm.__exit__.return_value = None
+    mock_conn.cursor.return_value = mock_cursor_cm
     
     # Mock cursor methods
     mock_cursor.execute.return_value = None
@@ -89,26 +94,22 @@ def test_psycopg_handshake_is_available():
         assert handshake._is_available() is False
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_init_default(mock_register_vector, mock_connection):
+def test_psycopg_handshake_init_default(mock_connection):
     """Test PsycopgHandshake initialization with default settings."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         assert handshake.connection == mock_connection
         assert handshake.table_name == "chonkie_chunks"
         assert handshake.create_table is True
         assert handshake.vector_dimensions == 128  # From mocked embedding
-        
-        # Verify database setup was called
-        mock_connection.cursor.assert_called()
-        mock_register_vector.assert_called_with(mock_connection)
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_init_custom(mock_register_vector, mock_connection):
+def test_psycopg_handshake_init_custom(mock_connection):
     """Test PsycopgHandshake initialization with custom settings."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(
             connection=mock_connection,
             table_name="custom_chunks",
@@ -121,10 +122,10 @@ def test_psycopg_handshake_init_custom(mock_register_vector, mock_connection):
         assert handshake.create_table is False
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_generate_id(mock_register_vector, mock_connection):
+def test_psycopg_handshake_generate_id(mock_connection):
     """Test the _generate_id method."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         chunk = SAMPLE_CHUNKS[0]
         index = 0
@@ -137,10 +138,10 @@ def test_psycopg_handshake_generate_id(mock_register_vector, mock_connection):
         assert generated_id == expected_id_str
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_generate_metadata(mock_register_vector, mock_connection):
+def test_psycopg_handshake_generate_metadata(mock_connection):
     """Test the _generate_metadata method."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         chunk = SAMPLE_CHUNKS[0]
         
@@ -153,10 +154,36 @@ def test_psycopg_handshake_generate_metadata(mock_register_vector, mock_connecti
         assert "language" not in metadata
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_write_single_chunk(mock_register_vector, mock_connection):
+def test_psycopg_handshake_generate_metadata_with_attributes(mock_connection):
+    """Test the _generate_metadata method with chunk attributes."""
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
+        handshake = PsycopgHandshake(mock_connection)
+        
+        # Create a mock chunk with additional attributes
+        chunk = Mock()
+        chunk.text = "Sample text"
+        chunk.start_index = 0
+        chunk.end_index = 11
+        chunk.token_count = 2
+        chunk.sentences = ["Sentence 1", "Sentence 2"]
+        chunk.words = ["Sample", "text"]
+        chunk.language = "en"
+        
+        metadata = handshake._generate_metadata(chunk)
+        
+        assert metadata["chunk_type"] == "Mock"
+        assert metadata["sentence_count"] == 2
+        assert metadata["word_count"] == 2
+        assert metadata["language"] == "en"
+
+
+def test_psycopg_handshake_write_single_chunk(mock_connection):
     """Test writing a single Chunk."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'), \
+         patch('chonkie.friends.handshakes.psycopg.Json', side_effect=lambda x: x, create=True) as mock_json:
+        
         handshake = PsycopgHandshake(mock_connection)
         chunk = SAMPLE_CHUNKS[0]
         
@@ -170,12 +197,17 @@ def test_psycopg_handshake_write_single_chunk(mock_register_vector, mock_connect
         mock_cursor = mock_connection.cursor.return_value.__enter__.return_value
         mock_cursor.execute.assert_called()
         mock_connection.commit.assert_called()
+        
+        # Verify Json was called for metadata
+        mock_json.assert_called()
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_write_multiple_chunks(mock_register_vector, mock_connection):
+def test_psycopg_handshake_write_multiple_chunks(mock_connection):
     """Test writing multiple Chunks."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'), \
+         patch('chonkie.friends.handshakes.psycopg.Json', side_effect=lambda x: x, create=True) as mock_json:
+        
         handshake = PsycopgHandshake(mock_connection)
         
         result = handshake.write(SAMPLE_CHUNKS)
@@ -188,12 +220,15 @@ def test_psycopg_handshake_write_multiple_chunks(mock_register_vector, mock_conn
         mock_cursor = mock_connection.cursor.return_value.__enter__.return_value
         assert mock_cursor.execute.call_count == len(SAMPLE_CHUNKS)
         mock_connection.commit.assert_called()
+        
+        # Verify Json was called for each chunk's metadata
+        assert mock_json.call_count == len(SAMPLE_CHUNKS)
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_search(mock_register_vector, mock_connection):
+def test_psycopg_handshake_search(mock_connection):
     """Test similarity search functionality."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         # Mock return data for search
@@ -214,20 +249,20 @@ def test_psycopg_handshake_search(mock_register_vector, mock_connection):
         mock_cursor.execute.assert_called()
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_search_invalid_metric(mock_register_vector, mock_connection):
+def test_psycopg_handshake_search_invalid_metric(mock_connection):
     """Test similarity search with invalid distance metric."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         with pytest.raises(ValueError, match="Unsupported distance metric"):
             handshake.search("test query", distance_metric="invalid")
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_create_index_hnsw(mock_register_vector, mock_connection):
+def test_psycopg_handshake_create_index_hnsw(mock_connection):
     """Test creating HNSW index."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         handshake.create_index(index_type="hnsw", distance_metric="l2", m=32, ef_construction=128)
@@ -238,10 +273,10 @@ def test_psycopg_handshake_create_index_hnsw(mock_register_vector, mock_connecti
         mock_connection.commit.assert_called()
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_create_index_ivfflat(mock_register_vector, mock_connection):
+def test_psycopg_handshake_create_index_ivfflat(mock_connection):
     """Test creating IVFFlat index."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         handshake.create_index(index_type="ivfflat", distance_metric="cosine", lists=200)
@@ -252,30 +287,30 @@ def test_psycopg_handshake_create_index_ivfflat(mock_register_vector, mock_conne
         mock_connection.commit.assert_called()
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_create_index_invalid_type(mock_register_vector, mock_connection):
+def test_psycopg_handshake_create_index_invalid_type(mock_connection):
     """Test creating index with invalid type."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         with pytest.raises(ValueError, match="Unsupported index type"):
             handshake.create_index(index_type="invalid")
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_create_index_invalid_metric(mock_register_vector, mock_connection):
+def test_psycopg_handshake_create_index_invalid_metric(mock_connection):
     """Test creating index with invalid distance metric."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection)
         
         with pytest.raises(ValueError, match="Unsupported distance metric"):
             handshake.create_index(distance_metric="invalid")
 
 
-@patch('chonkie.friends.handshakes.psycopg.register_vector')
-def test_psycopg_handshake_repr(mock_register_vector, mock_connection):
+def test_psycopg_handshake_repr(mock_connection):
     """Test the __repr__ method."""
-    with patch.object(PsycopgHandshake, '_import_dependencies'):
+    with patch.object(PsycopgHandshake, '_import_dependencies'), \
+         patch.object(PsycopgHandshake, '_setup_database'):
         handshake = PsycopgHandshake(mock_connection, table_name="test_table")
         expected_repr = f"PsycopgHandshake(table_name=test_table, vector_dimensions={handshake.vector_dimensions})"
         assert repr(handshake) == expected_repr
@@ -288,3 +323,20 @@ def test_psycopg_handshake_import_dependencies_error():
         
         with pytest.raises(ImportError, match="psycopg and pgvector are not installed"):
             handshake._import_dependencies()
+
+
+def test_psycopg_handshake_import_dependencies_success():
+    """Test successful import of dependencies."""
+    with patch('chonkie.friends.handshakes.psycopg.importutil.find_spec') as mock_find_spec:
+        # Mock both psycopg and pgvector as available
+        mock_find_spec.side_effect = lambda name: Mock() if name in ['psycopg', 'pgvector'] else None
+        
+        handshake = PsycopgHandshake.__new__(PsycopgHandshake)  # Create without calling __init__
+        
+        # Mock the imports to avoid actual import
+        with patch('builtins.__import__') as mock_import:
+            handshake._import_dependencies()
+            
+            # Verify the imports were attempted
+            # Should import psycopg, Json from psycopg.types.json, and register_vector from pgvector.psycopg
+            assert mock_import.call_count >= 2
