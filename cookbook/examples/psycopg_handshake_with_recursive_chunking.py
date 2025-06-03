@@ -27,7 +27,8 @@ Date: 2025
 
 import os
 import sys
-from typing import List
+import time
+from typing import Dict, List
 
 try:
     import psycopg
@@ -37,16 +38,15 @@ except ImportError:
     print("Install with: pip install 'chonkie[psycopg]'")
     sys.exit(1)
 
-from chonkie import PsycopgHandshake, RecursiveChunker, AutoEmbeddings
+from chonkie import AutoEmbeddings, PsycopgHandshake, RecursiveChunker
 from chonkie.types import Chunk
 
 
 def setup_database_connection() -> psycopg.Connection:
     """Set up PostgreSQL connection with pgvector support."""
-    
     # Database connection parameters
     # You can modify these or use environment variables
-    db_config = {
+    db_config: Dict[str, str] = {
         "host": os.getenv("POSTGRES_HOST", "localhost"),
         "port": os.getenv("POSTGRES_PORT", "5432"),
         "dbname": os.getenv("POSTGRES_DB", "chonkie_demo"),
@@ -61,12 +61,12 @@ def setup_database_connection() -> psycopg.Connection:
     
     try:
         # Create connection
-        connection = psycopg.connect(**db_config)
+        connection = psycopg.connect(**db_config)  # type: ignore
         
         # Test connection
         with connection.cursor() as cur:
             cur.execute("SELECT version()")
-            version = cur.fetchone()[0]
+            version = cur.fetchone()[0]  # type: ignore
             print(f"✅ Connected to PostgreSQL: {version[:50]}...")
             
         return connection
@@ -270,8 +270,6 @@ if __name__ == "__main__":
     print("\n🔧 Step 9: Performance Comparison")
     print("-" * 30)
     
-    import time
-    
     performance_query = "vector database indexing performance"
     
     # Time the search operation
@@ -283,7 +281,7 @@ if __name__ == "__main__":
     )
     search_time = time.time() - start_time
     
-    print(f"⚡ Search performance:")
+    print("⚡ Search performance:")
     print(f"   Query: '{performance_query}'")
     print(f"   Results: {len(perf_results)}")
     print(f"   Search time: {search_time:.4f} seconds")
@@ -305,12 +303,15 @@ if __name__ == "__main__":
             FROM {handshake.table_name}
         """)
         stats = cur.fetchone()
-    
-    print("📊 Final Statistics:")
-    print(f"   Total chunks stored: {stats[0]}")
-    print(f"   Average text length: {stats[1]:.1f} characters")
-    print(f"   Token range: {stats[2]} - {stats[3]}")
-    print(f"   Average tokens per chunk: {stats[4]:.1f}")
+
+    if stats:
+        print("📊 Final Statistics:")
+        print(f"   Total chunks stored: {stats[0]}")
+        print(f"   Average text length: {stats[1]:.1f} characters")
+        print(f"   Token range: {stats[2]} - {stats[3]}")
+        print(f"   Average tokens per chunk: {stats[4]:.1f}")
+    else:
+        print("📊 No statistics available (no data found)")
     
     # Optional: Clean up the table (uncomment if desired)
     # print("\n🧹 Cleaning up...")
