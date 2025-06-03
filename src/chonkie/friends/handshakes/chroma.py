@@ -49,8 +49,10 @@ class ChromaEmbeddingFunction:
         # Check if the model is a string
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
+            self.name = embedding_model  # Add name attribute for ChromaDB compatibility
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
+            self.name = str(embedding_model)  # Add name attribute for ChromaDB compatibility
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 

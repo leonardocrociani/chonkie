@@ -22,13 +22,19 @@ def tiktokenizer() -> Encoding:
 @pytest.fixture
 def transformers_tokenizer() -> PreTrainedTokenizerFast:
     """Fixture that returns a GPT-2 tokenizer from the transformers library."""
-    return cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained("gpt2"))
+    try:
+        return cast(PreTrainedTokenizerFast, AutoTokenizer.from_pretrained("gpt2"))
+    except (OSError, ValueError) as e:
+        pytest.skip(f"Could not load HuggingFace tokenizer: {e}")
 
 
 @pytest.fixture
 def tokenizer() -> Tokenizer:
     """Fixture that returns a GPT-2 tokenizer from the tokenizers library."""
-    return Tokenizer.from_pretrained("gpt2")
+    try:
+        return Tokenizer.from_pretrained("gpt2")
+    except (OSError, ValueError) as e:
+        pytest.skip(f"Could not load tokenizers tokenizer: {e}")
 
 
 @pytest.fixture
