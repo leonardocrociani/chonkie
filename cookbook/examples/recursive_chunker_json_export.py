@@ -9,8 +9,9 @@ The RecursiveChunker uses a hierarchical approach, trying larger separators firs
 to create semantically meaningful chunks while respecting size limits.
 """
 
-from chonkie import RecursiveChunker, JSONPorter
 import json
+
+from chonkie import JSONPorter, RecursiveChunker
 
 if __name__ == "__main__":
     # Sample text for demonstration
