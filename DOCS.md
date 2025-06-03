@@ -43,6 +43,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Handshakes](#handshakes)
   - [`ChromaHandshake`](#chromahandshake)
   - [`QdrantHandshake`](#qdranthandshake)
+  - [`PsycopgHandshake`](#psycopghandshake)
   - [`TurbopufferHandshake`](#turbopufferhandshake)
 - [Package Versioning](#package-versioning)
 
@@ -81,6 +82,10 @@ You can install optional features using the `pip install "chonkie[feature]"` syn
 | `semantic` | Enable semantic chunking capabilities, potentially leveraging `model2vec`.                              |
 | `neural`   | Utilize local Hugging Face `transformers` models (with `torch`) for advanced NLP tasks.                 |
 | `genie`    | Integrate with Google's Generative AI (Gemini) models for advanced functionalities.                     |
+| `chroma`   | Connect and integrate with ChromaDB vector database.                                                     |
+| `qdrant`   | Connect and integrate with Qdrant vector database.                                                       |
+| `psycopg`  | Connect and integrate with PostgreSQL using pgvector extension.                                          |
+| `turbopuffer` | Connect and integrate with Turbopuffer vector database.                                               |
 | `all`      | Install all optional dependencies for the complete Chonkie experience. Not recommended for prod.        |
 
 
@@ -1301,6 +1306,181 @@ print(f"Chunks written to Qdrant collection '{handshake.collection_name}' on ser
 # client = qdrant_client.QdrantClient(url="http://localhost:6333")
 # count = client.count(collection_name="local_docs_collection")
 # print(f"Collection count: {count.count}")
+```
+
+</details>
+
+### `PsycopgHandshake`
+
+The `PsycopgHandshake` exports `Chunk` objects to a PostgreSQL database with pgvector extension for vector similarity search. It embeds the chunks and stores them with full-text search capabilities.
+
+This handshake requires the `psycopg3` and `pgvector` libraries. You can install them with `pip install "chonkie[psycopg]"`.
+
+**Parameters:**
+
+- `connection (psycopg.Connection)`: A psycopg3 connection to your PostgreSQL database with pgvector extension enabled. Required.
+- `table_name (str)`: The name of the table to store chunks in. Defaults to `"chonkie_chunks"`.
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model for generating chunk embeddings. Defaults to `"minishlab/potion-retrieval-32M"`.
+- `vector_dimensions (Optional[int])`: The number of dimensions for the vector embeddings. If `None`, inferred from the embedding model. Defaults to `None`.
+- `create_table (bool)`: Whether to create the table if it doesn't exist. Defaults to `True`.
+
+**Methods:**
+
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> List[str]`: Embeds the chunks and inserts them into the PostgreSQL table. Returns a list of generated chunk IDs.
+- `search(query: str, limit: int = 5, distance_metric: str = "l2") -> List[Dict[str, Any]]`: Searches for similar chunks using vector similarity. Supports L2, cosine, and inner product distance metrics.
+- `create_index(index_type: str = "hnsw", distance_metric: str = "l2", **index_params) -> None`: Creates a vector index (HNSW or IVFFlat) for improved search performance.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Usage with PostgreSQL Connection</strong></summary>
+
+```python
+# Requires "chonkie[psycopg]" and a PostgreSQL server with pgvector
+import psycopg
+from chonkie import TokenChunker, PsycopgHandshake
+
+# Connect to PostgreSQL (adjust connection parameters as needed)
+connection = psycopg.connect(
+    host="localhost",
+    port=5432,
+    dbname="your_database",
+    user="your_user", 
+    password="your_password"
+)
+
+# Sample Chunks
+chunker = TokenChunker(chunk_size=100)
+text = "PostgreSQL with pgvector provides excellent vector similarity search. Chonkie makes it easy to store and search chunks."
+chunks = chunker(text)
+
+# Initialize handshake
+handshake = PsycopgHandshake(
+    connection=connection,
+    table_name="my_documents"
+)
+
+# Write the chunks
+chunk_ids = handshake.write(chunks)
+print(f"Stored {len(chunk_ids)} chunks in PostgreSQL")
+
+# Search for similar content
+results = handshake.search("vector similarity search", limit=3)
+for result in results:
+    print(f"Text: {result['text']}")
+    print(f"Distance: {result['distance']:.3f}")
+    print("---")
+
+# Don't forget to close the connection
+connection.close()
+```
+
+</details>
+
+<details>
+<summary><strong>2. Using Environment Variables and Vector Indexing</strong></summary>
+
+```python
+# Requires "chonkie[psycopg, st]"
+import os
+import psycopg
+from chonkie import SentenceChunker, PsycopgHandshake
+
+# Use environment variables for database connection
+connection = psycopg.connect(
+    host=os.getenv("POSTGRES_HOST", "localhost"),
+    port=os.getenv("POSTGRES_PORT", "5432"),
+    dbname=os.getenv("POSTGRES_DB", "chonkie"),
+    user=os.getenv("POSTGRES_USER", "postgres"),
+    password=os.getenv("POSTGRES_PASSWORD", "password")
+)
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=80)
+text = "Indexing improves search performance significantly. PostgreSQL supports HNSW and IVFFlat indexes for vector similarity."
+chunks = chunker(text)
+
+# Initialize handshake with custom embedding model
+handshake = PsycopgHandshake(
+    connection=connection,
+    table_name="indexed_docs",
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Write chunks
+chunk_ids = handshake.write(chunks)
+
+# Create an index for faster searches (do this after inserting data)
+handshake.create_index(
+    index_type="hnsw",
+    distance_metric="cosine",
+    m=16,
+    ef_construction=64
+)
+
+print("Created HNSW index for cosine similarity")
+
+# Search with cosine similarity
+results = handshake.search(
+    "search performance",
+    limit=2,
+    distance_metric="cosine"
+)
+
+for result in results:
+    print(f"Text: {result['text']}")
+    print(f"Cosine Distance: {result['distance']:.3f}")
+    print("---")
+
+connection.close()
+```
+
+</details>
+
+<details>
+<summary><strong>3. Using with Context Manager and Different Distance Metrics</strong></summary>
+
+```python
+# Requires "chonkie[psycopg, st]"
+import psycopg
+from chonkie import RecursiveChunker, PsycopgHandshake
+
+# Use context manager for automatic connection cleanup
+with psycopg.connect("postgresql://user:password@localhost/dbname") as connection:
+    
+    # Sample Chunks
+    chunker = RecursiveChunker(chunk_size=120)
+    text = "PostgreSQL supports multiple distance metrics. L2 distance is Euclidean. Cosine measures angle similarity. Inner product works with normalized vectors."
+    chunks = chunker(text)
+    
+    # Initialize handshake
+    handshake = PsycopgHandshake(
+        connection=connection,
+        table_name="distance_examples",
+        embedding_model="sentence-transformers/paraphrase-MiniLM-L3-v2"
+    )
+    
+    # Write chunks
+    handshake.write(chunks)
+    
+    # Create indexes for different distance metrics
+    handshake.create_index("hnsw", "l2")
+    handshake.create_index("ivfflat", "cosine", lists=50)
+    
+    # Compare different distance metrics
+    query = "distance measurement"
+    
+    print("L2 Distance Results:")
+    l2_results = handshake.search(query, limit=2, distance_metric="l2")
+    for result in l2_results:
+        print(f"  {result['text'][:50]}... (L2: {result['distance']:.3f})")
+    
+    print("\nCosine Distance Results:")
+    cosine_results = handshake.search(query, limit=2, distance_metric="cosine")
+    for result in cosine_results:
+        print(f"  {result['text'][:50]}... (Cosine: {result['distance']:.3f})")
+
+# Connection automatically closed due to context manager
 ```
 
 </details>
