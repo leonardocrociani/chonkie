@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import requests
 

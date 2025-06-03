@@ -1,8 +1,9 @@
 """Test the EmbeddingsRefinery module."""
 
-import pytest
 from typing import TYPE_CHECKING, Callable
 from unittest.mock import Mock, patch
+
+import pytest
 
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.refinery import EmbeddingsRefinery

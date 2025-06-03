@@ -2,7 +2,7 @@
 
 import warnings
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Literal, Union
+from typing import Any, Callable, List, Literal, Union
 
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
