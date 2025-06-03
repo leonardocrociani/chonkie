@@ -9,7 +9,7 @@ from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     import numpy as np
-    import tiktoken 
+    import tiktoken
 
 
 class OpenAIEmbeddings(BaseEmbeddings):

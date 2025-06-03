@@ -4,7 +4,7 @@ import asyncio
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, List, Literal, Optional
+from typing import TYPE_CHECKING, List, Literal, Optional
 
 from .base import BaseEmbeddings
 
