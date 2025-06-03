@@ -2,13 +2,14 @@
 import uuid
 from typing import List
 from unittest.mock import Mock, patch
+
 import pytest
 
 # Try to import psycopg and pgvector, skip tests if unavailable
 try:
     import psycopg
-    from psycopg.types.json import Json
     from pgvector.psycopg import register_vector
+    from psycopg.types.json import Json
     psycopg_available = True
 except ImportError:
     psycopg = None

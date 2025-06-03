@@ -32,7 +32,6 @@ from typing import Dict, List
 
 try:
     import psycopg
-    from pgvector.psycopg import register_vector
 except ImportError:
     print("❌ Required dependencies not found!")
     print("Install with: pip install 'chonkie[psycopg]'")

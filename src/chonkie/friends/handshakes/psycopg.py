@@ -99,11 +99,11 @@ class PsycopgHandshake(BaseHandshake):
         
         global psycopg, register_vector, Json
         import psycopg
-        from psycopg.types.json import Json
         from pgvector.psycopg import register_vector
+        from psycopg.types.json import Json
 
     def _setup_database(self) -> None:
-        """Setup the database with the pgvector extension and table."""
+        """Set up the database with the pgvector extension and table."""
         with self.connection.cursor() as cur:
             # Enable the pgvector extension
             cur.execute("CREATE EXTENSION IF NOT EXISTS vector")
@@ -223,6 +223,7 @@ class PsycopgHandshake(BaseHandshake):
             
         Returns:
             List[Dict[str, Any]]: List of similar chunks with metadata.
+
         """
         # Generate embedding for the query
         query_embedding = self.embedding_model.embed(query)
