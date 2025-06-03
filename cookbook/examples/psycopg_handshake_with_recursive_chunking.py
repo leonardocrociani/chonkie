@@ -8,11 +8,6 @@ search text chunks in PostgreSQL with pgvector for semantic similarity search.
 We'll chunk a sample document, store it in PostgreSQL, and perform vector 
 similarity searches.
 
-This example demonstrates how to use Chonkie's PsycopgHandshake to store and 
-search text chunks in PostgreSQL with pgvector for semantic similarity search.
-We'll chunk a sample document, store it in PostgreSQL, and perform vector 
-similarity searches.
-
 Prerequisites:
 - PostgreSQL running with pgvector extension
 - Install dependencies: pip install "chonkie[psycopg]"
