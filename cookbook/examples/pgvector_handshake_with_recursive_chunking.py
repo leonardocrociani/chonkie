@@ -145,8 +145,7 @@ if __name__ == "__main__":
     # Step 5: Initialize chunker and create chunks
     print("\n🔪 Step 5: Chunking Text")
     chunker = RecursiveChunker(
-        chunk_size=200,  # Smaller chunks for this example
-        chunk_overlap=50
+        chunk_size=200  # Smaller chunks for this example
     )
     
     chunks = chunker.chunk(sample_text)
