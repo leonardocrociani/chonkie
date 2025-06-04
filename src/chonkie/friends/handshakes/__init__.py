@@ -2,14 +2,14 @@
 
 from .base import BaseHandshake
 from .chroma import ChromaHandshake
-from .psycopg import PsycopgHandshake
+from .pgvector import PgvectorHandshake
 from .qdrant import QdrantHandshake
 from .turbopuffer import TurbopufferHandshake
 
 __all__ = [
     "BaseHandshake",
     "ChromaHandshake",
-    "PsycopgHandshake",
+    "PgvectorHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
 ]
