@@ -28,7 +28,7 @@ Date: 2025
 import os
 import sys
 import time
-from typing import Dict, List
+from typing import Dict, Union
 
 try:
     import vecs
@@ -37,11 +37,10 @@ except ImportError:
     print("Install with: pip install 'chonkie[pgvector]'")
     sys.exit(1)
 
-from chonkie import AutoEmbeddings, PgvectorHandshake, RecursiveChunker
-from chonkie.types import Chunk
+from chonkie import PgvectorHandshake, RecursiveChunker
 
 
-def get_database_config() -> Dict[str, str]:
+def get_database_config() -> Dict[str, Union[str, int]]:
     """Get database configuration from environment variables or defaults."""
     # Database connection parameters
     # You can modify these or use environment variables
@@ -54,7 +53,7 @@ def get_database_config() -> Dict[str, str]:
     }
 
 
-def test_connection(handshake: PgvectorHandshake) -> None:
+def test_connection(handshake: PgvectorHandshake) -> bool:
     """Test the database connection by getting collection info."""
     try:
         info = handshake.get_collection_info()
