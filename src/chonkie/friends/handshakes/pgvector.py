@@ -1,7 +1,6 @@
 """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs."""
 
 import importlib.util as importutil
-import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
@@ -55,14 +54,7 @@ class PgvectorHandshake(BaseHandshake):
             embedding_model: The embedding model to use for generating embeddings.
             vector_dimensions: The number of dimensions for the vector embeddings.
 
-        """
-        # Warn the user that PgvectorHandshake is experimental
-        warnings.warn(
-            "Chonkie's PgvectorHandshake is experimental and may change in the future. "
-            "Not all Chonkie features are supported yet.",
-            FutureWarning
-        )
-                    
+        """         
         super().__init__()
         
         # Lazy importing the dependencies
