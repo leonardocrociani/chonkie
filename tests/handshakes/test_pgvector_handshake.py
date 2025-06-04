@@ -138,18 +138,65 @@ def test_pgvector_handshake_init_with_existing_client(mock_dependencies):
 
 def test_pgvector_handshake_init_custom_vector_dimensions(mock_dependencies):
     """Test PgvectorHandshake initialization with custom vector dimensions."""
-    mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
+    handshake = PgvectorHandshake(
+        host="localhost",
+        vector_dimensions=256
+    )
     
-    with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
-        
-        handshake = PgvectorHandshake(
-            host="localhost",
-            vector_dimensions=256
-        )
-        
-        assert handshake.vector_dimensions == 256
+    assert handshake.vector_dimensions == 256
+
+
+def test_pgvector_handshake_dimension_detection_from_property(mock_dependencies):
+    """Test that dimension is detected from embedding model's dimension property when available."""
+    mock_embeddings = mock_dependencies['embeddings']
+    
+    # Create a mock embedding with dimension property
+    mock_embedding_with_dim = Mock()
+    mock_embedding_with_dim.dimension = 384
+    mock_embedding_with_dim.embed.return_value = [0.1] * 384
+    mock_embeddings.return_value = mock_embedding_with_dim
+    
+    handshake = PgvectorHandshake(host="localhost")
+    
+    # Should use dimension property, not call embed()
+    assert handshake.vector_dimensions == 384
+    mock_embedding_with_dim.embed.assert_not_called()
+
+
+def test_pgvector_handshake_dimension_detection_from_test_embedding(mock_dependencies):
+    """Test that dimension is detected from test embedding when dimension property is not available."""
+    mock_embeddings = mock_dependencies['embeddings']
+    
+    # Create a mock embedding without dimension property
+    mock_embedding_no_dim = Mock()
+    # Remove dimension property to simulate embeddings that don't have it
+    if hasattr(mock_embedding_no_dim, 'dimension'):
+        delattr(mock_embedding_no_dim, 'dimension')
+    mock_embedding_no_dim.embed.return_value = [0.1] * 512
+    mock_embeddings.return_value = mock_embedding_no_dim
+    
+    handshake = PgvectorHandshake(host="localhost")
+    
+    # Should call embed() to determine dimension
+    assert handshake.vector_dimensions == 512
+    mock_embedding_no_dim.embed.assert_called_once_with("test")
+
+
+def test_pgvector_handshake_dimension_detection_from_test_embedding_when_none(mock_dependencies):
+    """Test that dimension is detected from test embedding when dimension property is None."""
+    mock_embeddings = mock_dependencies['embeddings']
+    
+    # Create a mock embedding with dimension property set to None
+    mock_embedding_none_dim = Mock()
+    mock_embedding_none_dim.dimension = None
+    mock_embedding_none_dim.embed.return_value = [0.1] * 768
+    mock_embeddings.return_value = mock_embedding_none_dim
+    
+    handshake = PgvectorHandshake(host="localhost")
+    
+    # Should call embed() because dimension is None
+    assert handshake.vector_dimensions == 768
+    mock_embedding_none_dim.embed.assert_called_once_with("test")
 
 
 def test_pgvector_handshake_generate_id(mock_dependencies):

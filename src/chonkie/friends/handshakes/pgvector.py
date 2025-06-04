@@ -90,9 +90,13 @@ class PgvectorHandshake(BaseHandshake):
 
         # Determine vector dimensions
         if vector_dimensions is None:
-            # Get dimensions from a test embedding
-            test_embedding = self.embedding_model.embed("test")
-            self.vector_dimensions = len(test_embedding)
+            # Try to get dimensions from embedding model's dimension property first
+            if hasattr(self.embedding_model, 'dimension') and self.embedding_model.dimension is not None:
+                self.vector_dimensions = self.embedding_model.dimension
+            else:
+                # Fall back to test embedding if dimension property is not available or is None
+                test_embedding = self.embedding_model.embed("test")
+                self.vector_dimensions = len(test_embedding)
         else:
             self.vector_dimensions = vector_dimensions
 
