@@ -256,7 +256,7 @@ class CodeChunker(BaseChunker):
     except KeyError as error:
       raise KeyError(f"KeyError: {error}") from error
 
-    for rule in self.language_config.merge_rules:
+    for rule in self.language_config.merge_rules: # type: ignore
       # First check if this is the bidirectional or not
       if rule.bidirectional and current_type in rule.node_types and previous_type in rule.node_types:
           return True
