@@ -53,7 +53,9 @@ handshake = PgvectorHandshake(client=client, collection_name="my_collection")
 
 ## Usage
 
-### Writing Chunks
+<AccordionGroup>
+
+<Accordion title="Writing Chunks" description="Store your chunked text in PostgreSQL with vector embeddings" icon="upload" iconType="solid">
 
 ```python
 from chonkie import PgvectorHandshake, RecursiveChunker
@@ -74,7 +76,9 @@ chunks = chunker.chunk("Chonkie makes PostgreSQL vector search easy!")
 handshake.write(chunks)
 ```
 
-### Searching Chunks
+</Accordion>
+
+<Accordion title="Searching Chunks" description="Find similar chunks using vector similarity search" icon="magnifying-glass" iconType="solid">
 
 ```python
 # Search for similar chunks
@@ -89,7 +93,9 @@ for result in results:
     print("---")
 ```
 
-### Creating Indexes
+</Accordion>
+
+<Accordion title="Creating Indexes" description="Optimize search performance with vector indexes" icon="bolt" iconType="solid">
 
 ```python
 # Create an HNSW index for better performance
@@ -102,6 +108,10 @@ handshake.create_index(
     ef_construction=64
 )
 ```
+
+</Accordion>
+
+</AccordionGroup>
 
 ## Parameters
 
