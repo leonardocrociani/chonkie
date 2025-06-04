@@ -140,7 +140,15 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-"chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd"]
+"chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd", "*.c", "*.so"]
+
+[[tool.setuptools.ext-modules]]
+name = "chonkie.chunker.c_extensions.split"
+sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
+
+[[tool.setuptools.ext-modules]]
+name = "chonkie.chunker.c_extensions.merge"
+sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
 
 [tool.setuptools.dynamic]
 version = {attr = "chonkie.__version__"}
