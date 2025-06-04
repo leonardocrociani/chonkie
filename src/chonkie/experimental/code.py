@@ -253,11 +253,8 @@ class CodeChunker(BaseChunker):
     try:
       current_type = extracted_node['type']
       previous_type = extracted_node_group[-1]['type']
-    except KeyError:
-      print(extracted_node)
-      print(extracted_node_group)
-
-      raise KeyError 
+    except KeyError as error:
+      raise KeyError(f"KeyError: {error}") from error
 
     for rule in self.language_config.merge_rules:
       # First check if this is the bidirectional or not
