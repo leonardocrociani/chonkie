@@ -28,7 +28,7 @@ from .friends import (
     BasePorter,
     ChromaHandshake,
     JSONPorter,
-    PsycopgHandshake,
+    PgvectorHandshake,
     QdrantHandshake,
     TurbopufferHandshake,
 )
@@ -152,7 +152,7 @@ __all__ += [
     "BaseHandshake",
     "JSONPorter",
     "ChromaHandshake",
-    "PsycopgHandshake",
+    "PgvectorHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
 ]

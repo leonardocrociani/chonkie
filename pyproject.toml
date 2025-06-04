@@ -75,7 +75,7 @@ gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
-psycopg = ["psycopg[binary]>=3.0.0", "pgvector>=0.3.0"]
+pgvector = ["vecs>=0.4.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -146,7 +146,7 @@ version = {attr = "chonkie.__version__"}
 
 [tool.ruff]
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D", "DOC"]
+lint.select = ["F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
 
 [tool.ruff.format]

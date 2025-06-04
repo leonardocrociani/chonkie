@@ -205,7 +205,7 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 |----------------|-----------------------|-----------------------------------------|---------------------------|
 | `chroma`       | `ChromaHandshake`     | Ingest chunks into ChromaDB.            | `chonkie[chroma]`         |
 | `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
-| `psycopg`      | `PsycopgHandshake`    | Ingest chunks into PostgreSQL with pgvector. | `chonkie[psycopg]`   |
+| `pgvector`     | `PgvectorHandshake`   | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]`   |
 | `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[turbopuffer]`    |
 
 </details>

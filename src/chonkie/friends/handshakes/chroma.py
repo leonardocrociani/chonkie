@@ -1,7 +1,6 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
-import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
@@ -98,9 +97,6 @@ class ChromaHandshake(BaseHandshake):
             path: The path to the Chroma collection locally. If provided, it will create a Persistent Chroma Client.
 
         """
-        # Warn the user that ChromaHandshake is experimental
-        warnings.warn("Chonkie's ChromaHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.", FutureWarning)
-                    
         super().__init__()
         
         # Lazy importing the dependencies
