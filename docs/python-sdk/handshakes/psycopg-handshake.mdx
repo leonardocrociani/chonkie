@@ -1,25 +1,25 @@
 ---
-title: Psycopg Handshake
-sidebarTitle: Psycopg Handshake
+title: Pgvector Handshake
+sidebarTitle: Pgvector Handshake
 icon: handshake
 iconType: solid
-description: Export Chonkie's Chunks into a PostgreSQL database with pgvector.
+description: Export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs.
 ---
 
-The `PsycopgHandshake` class provides seamless integration between Chonkie's chunking system and PostgreSQL with pgvector, enabling you to store and search your chunks using powerful vector similarity operations.
+The `PgvectorHandshake` class provides seamless integration between Chonkie's chunking system and PostgreSQL with pgvector using the vecs client library from Supabase. It offers a higher-level API with automatic indexing, metadata filtering, and simplified connection management.
 
 Store your Chonkie chunks in PostgreSQL with vector embeddings and perform semantic search without ever leaving the Chonkie SDK.
 
 <Warning>
-The PsycopgHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.
+The PgvectorHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.
 </Warning>
 
 ## Installation
 
-Before using the Psycopg handshake, make sure to install the required dependencies:
+Before using the Pgvector handshake, make sure to install the required dependencies:
 
 ```bash
-pip install chonkie[psycopg]
+pip install chonkie[pgvector]
 ```
 
 You'll also need PostgreSQL with the pgvector extension installed:
@@ -34,36 +34,45 @@ CREATE EXTENSION IF NOT EXISTS vector;
 ### Setting up PostgreSQL Connection
 
 ```python
-import psycopg
-from chonkie import PsycopgHandshake
+from chonkie import PgvectorHandshake
 
-# Connect to PostgreSQL
-connection = psycopg.connect(
+# Initialize the handshake with individual connection parameters (easy!)
+handshake = PgvectorHandshake(
     host="localhost",
     port=5432,
-    dbname="your_database",
+    database="your_database",
     user="your_user",
-    password="your_password"
+    password="your_password",
+    collection_name="chonkie_chunks"
 )
 
-# Initialize the handshake
-handshake = PsycopgHandshake(
-    connection=connection,
-    table_name="chonkie_chunks"
+# Or use environment variables
+import os
+handshake = PgvectorHandshake(
+    host=os.getenv("POSTGRES_HOST", "localhost"),
+    port=int(os.getenv("POSTGRES_PORT", "5432")),
+    database=os.getenv("POSTGRES_DB", "postgres"),
+    user=os.getenv("POSTGRES_USER", "postgres"),
+    password=os.getenv("POSTGRES_PASSWORD", "postgres")
 )
 ```
 
 ### Writing Chunks to PostgreSQL
 
 ```python
-from chonkie import PsycopgHandshake, RecursiveChunker
+from chonkie import PgvectorHandshake, RecursiveChunker
 
 # Create chunks
 chunker = RecursiveChunker(chunk_size=512)
-chunks = chunker.chunk("Chonkie makes chunking PostgreSQL data easy!")
+chunks = chunker.chunk("Chonkie makes chunking PostgreSQL data easy with vecs!")
 
 # Initialize handshake and write chunks
-handshake = PsycopgHandshake(connection=connection)
+handshake = PgvectorHandshake(
+    host="localhost",
+    database="my_database",
+    user="my_user",
+    password="my_password"
+)
 chunk_ids = handshake.write(chunks)
 
 print(f"Stored {len(chunk_ids)} chunks in PostgreSQL")
@@ -166,19 +175,67 @@ CREATE TABLE chonkie_chunks (
 ## Parameters
 
 <ParamField
-    path="connection"
-    type="psycopg.Connection"
-    required
+    path="client"
+    type="Optional[vecs.Client]"
+    default="None"
 >
-    A psycopg3 connection to your PostgreSQL database with pgvector enabled.
+    An existing vecs.Client instance. If provided, other connection parameters are ignored.
 </ParamField>
 
 <ParamField
-    path="table_name"
+    path="host"
+    type="str"
+    default="localhost"
+>
+    PostgreSQL host address.
+</ParamField>
+
+<ParamField
+    path="port"
+    type="int"
+    default="5432"
+>
+    PostgreSQL port number.
+</ParamField>
+
+<ParamField
+    path="database"
+    type="str"
+    default="postgres"
+>
+    PostgreSQL database name.
+</ParamField>
+
+<ParamField
+    path="user"
+    type="str"
+    default="postgres"
+>
+    PostgreSQL username.
+</ParamField>
+
+<ParamField
+    path="password"
+    type="str"
+    default="postgres"
+>
+    PostgreSQL password.
+</ParamField>
+
+<ParamField
+    path="connection_string"
+    type="Optional[str]"
+    default="None"
+>
+    Full PostgreSQL connection string (e.g., "postgresql://user:pass@host:port/db"). If provided, individual connection parameters are ignored.
+</ParamField>
+
+<ParamField
+    path="collection_name"
     type="str"
     default="chonkie_chunks"
 >
-    Name of the table to store chunks in. Will be created if it doesn't exist and `create_table=True`.
+    Name of the vecs collection to store chunks in.
 </ParamField>
 
 <ParamField
@@ -195,14 +252,6 @@ CREATE TABLE chonkie_chunks (
     default="None"
 >
     Number of dimensions for the vector embeddings. If not provided, will be inferred from the embedding model.
-</ParamField>
-
-<ParamField
-    path="create_table"
-    type="bool"
-    default="True"
->
-    Whether to create the table if it doesn't exist. Set to False if you want to manage the table schema yourself.
 </ParamField>
 
 ## Methods

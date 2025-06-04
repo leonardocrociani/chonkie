@@ -3,7 +3,7 @@
 # Add all the handshakes here.
 from .handshakes.base import BaseHandshake
 from .handshakes.chroma import ChromaHandshake
-from .handshakes.psycopg import PsycopgHandshake
+from .handshakes.pgvector import PgvectorHandshake
 from .handshakes.qdrant import QdrantHandshake
 from .handshakes.turbopuffer import TurbopufferHandshake
 
@@ -15,7 +15,7 @@ __all__ = [
     "BasePorter",
     "BaseHandshake",
     "ChromaHandshake",
-    "PsycopgHandshake",
+    "PgvectorHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
     "JSONPorter",
