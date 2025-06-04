@@ -1,8 +1,10 @@
-"""Module containing CodeChunkerV2 class.
+"""Experimental code chunker with advanced AST-based parsing.
 
-This module provides a CodeChunkerV2 class for chunking code.
+This module provides an experimental CodeChunker class that uses tree-sitter
+for advanced code analysis and language-specific chunking strategies.
 """
 import importlib.util as importutil
+import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from chonkie.chunker.base import BaseChunker
@@ -14,23 +16,43 @@ from .code_registry import CodeLanguageRegistry
 if TYPE_CHECKING:
   from tree_sitter import Node
 
-class CodeChunkerV2(BaseChunker):
-  """A very basic and simple code chunker that splits simply.
+class CodeChunker(BaseChunker):
+  """Experimental code chunker using tree-sitter for advanced AST-based parsing.
+  
+  This chunker provides intelligent code splitting by understanding the syntax tree
+  structure of various programming languages. It uses language-specific rules to
+  maintain semantic coherence while respecting chunk size constraints.
+  
+  Features:
+    - AST-based parsing using tree-sitter
+    - Automatic language detection using Magika
+    - Language-specific merge and split rules
+    - Intelligent grouping of related code elements
+    - Support for multiple programming languages
+    - Optional chunk size management with recursive splitting
   
   Args:
-    language (str): The language to chunk.
-    tokenizer_or_token_counter (str): The tokenizer to use.
-    chunk_size (int): A threshold for the splitting to work. Not all chunks would adhere to this, only the ones which have a proper split mechanism defined.
-    add_split_context (bool): Whether to add the split context to the chunks.
+    language (str): The programming language to parse. Defaults to "auto" for 
+      automatic detection. Supported languages: python, typescript, javascript, 
+      rust, go, java, markdown, html, css, c, cpp, csharp.
+    tokenizer_or_token_counter (str): The tokenizer to use for token counting.
+      Defaults to "character".
+    chunk_size (Optional[int]): Maximum chunk size threshold. When specified,
+      large code constructs will be recursively split to respect this limit.
+      Note that chunks may exceed this size to preserve semantic structure
+      and code coherence. Defaults to None (no size limit).
+    add_split_context (bool): Whether to add contextual information about
+      the split location to chunks. Defaults to True.
 
   """
 
   def __init__(self, language: str = "auto", tokenizer_or_token_counter: str = "character", chunk_size: Optional[int] = None, add_split_context: bool = True) -> None:
-    """Initialize the CodeChunkerV2.
+    """Initialize the CodeChunker.
 
     Args:
       language (str): The language to chunk.
-      chunk_size (int): A threshold for the splitting to work. Not all chunks would adhere to this, only the ones which have a proper split mechanism defined.
+      chunk_size (Optional[int]): Maximum chunk size threshold. Chunks may exceed 
+        this size to preserve semantic structure and code coherence. Defaults to None.
       tokenizer_or_token_counter (str): The tokenizer to use.
       add_split_context (bool): Whether to add the split context to the chunks.
 
@@ -43,22 +65,43 @@ class CodeChunkerV2(BaseChunker):
     # Initialize the state
     self.chunk_size = chunk_size
     self.add_split_context = add_split_context
-    self.parser = get_parser(language) # type: ignore
+    self.language = language
 
-    # Check if the language has been defined or not
-    if language not in CodeLanguageRegistry:
-      raise ValueError(f"Language {language} is not registered in the configs.")
-
-    self.language_config = CodeLanguageRegistry[language]
+    # Initialize parser and language config based on language parameter
+    if language == "auto":
+      # Set a warning to the user that the language is auto and this might
+      # affect the performance of the chunker.
+      warnings.warn("The language is set to `auto`. This would adversely affect the performance of the chunker. " +
+                   "Consider setting the `language` parameter to a specific language to improve performance.")
+      
+      # Set the language to auto and initialize the Magika instance
+      self.magika = Magika() # type: ignore
+      self.parser = None
+      self.language_config = None
+    else:
+      # Check if the language has been defined or not
+      if language not in CodeLanguageRegistry:
+        raise ValueError(f"Language {language} is not registered in the configs.")
+      
+      self.parser = get_parser(language) # type: ignore
+      self.language_config = CodeLanguageRegistry[language]
 
   def _import_dependencies(self) -> None:
     """Import the dependencies from the node."""
-    if importutil.find_spec("tree_sitter") and importutil.find_spec("tree_sitter_language_pack"): 
-        global Node, get_parser
+    try:
+        global Node, get_parser, Magika
         from tree_sitter import Node
         from tree_sitter_language_pack import get_parser
-    else:
-        raise ImportError("tree_sitter and tree_sitter_language_pack are not installed. Please install them via `pip install chonkie[code]`")
+        from magika import Magika
+    except ImportError:
+        raise ImportError("One or more of the following dependencies are not installed: " +
+                         "[ tree-sitter, tree-sitter-language-pack, magika ]" +
+                         " Please install them using `pip install chonkie[code]`.")
+
+  def _detect_language(self, bytes_text: bytes) -> str:
+    """Detect the language of the code."""
+    response = self.magika.identify_bytes(bytes_text)
+    return response.output.label # type: ignore
 
   def _merge_extracted_nodes(self, extracted_nodes: List[Dict[str, Any]], text_bytes: bytes) -> Dict[str, Any]:
     """Merge the extracted nodes using byte positions."""
@@ -96,7 +139,7 @@ class CodeChunkerV2(BaseChunker):
   def _handle_target_node_with_recursion(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
     """Handle target node with potential recursive splitting."""
     if rule.recursive and self.chunk_size is not None:
-      target_text = target_node.text.decode()
+      target_text = str(target_node.text.decode()) 
       target_token_count = self.tokenizer.count_tokens(target_text)
       
       if target_token_count > self.chunk_size:
@@ -346,6 +389,22 @@ class CodeChunkerV2(BaseChunker):
     """Chunk the code."""
     # Encode text to bytes for consistent byte position handling
     text_bytes = text.encode('utf-8')
+    
+    # At this point, if the language is auto, we need to detect the language
+    # and initialize the parser and language config
+    if self.language == "auto":
+        detected_language = self._detect_language(text_bytes)
+        
+        # Check if the detected language is supported
+        if detected_language not in CodeLanguageRegistry:
+            # If the detected language is not supported, fall back to a default
+            # or raise an error with helpful message
+            raise ValueError(f"Detected language '{detected_language}' is not supported. " +
+                           f"Supported languages: {list(CodeLanguageRegistry.keys())}")
+        
+        # Initialize parser and language config for detected language
+        self.parser = get_parser(detected_language) # type: ignore
+        self.language_config = CodeLanguageRegistry[detected_language]
     
     # Create the tree-sitter tree
     tree = self.parser.parse(text_bytes) # type: ignore

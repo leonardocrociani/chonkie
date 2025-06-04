@@ -30,6 +30,10 @@ class _CodeLanguageRegistry:
   def __getitem__(self, language: str) -> LanguageConfig:
     """Get a language configuration."""
     return self.language_configs[language]
+  
+  def keys(self):
+    """Get all registered language keys."""
+    return self.language_configs.keys()
 
 # Initialize the registry
 CodeLanguageRegistry = _CodeLanguageRegistry()

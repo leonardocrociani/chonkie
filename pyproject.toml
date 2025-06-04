@@ -135,6 +135,7 @@ packages = [
     "chonkie.friends.handshakes",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
+    "chonkie.experimental",
 ]
 
 [tool.setuptools.package-data]

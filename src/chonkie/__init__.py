@@ -11,7 +11,6 @@ from .chunker import (
     SentenceChunker,
     SlumberChunker,
     TokenChunker,
-    CodeChunkerV2,
 )
 from .embeddings import (
     AutoEmbeddings,
@@ -117,7 +116,6 @@ __all__ += [
     "CodeChunker",
     "SlumberChunker",
     "NeuralChunker",
-    "CodeChunkerV2",
 ]
 
 # Add all embeddings classes to __all__

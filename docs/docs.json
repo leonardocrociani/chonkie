@@ -73,6 +73,13 @@
               "python-sdk/utils/visualizer",
               "python-sdk/utils/hubbie"
             ]
+          },
+          {
+            "group": "Experimental",
+            "pages": [
+              "python-sdk/experimental/overview",
+              "python-sdk/experimental/code-chunker"
+            ]
           }
         ]
       },
