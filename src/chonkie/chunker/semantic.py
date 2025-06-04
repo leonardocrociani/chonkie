@@ -481,7 +481,7 @@ class SemanticChunker(BaseChunker):
             #     high = threshold - self.threshold_step
 
             # check if all the split token counts are between the min and max chunk size
-            if (self.min_chunk_size <= split_token_counts <= self.chunk_size).all():
+            if ((self.min_chunk_size <= split_token_counts) & (split_token_counts <= self.chunk_size)).all():
                 break
             # check if any of the split token counts are greater than the max chunk size
             elif (split_token_counts > self.chunk_size).any(): # type: ignore
