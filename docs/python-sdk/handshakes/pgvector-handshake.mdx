@@ -3,16 +3,12 @@ title: Pgvector Handshake
 sidebarTitle: Pgvector Handshake
 icon: handshake
 iconType: solid
-description: Export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs.
+description: Export Chonkie's Chunks into a PostgreSQL database with pgvector.
 ---
 
-The `PgvectorHandshake` class provides seamless integration between Chonkie's chunking system and PostgreSQL with pgvector using the vecs client library from Supabase. It offers a higher-level API with automatic indexing, metadata filtering, and simplified connection management.
+The `PgvectorHandshake` class provides seamless integration between Chonkie's chunking system and PostgreSQL with pgvector. It uses the vecs client library from Supabase underneath to provide a higher-level API with automatic indexing, metadata filtering, and simplified connection management.
 
 Store your Chonkie chunks in PostgreSQL with vector embeddings and perform semantic search without ever leaving the Chonkie SDK.
-
-<Warning>
-The PgvectorHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.
-</Warning>
 
 ## Installation
 
@@ -29,14 +25,12 @@ You'll also need PostgreSQL with the pgvector extension installed:
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-## Basic Usage
-
-### Setting up PostgreSQL Connection
+## Initialization
 
 ```python
 from chonkie import PgvectorHandshake
 
-# Initialize the handshake with individual connection parameters (easy!)
+# Initialize with individual connection parameters
 handshake = PgvectorHandshake(
     host="localhost",
     port=5432,
@@ -46,130 +40,67 @@ handshake = PgvectorHandshake(
     collection_name="chonkie_chunks"
 )
 
-# Or use environment variables
-import os
+# Or use a connection string
 handshake = PgvectorHandshake(
-    host=os.getenv("POSTGRES_HOST", "localhost"),
-    port=int(os.getenv("POSTGRES_PORT", "5432")),
-    database=os.getenv("POSTGRES_DB", "postgres"),
-    user=os.getenv("POSTGRES_USER", "postgres"),
-    password=os.getenv("POSTGRES_PASSWORD", "postgres")
+    connection_string="postgresql://user:password@localhost:5432/database"
 )
+
+# Or use an existing vecs client
+import vecs
+client = vecs.create_client("postgresql://user:password@localhost:5432/database")
+handshake = PgvectorHandshake(client=client, collection_name="my_collection")
 ```
 
-### Writing Chunks to PostgreSQL
+## Usage
+
+### Writing Chunks
 
 ```python
 from chonkie import PgvectorHandshake, RecursiveChunker
 
-# Create chunks
-chunker = RecursiveChunker(chunk_size=512)
-chunks = chunker.chunk("Chonkie makes chunking PostgreSQL data easy with vecs!")
-
-# Initialize handshake and write chunks
+# Initialize the handshake
 handshake = PgvectorHandshake(
     host="localhost",
     database="my_database",
     user="my_user",
     password="my_password"
 )
-chunk_ids = handshake.write(chunks)
 
-print(f"Stored {len(chunk_ids)} chunks in PostgreSQL")
+# Create some chunks
+chunker = RecursiveChunker(chunk_size=512)
+chunks = chunker.chunk("Chonkie makes PostgreSQL vector search easy!")
+
+# Write chunks to PostgreSQL
+handshake.write(chunks)
 ```
 
-### Searching for Similar Chunks
+### Searching Chunks
 
 ```python
-# Search for semantically similar chunks
+# Search for similar chunks
 results = handshake.search(
-    query="PostgreSQL chunking",
-    limit=5,
-    distance_metric="cosine"
+    query="PostgreSQL vector search",
+    limit=5
 )
 
 for result in results:
     print(f"Text: {result['text']}")
-    print(f"Distance: {result['distance']:.3f}")
-    print(f"Metadata: {result['metadata']}")
+    print(f"Similarity: {result['similarity']:.3f}")
     print("---")
 ```
 
-### Creating Vector Indexes for Performance
+### Creating Indexes
 
 ```python
-# Create an HNSW index for faster similarity search
+# Create an HNSW index for better performance
+handshake.create_index(method="hnsw")
+
+# Or create with custom parameters
 handshake.create_index(
-    index_type="hnsw",
-    distance_metric="cosine",
+    method="hnsw",
     m=16,
     ef_construction=64
 )
-
-# Or create an IVFFlat index
-handshake.create_index(
-    index_type="ivfflat",
-    distance_metric="l2",
-    lists=100
-)
-```
-
-## Advanced Usage
-
-### Custom Embedding Models
-
-```python
-from chonkie import AutoEmbeddings
-
-# Use a different embedding model
-embeddings = AutoEmbeddings.get_embeddings("sentence-transformers/all-MiniLM-L6-v2")
-
-handshake = PsycopgHandshake(
-    connection=connection,
-    embedding_model=embeddings,
-    table_name="custom_chunks"
-)
-```
-
-### Environment Variables Setup
-
-```python
-import os
-import psycopg
-
-# Use environment variables for database configuration
-connection = psycopg.connect(
-    host=os.getenv("POSTGRES_HOST", "localhost"),
-    port=os.getenv("POSTGRES_PORT", "5432"),
-    dbname=os.getenv("POSTGRES_DB", "chonkie"),
-    user=os.getenv("POSTGRES_USER", "postgres"),
-    password=os.getenv("POSTGRES_PASSWORD", "password")
-)
-```
-
-## Distance Metrics
-
-The PsycopgHandshake supports three distance metrics for vector similarity:
-
-- **`l2`**: Euclidean distance (default) - good for general similarity
-- **`cosine`**: Cosine distance - normalized similarity, good for text
-- **`inner_product`**: Inner product - for when vectors are normalized
-
-## Database Schema
-
-When `create_table=True`, the handshake creates a table with the following schema:
-
-```sql
-CREATE TABLE chonkie_chunks (
-    id TEXT PRIMARY KEY,
-    text TEXT NOT NULL,
-    embedding vector(dimensions),
-    start_index INTEGER,
-    end_index INTEGER,
-    token_count INTEGER,
-    metadata JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 ```
 
 ## Parameters
@@ -227,7 +158,7 @@ CREATE TABLE chonkie_chunks (
     type="Optional[str]"
     default="None"
 >
-    Full PostgreSQL connection string (e.g., "postgresql://user:pass@host:port/db"). If provided, individual connection parameters are ignored.
+    Full PostgreSQL connection string. If provided, individual connection parameters are ignored.
 </ParamField>
 
 <ParamField
@@ -235,7 +166,7 @@ CREATE TABLE chonkie_chunks (
     type="str"
     default="chonkie_chunks"
 >
-    Name of the vecs collection to store chunks in.
+    Name of the collection to store chunks in.
 </ParamField>
 
 <ParamField
@@ -243,7 +174,7 @@ CREATE TABLE chonkie_chunks (
     type="Union[str, BaseEmbeddings]"
     default="minishlab/potion-retrieval-32M"
 >
-    Embedding model to use for generating vector embeddings. Can be a model name or a BaseEmbeddings instance.
+    Embedding model to use. Can be a model name or a BaseEmbeddings instance.
 </ParamField>
 
 <ParamField
@@ -254,78 +185,3 @@ CREATE TABLE chonkie_chunks (
     Number of dimensions for the vector embeddings. If not provided, will be inferred from the embedding model.
 </ParamField>
 
-## Methods
-
-### write()
-
-Store chunks in the PostgreSQL database with vector embeddings.
-
-```python
-chunk_ids = handshake.write(chunks)
-```
-
-Returns a list of chunk IDs that were inserted/updated.
-
-### search()
-
-Search for similar chunks using vector similarity.
-
-```python
-results = handshake.search(
-    query="search query",
-    limit=10,
-    distance_metric="cosine"
-)
-```
-
-Returns a list of dictionaries containing chunk data and similarity scores.
-
-### create_index()
-
-Create a vector index for improved search performance.
-
-```python
-handshake.create_index(
-    index_type="hnsw",  # or "ivfflat"
-    distance_metric="cosine",
-    m=16,  # HNSW parameter
-    ef_construction=64  # HNSW parameter
-)
-```
-
-## Best Practices
-
-1. **Use Indexes**: Create appropriate vector indexes for your distance metric and data size
-2. **Connection Management**: Properly manage your PostgreSQL connections and close them when done
-3. **Batch Processing**: For large datasets, consider processing chunks in batches
-4. **Distance Metrics**: Choose the right distance metric for your use case (cosine for normalized text similarity)
-5. **Environment Variables**: Use environment variables for database credentials in production
-
-## Troubleshooting
-
-### pgvector Extension Not Found
-```bash
-# Install pgvector extension
-sudo apt-get install postgresql-16-pgvector  # Ubuntu/Debian
-brew install pgvector  # macOS with Homebrew
-
-# Enable in your database
-psql -d your_database -c "CREATE EXTENSION vector;"
-```
-
-### Connection Issues
-```python
-# Test your connection first
-try:
-    connection = psycopg.connect(...)
-    with connection.cursor() as cur:
-        cur.execute("SELECT version()")
-        print("Connected successfully!")
-except psycopg.Error as e:
-    print(f"Connection failed: {e}")
-```
-
-### Performance Optimization
-- Create vector indexes after inserting your data
-- Use appropriate `lists` parameter for IVFFlat based on your data size
-- Consider using connection pooling for high-throughput applications
