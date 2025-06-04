@@ -20,7 +20,13 @@ class PgvectorHandshake(BaseHandshake):
     using the pgvector extension through the vecs client library from Supabase.
 
     Args:
-        connection_string: PostgreSQL connection string or vecs client.
+        client: An existing vecs.Client instance. If provided, other connection parameters are ignored.
+        host: PostgreSQL host. Defaults to "localhost".
+        port: PostgreSQL port. Defaults to 5432.
+        database: PostgreSQL database name. Defaults to "postgres".
+        user: PostgreSQL username. Defaults to "postgres".
+        password: PostgreSQL password. Defaults to "postgres".
+        connection_string: Full PostgreSQL connection string. If provided, individual parameters are ignored.
         collection_name: The name of the collection to store chunks in.
         embedding_model: The embedding model to use for generating embeddings.
         vector_dimensions: The number of dimensions for the vector embeddings.

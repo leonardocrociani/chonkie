@@ -146,7 +146,7 @@ version = {attr = "chonkie.__version__"}
 
 [tool.ruff]
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D", "DOC"]
+lint.select = ["F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
 
 [tool.ruff.format]

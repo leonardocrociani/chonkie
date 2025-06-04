@@ -23,9 +23,11 @@ pytestmark = pytest.mark.skipif(not vecs_available, reason="vecs not installed")
 
 
 @pytest.fixture(autouse=True)
-def mock_embeddings():
-    """Mock AutoEmbeddings to avoid downloading models in CI."""
-    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings:
+def mock_dependencies():
+    """Mock dependencies to avoid real connections and downloads in CI."""
+    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings, \
+         patch('vecs.create_client') as mock_create_client:
+        
         # Create a mock embedding model
         mock_embedding = Mock()
         
@@ -41,29 +43,29 @@ def mock_embeddings():
         mock_embedding.embed_batch.side_effect = mock_embed_batch
         mock_embedding.dimension = 128
         mock_get_embeddings.return_value = mock_embedding
-        yield mock_get_embeddings
+        
+        # Create a mock vecs client and collection
+        mock_client = Mock()
+        mock_collection = Mock()
+        mock_collection.name = "test_collection"
+        mock_collection.dimension = 128
+        mock_client.get_or_create_collection.return_value = mock_collection
+        mock_client.delete_collection.return_value = None
+        mock_collection.upsert.return_value = None
+        mock_collection.query.return_value = []
+        mock_collection.create_index.return_value = None
+        
+        mock_create_client.return_value = mock_client
+        
+        yield {
+            'embeddings': mock_get_embeddings,
+            'create_client': mock_create_client,
+            'client': mock_client,
+            'collection': mock_collection
+        }
 
 
-@pytest.fixture
-def mock_vecs_client():
-    """Mock vecs client for testing."""
-    mock_client = Mock()
-    mock_collection = Mock()
-    
-    # Setup collection properties
-    mock_collection.name = "test_collection"
-    mock_collection.dimension = 128
-    
-    # Mock client methods
-    mock_client.get_or_create_collection.return_value = mock_collection
-    mock_client.delete_collection.return_value = None
-    
-    # Mock collection methods
-    mock_collection.upsert.return_value = None
-    mock_collection.query.return_value = []
-    mock_collection.create_index.return_value = None
-    
-    return mock_client, mock_collection
+# Remove the old fixture since we're using autouse mock_dependencies now
 
 
 # Sample Chunks for testing
@@ -88,47 +90,44 @@ def test_pgvector_handshake_is_available():
         assert handshake._is_available() is False
 
 
-def test_pgvector_handshake_init_with_individual_params(mock_vecs_client):
+def test_pgvector_handshake_init_with_individual_params(mock_dependencies):
     """Test PgvectorHandshake initialization with individual connection parameters."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_create_client = mock_dependencies['create_client']
+    mock_client = mock_dependencies['client']
     
-    with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
-        
-        handshake = PgvectorHandshake(
-            host="localhost",
-            port=5432,
-            database="test_db",
-            user="test_user",
-            password="test_password",
-            collection_name="test_collection"
-        )
-        
-        # Verify client was created with correct connection string
-        vecs.create_client.assert_called_once_with("postgresql://test_user:test_password@localhost:5432/test_db")
-        assert handshake.client == mock_client
-        assert handshake.collection_name == "test_collection"
-        assert handshake.vector_dimensions == 128  # From mocked embedding
+    handshake = PgvectorHandshake(
+        host="localhost",
+        port=5432,
+        database="test_db",
+        user="test_user",
+        password="test_password",
+        collection_name="test_collection"
+    )
+    
+    # Verify client was created with correct connection string
+    mock_create_client.assert_called_once_with("postgresql://test_user:test_password@localhost:5432/test_db")
+    assert handshake.client == mock_client
+    assert handshake.collection_name == "test_collection"
+    assert handshake.vector_dimensions == 128  # From mocked embedding
 
 
-def test_pgvector_handshake_init_with_connection_string(mock_vecs_client):
+def test_pgvector_handshake_init_with_connection_string(mock_dependencies):
     """Test PgvectorHandshake initialization with connection string."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_create_client = mock_dependencies['create_client']
     
-    with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
-        
-        connection_string = "postgresql://user:pass@host:5432/db"
-        handshake = PgvectorHandshake(connection_string=connection_string)
-        
-        # Verify client was created with provided connection string
-        vecs.create_client.assert_called_once_with(connection_string)
-        assert handshake.client == mock_client
+    connection_string = "postgresql://user:pass@host:5432/db"
+    handshake = PgvectorHandshake(connection_string=connection_string)
+    
+    # Verify client was created with provided connection string
+    mock_create_client.assert_called_with(connection_string)
+    assert handshake.client == mock_client
 
 
-def test_pgvector_handshake_init_with_existing_client(mock_vecs_client):
+def test_pgvector_handshake_init_with_existing_client(mock_dependencies):
     """Test PgvectorHandshake initialization with existing vecs client."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'):
         handshake = PgvectorHandshake(client=mock_client)
@@ -137,12 +136,13 @@ def test_pgvector_handshake_init_with_existing_client(mock_vecs_client):
         assert handshake.client == mock_client
 
 
-def test_pgvector_handshake_init_custom_vector_dimensions(mock_vecs_client):
+def test_pgvector_handshake_init_custom_vector_dimensions(mock_dependencies):
     """Test PgvectorHandshake initialization with custom vector dimensions."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(
             host="localhost",
@@ -152,12 +152,13 @@ def test_pgvector_handshake_init_custom_vector_dimensions(mock_vecs_client):
         assert handshake.vector_dimensions == 256
 
 
-def test_pgvector_handshake_generate_id(mock_vecs_client):
+def test_pgvector_handshake_generate_id(mock_dependencies):
     """Test the _generate_id method."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         chunk = SAMPLE_CHUNKS[0]
@@ -171,12 +172,13 @@ def test_pgvector_handshake_generate_id(mock_vecs_client):
         assert generated_id == expected_id_str
 
 
-def test_pgvector_handshake_generate_metadata(mock_vecs_client):
+def test_pgvector_handshake_generate_metadata(mock_dependencies):
     """Test the _generate_metadata method."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         chunk = SAMPLE_CHUNKS[0]
@@ -190,12 +192,13 @@ def test_pgvector_handshake_generate_metadata(mock_vecs_client):
         assert metadata["chunk_type"] == "Chunk"
 
 
-def test_pgvector_handshake_generate_metadata_with_attributes(mock_vecs_client):
+def test_pgvector_handshake_generate_metadata_with_attributes(mock_dependencies):
     """Test the _generate_metadata method with chunk attributes."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -218,12 +221,13 @@ def test_pgvector_handshake_generate_metadata_with_attributes(mock_vecs_client):
         assert metadata["language"] == "en"
 
 
-def test_pgvector_handshake_write_single_chunk(mock_vecs_client):
+def test_pgvector_handshake_write_single_chunk(mock_dependencies):
     """Test writing a single Chunk."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         chunk = SAMPLE_CHUNKS[0]
@@ -250,12 +254,13 @@ def test_pgvector_handshake_write_single_chunk(mock_vecs_client):
         assert isinstance(record[2], dict)  # metadata
 
 
-def test_pgvector_handshake_write_multiple_chunks(mock_vecs_client):
+def test_pgvector_handshake_write_multiple_chunks(mock_dependencies):
     """Test writing multiple Chunks."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -274,12 +279,13 @@ def test_pgvector_handshake_write_multiple_chunks(mock_vecs_client):
         assert len(records) == len(SAMPLE_CHUNKS)
 
 
-def test_pgvector_handshake_search(mock_vecs_client):
+def test_pgvector_handshake_search(mock_dependencies):
     """Test similarity search functionality."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -302,12 +308,13 @@ def test_pgvector_handshake_search(mock_vecs_client):
         assert call_args[1]['limit'] == 2
 
 
-def test_pgvector_handshake_search_with_filters(mock_vecs_client):
+def test_pgvector_handshake_search_with_filters(mock_dependencies):
     """Test similarity search with metadata filters."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -327,12 +334,13 @@ def test_pgvector_handshake_search_with_filters(mock_vecs_client):
         assert call_args[1]['filters'] == filters
 
 
-def test_pgvector_handshake_create_index(mock_vecs_client):
+def test_pgvector_handshake_create_index(mock_dependencies):
     """Test creating vector index."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -346,12 +354,13 @@ def test_pgvector_handshake_create_index(mock_vecs_client):
         assert call_args[1]['ef_construction'] == 128
 
 
-def test_pgvector_handshake_delete_collection(mock_vecs_client):
+def test_pgvector_handshake_delete_collection(mock_dependencies):
     """Test deleting collection."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost", collection_name="test_collection")
         
@@ -361,12 +370,13 @@ def test_pgvector_handshake_delete_collection(mock_vecs_client):
         mock_client.delete_collection.assert_called_once_with("test_collection")
 
 
-def test_pgvector_handshake_get_collection_info(mock_vecs_client):
+def test_pgvector_handshake_get_collection_info(mock_dependencies):
     """Test getting collection information."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -376,12 +386,13 @@ def test_pgvector_handshake_get_collection_info(mock_vecs_client):
         assert info["dimension"] == mock_collection.dimension
 
 
-def test_pgvector_handshake_repr(mock_vecs_client):
+def test_pgvector_handshake_repr(mock_dependencies):
     """Test the __repr__ method."""
-    mock_client, mock_collection = mock_vecs_client
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost", collection_name="test_collection")
         expected_repr = f"PgvectorHandshake(collection_name=test_collection, vector_dimensions={handshake.vector_dimensions})"
@@ -413,12 +424,13 @@ def test_pgvector_handshake_import_dependencies_success():
             assert mock_import.call_count >= 1
 
 
-def test_pgvector_handshake_search_without_metadata_and_similarity():
+def test_pgvector_handshake_search_without_metadata_and_similarity(mock_dependencies):
     """Test search with include_metadata=False and include_value=False."""
-    mock_client, mock_collection = mock_vecs_client[0], mock_vecs_client[1]
+    mock_client = mock_dependencies['client']
+    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client):
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client):
         
         handshake = PgvectorHandshake(host="localhost")
         
@@ -453,7 +465,7 @@ def test_pgvector_handshake_connection_priority():
     
     # Test 2: Connection string takes priority over individual params
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
-         patch('vecs.create_client', return_value=mock_client) as mock_create:
+         patch('chonkie.friends.handshakes.pgvector.vecs.create_client', return_value=mock_client) as mock_create:
         
         handshake = PgvectorHandshake(
             connection_string="postgresql://user:pass@host:5432/db",
