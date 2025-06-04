@@ -43,6 +43,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Handshakes](#handshakes)
   - [`ChromaHandshake`](#chromahandshake)
   - [`QdrantHandshake`](#qdranthandshake)
+  - [`PgvectorHandshake`](#pgvectorhandshake)
   - [`TurbopufferHandshake`](#turbopufferhandshake)
 - [Package Versioning](#package-versioning)
 
@@ -81,6 +82,10 @@ You can install optional features using the `pip install "chonkie[feature]"` syn
 | `semantic` | Enable semantic chunking capabilities, potentially leveraging `model2vec`.                              |
 | `neural`   | Utilize local Hugging Face `transformers` models (with `torch`) for advanced NLP tasks.                 |
 | `genie`    | Integrate with Google's Generative AI (Gemini) models for advanced functionalities.                     |
+| `chroma`   | Connect and integrate with ChromaDB vector database.                                                     |
+| `qdrant`   | Connect and integrate with Qdrant vector database.                                                       |
+| `pgvector` | Connect and integrate with PostgreSQL using pgvector extension via vecs.                                |
+| `turbopuffer` | Connect and integrate with Turbopuffer vector database.                                               |
 | `all`      | Install all optional dependencies for the complete Chonkie experience. Not recommended for prod.        |
 
 
@@ -1301,6 +1306,172 @@ print(f"Chunks written to Qdrant collection '{handshake.collection_name}' on ser
 # client = qdrant_client.QdrantClient(url="http://localhost:6333")
 # count = client.count(collection_name="local_docs_collection")
 # print(f"Collection count: {count.count}")
+```
+
+</details>
+
+### `PgvectorHandshake`
+
+The `PgvectorHandshake` exports `Chunk` objects to a PostgreSQL database with pgvector extension for vector similarity search using the vecs client library from Supabase. It provides a higher-level API with automatic indexing and metadata filtering.
+
+This handshake requires the `vecs` library. You can install it with `pip install "chonkie[pgvector]"`.
+
+**Parameters:**
+
+- `client (Optional[vecs.Client])`: An existing vecs.Client instance. If provided, other connection parameters are ignored. Defaults to `None`.
+- `host (str)`: PostgreSQL host address. Defaults to `"localhost"`.
+- `port (int)`: PostgreSQL port number. Defaults to `5432`.
+- `database (str)`: PostgreSQL database name. Defaults to `"postgres"`.
+- `user (str)`: PostgreSQL username. Defaults to `"postgres"`.
+- `password (str)`: PostgreSQL password. Defaults to `"postgres"`.
+- `connection_string (Optional[str])`: Full PostgreSQL connection string (e.g., "postgresql://user:pass@host:port/db"). If provided, individual connection parameters are ignored. Defaults to `None`.
+- `collection_name (str)`: The name of the vecs collection to store chunks in. Defaults to `"chonkie_chunks"`.
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model for generating chunk embeddings. Defaults to `"minishlab/potion-retrieval-32M"`.
+- `vector_dimensions (Optional[int])`: The number of dimensions for the vector embeddings. If `None`, inferred from the embedding model. Defaults to `None`.
+
+**Methods:**
+
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> List[str]`: Embeds the chunks and upserts them into the vecs collection. Returns a list of generated chunk IDs.
+- `search(query: str, limit: int = 5, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]`: Searches for similar chunks using vector similarity with optional metadata filtering.
+- `create_index(method: str = "hnsw", **index_params) -> None`: Creates a vector index for improved search performance using vecs.
+- `delete_collection() -> None`: Deletes the entire collection.
+- `get_collection_info() -> Dict[str, Any]`: Gets information about the collection.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Usage with Individual Connection Parameters</strong></summary>
+
+```python
+# Requires "chonkie[pgvector]" and a PostgreSQL server with pgvector
+from chonkie import TokenChunker, PgvectorHandshake
+
+# Sample Chunks
+chunker = TokenChunker(chunk_size=100)
+text = "PostgreSQL with pgvector provides excellent vector similarity search. Chonkie with vecs makes it even easier!"
+chunks = chunker(text)
+
+# Initialize handshake with individual connection parameters (much easier!)
+handshake = PgvectorHandshake(
+    host="localhost",
+    port=5432,
+    database="my_database",
+    user="my_user",
+    password="my_password",
+    collection_name="my_documents"
+)
+
+# Write the chunks
+chunk_ids = handshake.write(chunks)
+print(f"Stored {len(chunk_ids)} chunks in PostgreSQL")
+
+# Search for similar content
+results = handshake.search("vector similarity search", limit=3)
+for result in results:
+    print(f"Text: {result['text']}")
+    print(f"Similarity: {result['similarity']:.3f}")
+    print("---")
+```
+
+</details>
+
+<details>
+<summary><strong>2. Using Environment Variables and Metadata Filtering</strong></summary>
+
+```python
+# Requires "chonkie[pgvector, st]"
+import os
+from chonkie import SentenceChunker, PgvectorHandshake
+
+# Sample Chunks
+chunker = SentenceChunker(chunk_size=80)
+text = "Vecs provides excellent metadata filtering. You can search by year, category, or any custom field. Performance is great with proper indexing."
+chunks = chunker(text)
+
+# Initialize handshake using environment variables (no need to build connection strings!)
+handshake = PgvectorHandshake(
+    host=os.getenv("POSTGRES_HOST", "localhost"),
+    port=int(os.getenv("POSTGRES_PORT", "5432")),
+    database=os.getenv("POSTGRES_DB", "chonkie"),
+    user=os.getenv("POSTGRES_USER", "postgres"),
+    password=os.getenv("POSTGRES_PASSWORD", "password"),
+    collection_name="filtered_docs",
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Write chunks
+chunk_ids = handshake.write(chunks)
+
+# Create an index for faster searches
+handshake.create_index(method="hnsw")
+print("Created HNSW index")
+
+# Search with metadata filtering (if you added custom metadata)
+results = handshake.search(
+    "metadata filtering",
+    limit=2,
+    filters={"chunk_type": {"$eq": "SentenceChunk"}}
+)
+
+for result in results:
+    print(f"Text: {result['text']}")
+    print(f"Similarity: {result['similarity']:.3f}")
+    print(f"Chunk Type: {result.get('chunk_type', 'N/A')}")
+    print("---")
+```
+
+</details>
+
+<details>
+<summary><strong>3. Using Existing vecs Client and Advanced Features</strong></summary>
+
+```python
+# Requires "chonkie[pgvector, st]"
+import vecs
+from chonkie import RecursiveChunker, PgvectorHandshake
+
+# Create vecs client first (allows more control)
+client = vecs.create_client("postgresql://user:password@localhost/dbname")
+
+# Sample Chunks
+chunker = RecursiveChunker(chunk_size=120)
+text = "Vecs provides a powerful Python interface for pgvector. It supports metadata filtering, automatic indexing, and rich querying capabilities."
+chunks = chunker(text)
+
+# Initialize handshake with existing client
+handshake = PgvectorHandshake(
+    client=client,  # Pass existing client
+    collection_name="advanced_examples",
+    embedding_model="sentence-transformers/paraphrase-MiniLM-L3-v2"
+)
+
+# Write chunks
+chunk_ids = handshake.write(chunks)
+
+# Create index for better performance
+handshake.create_index(method="hnsw")
+
+# Advanced search with metadata filtering
+query = "pgvector interface"
+results = handshake.search(
+    query, 
+    limit=3,
+    filters={"token_count": {"$gte": 10}}  # Only chunks with 10+ tokens
+)
+
+print("Advanced Search Results:")
+for result in results:
+    print(f"Text: {result['text'][:60]}...")
+    print(f"Similarity: {result['similarity']:.3f}")
+    print(f"Token Count: {result.get('token_count', 'N/A')}")
+    print("---")
+
+# Get collection info
+info = handshake.get_collection_info()
+print(f"Collection: {info['name']}, Dimensions: {info['dimension']}")
+
+# Optional: Clean up
+# handshake.delete_collection()
 ```
 
 </details>

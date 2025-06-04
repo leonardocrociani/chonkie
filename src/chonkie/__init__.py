@@ -28,6 +28,7 @@ from .friends import (
     BasePorter,
     ChromaHandshake,
     JSONPorter,
+    PgvectorHandshake,
     QdrantHandshake,
     TurbopufferHandshake,
 )
@@ -68,7 +69,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.8"
+__version__ = "1.0.9"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -157,6 +158,7 @@ __all__ += [
     "BaseHandshake",
     "JSONPorter",
     "ChromaHandshake",
+    "PgvectorHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
 ]

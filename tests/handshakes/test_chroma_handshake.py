@@ -50,6 +50,8 @@ def mock_embeddings():
         mock_embedding.embed.side_effect = mock_embed_single
         mock_embedding.embed_batch.side_effect = mock_embed_batch
         mock_embedding.dimension = 128
+        # Make sure __str__ returns a string, not a callable
+        mock_embedding.__str__ = Mock(return_value="MockEmbeddingModel")
         mock_get_embeddings.return_value = mock_embedding
         yield mock_get_embeddings
 

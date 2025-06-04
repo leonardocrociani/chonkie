@@ -1,7 +1,6 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
-import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
@@ -49,10 +48,16 @@ class ChromaEmbeddingFunction:
         # Check if the model is a string
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
+            self._model_name = embedding_model  # Store name for ChromaDB compatibility
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
+            self._model_name = str(embedding_model)  # Store name for ChromaDB compatibility
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
+
+    def name(self) -> str:
+        """Return the name of the embedding model for ChromaDB compatibility."""
+        return self._model_name
 
     def __call__(self, input: Union[str, List[str]]) -> Union["np.ndarray", List["np.ndarray"]]:
         """Call the ChromaEmbeddingFunction."""
@@ -92,9 +97,6 @@ class ChromaHandshake(BaseHandshake):
             path: The path to the Chroma collection locally. If provided, it will create a Persistent Chroma Client.
 
         """
-        # Warn the user that ChromaHandshake is experimental
-        warnings.warn("Chonkie's ChromaHandshake is experimental and may change in the future. Not all Chonkie features are supported yet.", FutureWarning)
-                    
         super().__init__()
         
         # Lazy importing the dependencies

@@ -116,7 +116,7 @@ More on these methods and the approaches taken inside the [docs](https://docs.ch
 
 ## Integrations
 
-Chonkie boasts 17+ integrations across tokenizers and embedding providers, ensuring it fits seamlessly into your existing workflow.
+Chonkie boasts 19+ integrations across tokenizers, embedding providers, LLMs, porters, and vector databases, ensuring it fits seamlessly into your existing workflow.
 
 <details>
 <summary><strong>🪓 Slice 'n' Dice! Chonkie supports 5+ ways to tokenize! </strong></summary>
@@ -197,7 +197,7 @@ Porters help you save your chunks easily.
 </details>
 
 <details>
-<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 3+ vector stores!</strong></summary>
+<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 4+ vector stores!</strong></summary>
 
 Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
 
@@ -205,6 +205,7 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 |----------------|-----------------------|-----------------------------------------|---------------------------|
 | `chroma`       | `ChromaHandshake`     | Ingest chunks into ChromaDB.            | `chonkie[chroma]`         |
 | `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
+| `pgvector`     | `PgvectorHandshake`   | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]`   |
 | `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[turbopuffer]`    |
 
 </details>

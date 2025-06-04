@@ -2,7 +2,7 @@
 
 import warnings
 from functools import lru_cache
-from typing import Any, Callable, Dict, List, Literal, Union
+from typing import Any, Callable, List, Literal, Union
 
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
@@ -87,11 +87,11 @@ class OverlapRefinery(BaseRefinery):
         return True
 
     def _get_tokens_impl(self, text: str) -> list:
-        """Implementation for getting tokens."""
+        """Get tokens from text."""
         return self.tokenizer.encode(text)
 
     def _count_tokens_impl(self, text: str) -> int:
-        """Implementation for counting tokens."""
+        """Count tokens in text."""
         return len(self.tokenizer.encode(text))
 
     def clear_cache(self) -> None:
