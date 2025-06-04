@@ -313,7 +313,7 @@ def test_overlap_refinery_recursive_large_context(sample_chunks) -> None:
 
 def test_overlap_refinery_recursive_with_custom_rules() -> None:
     """Test the OverlapRefinery with custom recursive rules."""
-    from chonkie.types import RecursiveRules, RecursiveLevel
+    from chonkie.types import RecursiveLevel, RecursiveRules
     
     # Create custom rules with only sentence-level splitting
     custom_rules = RecursiveRules(levels=[
@@ -343,7 +343,7 @@ def test_overlap_refinery_recursive_with_custom_rules() -> None:
 
 def test_overlap_refinery_recursive_exceeding_levels() -> None:
     """Test the OverlapRefinery when recursive levels are exceeded."""
-    from chonkie.types import RecursiveRules, RecursiveLevel
+    from chonkie.types import RecursiveLevel, RecursiveRules
     
     # Create minimal rules with only one level
     minimal_rules = RecursiveRules(levels=[
@@ -514,7 +514,7 @@ def test_overlap_refinery_stress_test_many_chunks() -> None:
 
 def test_overlap_refinery_recursive_stress_deep_nesting() -> None:
     """Test recursive mode with content that forces deep recursion."""
-    from chonkie.types import RecursiveRules, RecursiveLevel
+    from chonkie.types import RecursiveLevel, RecursiveRules
     
     # Create rules that will force deep recursion
     deep_rules = RecursiveRules(levels=[
@@ -592,7 +592,7 @@ def test_overlap_refinery_recursive_index_preservation() -> None:
 
 def test_overlap_refinery_recursive_delimiter_modes() -> None:
     """Test recursive mode with different delimiter inclusion modes."""
-    from chonkie.types import RecursiveRules, RecursiveLevel
+    from chonkie.types import RecursiveLevel, RecursiveRules
     
     chunks = [
         Chunk(text="First. Second.", start_index=0, end_index=13, token_count=3),
@@ -626,7 +626,7 @@ def test_overlap_refinery_recursive_delimiter_modes() -> None:
 
 def test_overlap_refinery_empty_text_recursive() -> None:
     """Test recursive overlap with empty text."""
-    from chonkie.types import RecursiveRules, RecursiveLevel
+    from chonkie.types import RecursiveLevel, RecursiveRules
     
     # Test with empty text in chunks
     chunks = [

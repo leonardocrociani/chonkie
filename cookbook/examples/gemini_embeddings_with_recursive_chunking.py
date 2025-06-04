@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""
-Gemini Embeddings with Recursive Chunking Example
+"""Gemini Embeddings with Recursive Chunking Example.
+
 ================================================
 
 This example demonstrates how to use Google's Gemini embedding models with Chonkie's 
@@ -18,11 +18,8 @@ Date: 2025
 import os
 from typing import List
 
-import numpy as np
-
 from chonkie import AutoEmbeddings, RecursiveChunker
 from chonkie.types import Chunk
-
 
 if __name__ == "__main__":
     """
@@ -98,7 +95,7 @@ if __name__ == "__main__":
     chunker = RecursiveChunker(
         chunk_size=256,  # Target chunk size in tokens (power of 2)
     )
-    print(f"✅ RecursiveChunker configured:")
+    print("✅ RecursiveChunker configured:")
     print(f"   - Chunk size: {chunker.chunk_size} tokens")
     
     # Step 3: Chunk the text
@@ -173,7 +170,7 @@ if __name__ == "__main__":
     print("-" * 30)
     
     total_tokens = sum(embeddings.count_tokens(chunk.text) for chunk in chunks)
-    print(f"📈 Token analysis:")
+    print("📈 Token analysis:")
     print(f"   Total tokens across all chunks: {total_tokens}")
     print(f"   Average tokens per chunk: {total_tokens / len(chunks):.1f}")
     

@@ -49,10 +49,16 @@ class ChromaEmbeddingFunction:
         # Check if the model is a string
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
+            self._model_name = embedding_model  # Store name for ChromaDB compatibility
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
+            self._model_name = str(embedding_model)  # Store name for ChromaDB compatibility
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
+
+    def name(self) -> str:
+        """Return the name of the embedding model for ChromaDB compatibility."""
+        return self._model_name
 
     def __call__(self, input: Union[str, List[str]]) -> Union["np.ndarray", List["np.ndarray"]]:
         """Call the ChromaEmbeddingFunction."""
