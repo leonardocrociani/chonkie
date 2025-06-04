@@ -136,23 +136,101 @@ class CodeChunker(BaseChunker):
       "type": node.type,
     }
 
+  def _split_target_node_once(self, target_node: "Node", text_bytes: bytes) -> List[Dict[str, Any]]:
+    """Split a target node once - extract each immediate child as a complete unit."""
+    if hasattr(target_node, 'children') and target_node.children:
+      child_chunks = []
+      for child in target_node.children:
+        child_chunks.append(self._extract_node(child))
+      return child_chunks
+    else:
+      # Fallback: return as single node if no children
+      return [self._extract_node(target_node)]
+
+  def _split_target_node_recursively(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
+    """Split a target node recursively - continue splitting results that exceed chunk_size."""
+    if self.chunk_size is None:
+      # No size limit, just do single split
+      return self._split_target_node_once(target_node, text_bytes)
+    
+    # For recursive splitting, we process children through the normal extraction pipeline
+    # which will apply split rules recursively to any oversized children
+    if hasattr(target_node, 'children') and target_node.children:
+      return self._extract_split_nodes(list(target_node.children), text_bytes)
+    else:
+      # Fallback: return as single node if no children
+      return [self._extract_node(target_node)]
+
+  def _extract_header_from_node(self, node: "Node", rule: SplitRule, text_bytes: bytes) -> str:
+    """Extract header text from node (everything before the body_child plus docstring if present)."""
+    if rule.body_child == "self":
+      return ""
+    
+    # Find the body_child node
+    body_node = None
+    for child in node.children:
+      if child.type == rule.body_child:
+        body_node = child
+        break
+    
+    if not body_node:
+      return ""
+    
+    # Header is everything before the body_child
+    header_bytes = text_bytes[node.start_byte:body_node.start_byte]
+    header_text = header_bytes.decode('utf-8').rstrip()
+    
+    # Check if first child of body is a docstring and include it
+    if body_node.children:
+      first_child = body_node.children[0]
+      if (first_child.type == "expression_statement" and 
+          first_child.children and 
+          first_child.children[0].type == "string"):
+        # Include the docstring
+        docstring_bytes = text_bytes[first_child.start_byte:first_child.end_byte]
+        docstring_text = docstring_bytes.decode('utf-8')
+        header_text += "\n    " + docstring_text
+    
+    return header_text
+
+  def _apply_header_to_chunks(self, chunks: List[Dict[str, Any]], header_text: str) -> List[Dict[str, Any]]:
+    """Apply header context to chunks when add_split_context is enabled."""
+    if not self.add_split_context or not header_text:
+      return chunks
+    
+    result_chunks = []
+    for i, chunk_data in enumerate(chunks):
+      if i == 0:
+        # First chunk: header + content (no breadcrumb)
+        combined_text = header_text + "\n\n" + chunk_data['text'].lstrip()
+      else:
+        # Subsequent chunks: header + breadcrumb + content  
+        combined_text = header_text + "\n\n\t...\n\n" + chunk_data['text'].lstrip()
+      
+      result_chunks.append({
+        **chunk_data,
+        'text': combined_text,
+      })
+    
+    return result_chunks
+
   def _handle_target_node_with_recursion(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
-    """Handle target node with potential recursive splitting."""
+    """Handle target node with appropriate splitting strategy based on recursive flag."""
     if rule.recursive and self.chunk_size is not None:
       target_text = str(target_node.text.decode()) 
       target_token_count = self.tokenizer.count_tokens(target_text)
       
       if target_token_count > self.chunk_size:
-        recursive_chunks = self._split_node(target_node, rule, text_bytes)
-        if recursive_chunks:
-          return recursive_chunks
+        # Use recursive splitting for rules marked as recursive
+        return self._split_target_node_recursively(target_node, rule, text_bytes)
     
-    # Fallback: return as single node
-    return [self._extract_node(target_node)]
+    # For non-recursive rules or when size is acceptable, do single-level split
+    return self._split_target_node_once(target_node, text_bytes)
 
-  def _perform_sequential_splitting(self, all_children: List["Node"], target_indices: List[int], rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _perform_sequential_splitting(self, all_children: List["Node"], target_indices: List[int], rule: SplitRule, text_bytes: bytes, parent_node: Optional["Node"] = None, header_text: str = "") -> List[Dict[str, Any]]:
     """Perform sequential splitting logic."""
     result_chunks = []
+    target_chunk_positions = []  # Track positions of target chunks in result_chunks
     start_idx = 0
     
     for target_idx in target_indices:
@@ -167,8 +245,12 @@ class CodeChunker(BaseChunker):
       # Handle target node with potential recursion
       target_node = all_children[target_idx]
       target_chunks = self._handle_target_node_with_recursion(target_node, rule, text_bytes)
-      result_chunks.extend(target_chunks)
       
+      # Record positions where target chunks will be placed
+      for i in range(len(target_chunks)):
+        target_chunk_positions.append(len(result_chunks) + i)
+      
+      result_chunks.extend(target_chunks)
       start_idx = target_idx + 1
     
     # Handle remaining nodes after last target
@@ -179,10 +261,34 @@ class CodeChunker(BaseChunker):
         merged_remaining = self._merge_extracted_nodes(remaining_exnodes, text_bytes)
         result_chunks.append(merged_remaining)
     
+    # Apply header context to target chunks based on add_split_context setting
+    if target_chunk_positions and header_text:
+      if self.add_split_context:
+        # Apply header to all target chunks with breadcrumb logic
+        target_chunks_only = [result_chunks[pos] for pos in target_chunk_positions]
+        target_chunks_with_headers = self._apply_header_to_chunks(target_chunks_only, header_text)
+        
+        # Replace target chunks in result_chunks with header-applied versions
+        for i, pos in enumerate(target_chunk_positions):
+          result_chunks[pos] = target_chunks_with_headers[i]
+      else:
+        # Apply header only to the first target chunk (no breadcrumb)
+        if target_chunk_positions:
+          first_pos = target_chunk_positions[0]
+          first_chunk = result_chunks[first_pos]
+          combined_text = header_text + "\n\n" + first_chunk['text'].lstrip()
+          result_chunks[first_pos] = {
+            **first_chunk,
+            'text': combined_text,
+          }
+    
     return result_chunks
 
   def _split_node(self, node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
     """Extract the split node with sequential splitting support (refactored)."""
+    # Extract header first
+    header_text = self._extract_header_from_node(node, rule, text_bytes)
+    
     if isinstance(rule.body_child, str):
       if rule.body_child == "self":
         return [self._extract_node(node)]
@@ -195,7 +301,7 @@ class CodeChunker(BaseChunker):
       if not target_indices:
         return []
       
-      return self._perform_sequential_splitting(all_children, target_indices, rule, text_bytes)
+      return self._perform_sequential_splitting(all_children, target_indices, rule, text_bytes, node, header_text)
     
     else:
       # Complex case: path traversal through nested children
@@ -223,26 +329,36 @@ class CodeChunker(BaseChunker):
       if not target_indices:
         return []
       
-      return self._perform_sequential_splitting(all_children, target_indices, rule, text_bytes)
+      return self._perform_sequential_splitting(all_children, target_indices, rule, text_bytes, node, header_text)
 
 
   def _extract_split_nodes(self, nodes: List["Node"], text_bytes: bytes) -> List[Dict[str, Any]]:
     """Extract important information from the nodes."""
     exnodes: List[Dict[str, Any]] = []
     for node in nodes:
-      # If node matches one with a split rule and the token count for it is larger then, split it.
+      # Check if node matches a split rule
       is_split = False
-      if self.chunk_size is not None:
-        for rule in self.language_config.split_rules:
-            if node.type == rule.node_type:
-              split_nodes = self._split_node(node, rule, text_bytes)
-              if split_nodes:
-                exnodes.extend(split_nodes)
-              is_split = True
-              break
+      for rule in self.language_config.split_rules:
+          if node.type == rule.node_type:
+            split_nodes = self._split_node(node, rule, text_bytes)
+            if split_nodes:
+              exnodes.extend(split_nodes)
+            is_split = True
+            break
             
       if not is_split:
-        exnodes.append(self._extract_node(node))
+        # If no split rule applied, only recurse into structural containers, not semantic units
+        # Structural containers are typically high-level nodes that organize code
+        if (hasattr(node, 'children') and node.children and 
+            node.type in ['module', 'block', 'suite', 'source_file', 'program']):
+          child_exnodes = self._extract_split_nodes(list(node.children), text_bytes)
+          if child_exnodes:
+            exnodes.extend(child_exnodes)
+          else:
+            exnodes.append(self._extract_node(node))
+        else:
+          # For semantic units (imports, functions, classes, etc.), extract as complete units
+          exnodes.append(self._extract_node(node))
     return exnodes
 
   def _should_merge_node_w_node_group(self, extracted_node: Dict[str, Any], extracted_node_group: List[Dict[str, Any]]) -> bool:
@@ -291,16 +407,35 @@ class CodeChunker(BaseChunker):
 
     return merged_exnodes
 
-  def _create_chunks_from_exnodes(self, exnodes: List[Dict[str, Any]], text_bytes: bytes) -> List[Chunk]:
-    """Create chunks from the extracted nodes, avoiding small whitespace-only chunks."""
+  def _create_chunks_from_exnodes(self, exnodes: List[Dict[str, Any]], text_bytes: bytes, root_node: Optional["Node"] = None) -> List[Chunk]:
+    """Create chunks from the extracted nodes, using root node boundaries for proper file coverage."""
     chunks: List[Chunk] = []
     current_index = 0
     current_byte_pos = 0
+    
+    # Determine the actual content boundaries using root node if available
+    content_start_byte = root_node.start_byte if root_node else 0
+    content_end_byte = root_node.end_byte if root_node else len(text_bytes)
     
     if not exnodes:
       original_text = text_bytes.decode('utf-8')
       token_count = self.tokenizer.count_tokens(original_text)
       return [Chunk(text=original_text, start_index=0, end_index=len(original_text), token_count=token_count)]
+    
+    # Handle leading whitespace before root content
+    if content_start_byte > 0:
+      leading_bytes = text_bytes[0:content_start_byte]
+      leading_text = leading_bytes.decode('utf-8')
+      if leading_text:
+        token_count = self.tokenizer.count_tokens(leading_text)
+        chunks.append(Chunk(
+          text=leading_text,
+          start_index=0,
+          end_index=len(leading_text),
+          token_count=token_count
+        ))
+        current_index = len(leading_text)
+        current_byte_pos = content_start_byte
     
     # Sort by byte position
     exnodes.sort(key=lambda x: x['start_byte'])
@@ -325,8 +460,8 @@ class CodeChunker(BaseChunker):
       
       # Decide whether to merge gap with current chunk or create separate chunks
       if gap_text:
-        # Check if gap is small whitespace that should be merged
-        if len(gap_text.strip()) == 0 and len(gap_text) <= 20:  # Small whitespace gap
+        # Check if gap is only whitespace - if so, merge it with current chunk
+        if len(gap_text.strip()) == 0:
           # Merge gap with current chunk - chunk will start from current_index (before gap)
           chunk_text = gap_text + chunk_text
           # Don't update current_index here - it stays where the chunk starts
@@ -353,13 +488,14 @@ class CodeChunker(BaseChunker):
       current_index = chunk_start_index + len(chunk_text)
       current_byte_pos = exnode['end_byte']
     
-    # Add remaining text after last chunk
-    if current_byte_pos < len(text_bytes):
-      remaining_bytes = text_bytes[current_byte_pos:]
+    # Handle trailing text after root content using root node boundaries
+    if current_byte_pos < content_end_byte:
+      # Text within root bounds but after last extracted node
+      remaining_bytes = text_bytes[current_byte_pos:content_end_byte]
       remaining_text = remaining_bytes.decode('utf-8')
       if remaining_text:
-        # Check if we should merge with previous chunk
-        if (chunks and len(remaining_text.strip()) == 0 and len(remaining_text) <= 20):
+        # If remaining text is only whitespace, merge with previous chunk
+        if chunks and len(remaining_text.strip()) == 0:
           # Merge with last chunk
           last_chunk = chunks[-1]
           merged_text = last_chunk.text + remaining_text
@@ -371,12 +507,40 @@ class CodeChunker(BaseChunker):
             token_count=token_count
           )
         else:
-          # Create separate chunk
+          # Create separate chunk for non-whitespace content
           token_count = self.tokenizer.count_tokens(remaining_text)
           chunks.append(Chunk(
             text=remaining_text,
             start_index=current_index,
             end_index=current_index + len(remaining_text),
+            token_count=token_count
+          ))
+        current_index += len(remaining_text)
+        current_byte_pos = content_end_byte
+    
+    # Handle trailing whitespace after root content
+    if content_end_byte < len(text_bytes):
+      trailing_bytes = text_bytes[content_end_byte:]
+      trailing_text = trailing_bytes.decode('utf-8')
+      if trailing_text:
+        # Always merge trailing whitespace with the last chunk if it exists
+        if chunks:
+          last_chunk = chunks[-1]
+          merged_text = last_chunk.text + trailing_text
+          token_count = self.tokenizer.count_tokens(merged_text)
+          chunks[-1] = Chunk(
+            text=merged_text,
+            start_index=last_chunk.start_index,
+            end_index=last_chunk.end_index + len(trailing_text),
+            token_count=token_count
+          )
+        else:
+          # If no chunks exist, create one for the trailing text
+          token_count = self.tokenizer.count_tokens(trailing_text)
+          chunks.append(Chunk(
+            text=trailing_text,
+            start_index=current_index,
+            end_index=current_index + len(trailing_text),
             token_count=token_count
           ))
     
@@ -414,6 +578,6 @@ class CodeChunker(BaseChunker):
     # Merge the nodes based on type
     merged_exnodes = self._merge_extracted_nodes_by_type(exnodes, text_bytes)
 
-    # return the final chunks
-    chunks = self._create_chunks_from_exnodes(merged_exnodes, text_bytes)
+    # return the final chunks using root node boundaries
+    chunks = self._create_chunks_from_exnodes(merged_exnodes, text_bytes, root)
     return chunks
