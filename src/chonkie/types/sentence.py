@@ -55,7 +55,12 @@ class Sentence:
     @classmethod
     def from_dict(cls, data: Dict[str, Union[str, int]]) -> "Sentence":
         """Create a Sentence object from a dictionary."""
-        return cls(**data)
+        return cls(
+            text=str(data["text"]),
+            start_index=int(data["start_index"]),
+            end_index=int(data["end_index"]),
+            token_count=int(data["token_count"])
+        )
 
 
 @dataclass

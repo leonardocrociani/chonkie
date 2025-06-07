@@ -1,12 +1,19 @@
 """Module containing the LateChunker class."""
 
 import importlib.util as importutil
-from typing import Any, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from chonkie.types import LateChunk, RecursiveRules
+
+if TYPE_CHECKING:
+    try:
+        import numpy as np
+    except ImportError:
+        class np:  # type: ignore
+            pass
 
 
 class LateChunker(RecursiveChunker):
@@ -70,14 +77,14 @@ class LateChunker(RecursiveChunker):
         self._use_multiprocessing = False
     
     @classmethod
-    def from_recipe(cls, 
+    def from_recipe(cls,  # type: ignore[override]
                     name: Optional[str] = "default", 
                     lang: Optional[str] = "en", 
                     path: Optional[str] = None, 
                     embedding_model: Union[str, SentenceTransformerEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
                     chunk_size: int = 512,
                     min_characters_per_chunk: int = 24,
-                    **kwargs: Any) -> "LateChunker": # type: ignore
+                    **kwargs: Any) -> "LateChunker":
         """Create a LateChunker from a recipe.
 
         Args:
@@ -111,10 +118,10 @@ class LateChunker(RecursiveChunker):
     ) -> List["np.ndarray"]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
-        cum_token_counts = np.cumsum([0] + token_counts)
+        cum_token_counts = np.cumsum([0] + token_counts)  # type: ignore[name-defined]
         for i in range(len(token_counts)):
             embs.append(
-                np.mean(
+                np.mean(  # type: ignore[name-defined]
                     token_embeddings[cum_token_counts[i] : cum_token_counts[i + 1]],
                     axis=0,
                 )
@@ -130,7 +137,8 @@ class LateChunker(RecursiveChunker):
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
-        token_counts = [c.token_count for c in chunks]
+        # Note: LateChunker always uses return_type="chunks", so chunks are always RecursiveChunk objects
+        token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
 
         # Validate the token_counts with the actual count
         if sum(token_counts) > token_embeddings.shape[0]:
@@ -157,11 +165,12 @@ class LateChunker(RecursiveChunker):
         # Wrap it all up in LateChunks
         result = []
         for chunk, token_count, embedding in zip(chunks, token_counts, late_embds):
+            # Note: LateChunker always uses return_type="chunks", so chunk is always a RecursiveChunk
             result.append(
                 LateChunk(
-                    text=chunk.text,
-                    start_index=chunk.start_index,
-                    end_index=chunk.end_index,
+                    text=chunk.text,  # type: ignore[attr-defined]
+                    start_index=chunk.start_index,  # type: ignore[attr-defined]
+                    end_index=chunk.end_index,  # type: ignore[attr-defined]
                     token_count=token_count,
                     embedding=embedding,
                 )

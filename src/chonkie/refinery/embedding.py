@@ -46,7 +46,7 @@ class EmbeddingsRefinery(BaseRefinery):
         texts = [chunk.text for chunk in chunks]
         embeds = self.embedding_model.embed_batch(texts)
         for chunk, embed in zip(chunks, embeds):
-            chunk.embedding = embed
+            chunk.embedding = embed  # type: ignore[attr-defined]
         return chunks
 
     def __repr__(self) -> str:

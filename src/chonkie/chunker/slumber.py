@@ -111,29 +111,29 @@ class SlumberChunker(BaseChunker):
         if _CYTHON_AVAILABLE:
             # Use the optimized Cython split function
             if recursive_level.whitespace:
-                return split_text(
+                return list(split_text(
                     text,
                     delim=None,
                     include_delim=recursive_level.include_delim,
                     min_characters_per_segment=self.min_characters_per_chunk,
                     whitespace_mode=True,
                     character_fallback=False
-                )
+                ))
             elif recursive_level.delimiters:
-                return split_text(
+                return list(split_text(
                     text,
                     delim=recursive_level.delimiters,
                     include_delim=recursive_level.include_delim,
                     min_characters_per_segment=self.min_characters_per_chunk,
                     whitespace_mode=False,
                     character_fallback=False
-                )
+                ))
             else:
                 # Token-based splitting - fall back to original implementation
                 encoded = self.tokenizer.encode(text)
                 token_splits = [encoded[i : i + self.chunk_size]
                     for i in range(0, len(encoded), self.chunk_size)]
-                return self.tokenizer.decode_batch(token_splits)
+                return list(self.tokenizer.decode_batch(token_splits))
         else:
             # Fallback to original implementation when Cython is not available
             return self._split_text_fallback(text, recursive_level)
@@ -171,7 +171,7 @@ class SlumberChunker(BaseChunker):
             token_splits = [ encoded[i : i + self.chunk_size]
                 for i in range(0, len(encoded), self.chunk_size)
             ]
-            splits = self.tokenizer.decode_batch(token_splits)
+            splits = list(self.tokenizer.decode_batch(token_splits))
         
         # Merge short splits
         current = ""
@@ -201,14 +201,14 @@ class SlumberChunker(BaseChunker):
 
     def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> List[Chunk]:
         """Recursively split the text into chunks."""
-        if level >= len(self.rules.levels):
+        if not self.rules.levels or level >= len(self.rules.levels):
             return [Chunk(text,
                          offset,
                          offset + len(text),
                          self.tokenizer.count_tokens(text))]
         
         # Do the first split based on the level provided
-        splits = self._split_text(text, self.rules.levels[level])
+        splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
 
         # Calculate the token_count of each of the splits
         token_counts = self.tokenizer.count_tokens_batch(splits)
@@ -277,7 +277,7 @@ class SlumberChunker(BaseChunker):
                 group_end_index += 1
 
             prompt = self.template.format(passages="\n".join(prepared_split_texts[current_pos:group_end_index]))
-            response = int(self.genie.generate_json(prompt, Split)['split_index'])
+            response = int(self.genie.generate_json(prompt, self.Split)['split_index'])
 
             # Make sure that the response doesn't bug out and return a index smaller 
             # than the current position
@@ -302,11 +302,12 @@ class SlumberChunker(BaseChunker):
     def _import_dependencies(self) -> None:
         """Import the dependencies for the SlumberChunker."""
         try: 
-            global BaseModel, Split
             from pydantic import BaseModel
 
             class Split(BaseModel): # type: ignore
                 split_index: int
+            
+            self.Split = Split
     
         except ImportError:
             raise ImportError("The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.")

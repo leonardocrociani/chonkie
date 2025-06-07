@@ -179,14 +179,14 @@ class SentenceChunker(BaseChunker):
         """
         if SPLIT_AVAILABLE:
             # Use optimized Cython split function
-            return split_text(
+            return list(split_text(
                 text=text,
                 delim=self.delim,
                 include_delim=self.include_delim,
                 min_characters_per_segment=self.min_characters_per_sentence,
                 whitespace_mode=False,
                 character_fallback=True
-            )
+            ))
         else:
             # Fallback to original Python implementation
             t = text

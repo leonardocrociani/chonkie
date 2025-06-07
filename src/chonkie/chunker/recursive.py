@@ -129,25 +129,22 @@ class RecursiveChunker(BaseChunker):
 
     @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
-        estimate = max(1, len(text) // self._CHARS_PER_TOKEN)
-        return (
-            self.chunk_size + 1
-            if estimate > self.chunk_size
-            else self.tokenizer.count_tokens(text)
-        )
+        # Always return the actual token count for accuracy
+        # The estimate was only used as an optimization hint
+        return self.tokenizer.count_tokens(text)
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         if SPLIT_AVAILABLE and recursive_level.delimiters:
             # Use optimized Cython split function for delimiter-based splitting only
-            return split_text(
+            return list(split_text(
                 text=text,
                 delim=recursive_level.delimiters,
                 include_delim=recursive_level.include_delim,
                 min_characters_per_segment=self.min_characters_per_chunk,
                 whitespace_mode=False,
                 character_fallback=False
-            )
+            ))
         else:
             # Fallback to original implementation
             if recursive_level.whitespace:
@@ -193,7 +190,7 @@ class RecursiveChunker(BaseChunker):
                     encoded[i : i + self.chunk_size]
                     for i in range(0, len(encoded), self.chunk_size)
                 ]
-                splits = self.tokenizer.decode_batch(token_splits)
+                splits = list(self.tokenizer.decode_batch(token_splits))
 
             return splits
 
@@ -317,7 +314,7 @@ class RecursiveChunker(BaseChunker):
 
     def _recursive_chunk(
         self, text: str, level: int = 0, start_offset: int =0
-    ) -> Sequence[RecursiveChunk]:
+    ) -> Union[Sequence[RecursiveChunk], Sequence[str]]:
         """Recursive helper for core chunking."""
         if not text:
             return []
@@ -334,6 +331,14 @@ class RecursiveChunker(BaseChunker):
             )
 
         curr_rule = self.rules[level]
+        if curr_rule is None:
+            if self.return_type == "texts":
+                return [text]
+            if self.return_type == "chunks":
+                return [
+                    self._make_chunks(text, self._estimate_token_count(text), level, start_offset)
+                ]
+        
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
@@ -355,11 +360,12 @@ class RecursiveChunker(BaseChunker):
             )
 
         # Chunk long merged splits
-        chunks: list[RecursiveChunk] = []
+        chunks: List[Union[RecursiveChunk, str]] = []
         current_offset = start_offset
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
-                chunks.extend(self._recursive_chunk(split, level + 1, current_offset))
+                recursive_result = self._recursive_chunk(split, level + 1, current_offset)
+                chunks.extend(recursive_result)  # type: ignore[arg-type]
             else:
                 if self.return_type == "chunks":
                     chunks.append(self._make_chunks(split, token_count, level, current_offset))
@@ -367,9 +373,9 @@ class RecursiveChunker(BaseChunker):
                     chunks.append(split)
             # Update the offset by the length of the processed split.
             current_offset += len(split)
-        return chunks
+        return chunks  # type: ignore[return-value]
 
-    def chunk(self, text: str) -> Sequence[RecursiveChunk]:
+    def chunk(self, text: str) -> Union[Sequence[RecursiveChunk], Sequence[str]]:
         """Recursively chunk text.
 
         Args:

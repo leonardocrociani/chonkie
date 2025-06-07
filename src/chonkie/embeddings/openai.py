@@ -172,8 +172,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def count_tokens_batch(self, texts: List[str]) -> List[int]:
         """Count tokens in multiple texts."""
-        tokens = self._tokenizer.encode_batch(texts)
-        return [len(t) for t in tokens]
+        return [len(self._tokenizer.encode(text)) for text in texts]
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings."""
@@ -186,7 +185,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer
+        return self._tokenizer  # type: ignore[return-value]
 
     def _is_available(self) -> bool:
         """Check if the OpenAI package is available."""

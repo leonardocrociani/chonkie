@@ -7,11 +7,19 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.tokenizer import Tokenizer
 from chonkie.types.code import CodeChunk
+
+if TYPE_CHECKING:
+    from typing import Any
+    try:
+        from tree_sitter import Node
+    except ImportError:
+        class Node:  # type: ignore
+            pass
 
 
 class CodeChunker(BaseChunker):
@@ -29,7 +37,7 @@ class CodeChunker(BaseChunker):
     def __init__(self,
                  tokenizer_or_token_counter: Union[str, List, Any] = "gpt2",
                  chunk_size: int = 512,
-                 language: Union[Literal["auto"], "SupportedLanguage"] = "auto",
+                 language: Union[Literal["auto"], Any] = "auto",
                  include_nodes: bool = False,
                  return_type: Literal["chunks", "texts"] = "chunks") -> None:
         """Initialize a CodeChunker object.
@@ -95,7 +103,7 @@ class CodeChunker(BaseChunker):
                              "[ tree-sitter, tree-sitter-language-pack, magika ]" +
                              " Please install them using `pip install chonkie[code]`.")
 
-    def _detect_language(self, bytes_text: bytes) -> "SupportedLanguage":
+    def _detect_language(self, bytes_text: bytes) -> Any:
         """Detect the language of the code."""
         response = self.magika.identify_bytes(bytes_text)
         return response.output.label # type: ignore
@@ -121,7 +129,7 @@ class CodeChunker(BaseChunker):
         current_token_count = 0
         current_node_group: List["Node"] = []
         for child in node.children:
-            child_text = child.text.decode()
+            child_text = child.text.decode() if child.text else ""
             token_count: int = self.tokenizer.count_tokens(child_text)
             # If the child itself is larger than chunk size then we need to split and group it
             if token_count > self.chunk_size:
@@ -304,7 +312,7 @@ class CodeChunker(BaseChunker):
                                     start_index=current_index, 
                                     end_index=current_index + len(text),
                                     token_count=token_count,
-                                    nodes=node_group))
+                                    nodes=None if not self.include_nodes or not node_group else [{"type": node.type, "text": node.text.decode() if node.text else ""} for node in node_group]))  # type: ignore[attr-defined]
             current_index += len(text)
         return chunks
         

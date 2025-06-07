@@ -83,7 +83,7 @@ class ChromaHandshake(BaseHandshake):
     """
 
     def __init__(self, 
-                client: Optional["chromadb.Client"] = None,
+                client: Optional[Any] = None,  # chromadb.Client
                 collection_name: Union[str, Literal["random"]] = "random", 
                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M", 
                 path: Optional[str] = None,
@@ -108,7 +108,7 @@ class ChromaHandshake(BaseHandshake):
         elif client is None and path is not None:
             self.client = chromadb.PersistentClient(path=path)
         else:
-            self.client = client
+            self.client = client  # type: ignore[assignment]
 
         # Initialize the EmbeddingRefinery internally!
         self.embedding_function = ChromaEmbeddingFunction(embedding_model)
@@ -116,13 +116,13 @@ class ChromaHandshake(BaseHandshake):
         # If the collection name is not random, create the collection
         if collection_name != "random":
             self.collection_name = collection_name
-            self.collection = self.client.get_or_create_collection(self.collection_name, embedding_function=self.embedding_function)
+            self.collection = self.client.get_or_create_collection(self.collection_name, embedding_function=self.embedding_function)  # type: ignore[arg-type]
         else:
             # Keep generating random collection names until we find one that doesn't exist
             while True:
                 self.collection_name = generate_random_collection_name()
                 try:
-                    self.collection = self.client.create_collection(self.collection_name, embedding_function=self.embedding_function)
+                    self.collection = self.client.create_collection(self.collection_name, embedding_function=self.embedding_function)  # type: ignore[arg-type]
                     break
                 except Exception:
                     pass

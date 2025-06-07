@@ -167,7 +167,7 @@ class Visualizer:
             raise ImportError(f"Could not import dependencies with error: {e}. Please install the dependencies with `pip install chonkie[viz]`")
 
     # NOTE: This is a helper function to manage the theme
-    def _get_theme(self, theme: str) -> List[str]:
+    def _get_theme(self, theme: str) -> tuple[List[str], str]:
         """Get the theme from the theme name."""
         if theme in DARK_THEMES:
             return DARK_THEMES[theme], TEXT_COLOR_DARK

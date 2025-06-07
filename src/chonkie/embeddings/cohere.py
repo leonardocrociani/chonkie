@@ -10,6 +10,11 @@ import requests
 if TYPE_CHECKING:
     import numpy as np
     import tokenizers
+    try:
+        from cohere import ClientV2
+    except ImportError:
+        class ClientV2:  # type: ignore
+            pass
 
 from .base import BaseEmbeddings
 
@@ -138,7 +143,7 @@ class CohereEmbeddings(BaseEmbeddings):
                     texts=[text],
                 )
 
-                return np.array(response.embeddings.float_[0], dtype=np.float32)
+                return np.array(response.embeddings.float_[0], dtype=np.float32)  # type: ignore[index]
             except Exception as e:
                 if self._show_warnings:
                     warnings.warn(
@@ -180,7 +185,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
                         embeddings = [
                             np.array(e, dtype=np.float32)
-                            for e in response.embeddings.float_
+                            for e in response.embeddings.float_  # type: ignore[union-attr]
                         ]
                         all_embeddings.extend(embeddings)
                         break

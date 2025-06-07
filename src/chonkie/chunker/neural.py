@@ -6,11 +6,20 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 from chonkie.types import Chunk
 
 from .base import BaseChunker
+
+if TYPE_CHECKING:
+    try:
+        from transformers import PreTrainedTokenizerFast, pipeline
+    except ImportError:
+        class PreTrainedTokenizerFast:  # type: ignore
+            pass
+        def pipeline(*args, **kwargs):  # type: ignore
+            pass
 
 # TODO: Add a check to see if the model is supported
 

@@ -94,7 +94,7 @@ class SDPMChunker(SemanticChunker):
 
     
     @classmethod
-    def from_recipe(cls,
+    def from_recipe(cls,  # type: ignore[override]
                     name: str = "default", 
                     lang: Optional[str] = "en", 
                     path: Optional[str] = None, 
@@ -179,7 +179,7 @@ class SDPMChunker(SemanticChunker):
             return groups
 
         merged_groups = []
-        embeddings = [self._compute_group_embedding(group) for group in groups]
+        embeddings = [self._compute_group_embedding(group) for group in groups]  # type: ignore[arg-type]
 
         while groups:
             if len(groups) == 1:
@@ -196,7 +196,7 @@ class SDPMChunker(SemanticChunker):
 
             if similarity >= similarity_threshold:
                 # Merge groups from 0 to skip_index (inclusive)
-                merged = self._merge_sentence_groups(groups[: skip_index + 1])
+                merged = self._merge_sentence_groups(groups[: skip_index + 1])  # type: ignore[arg-type]
 
                 # Remove the merged groups
                 for _ in range(skip_index + 1):
@@ -204,8 +204,8 @@ class SDPMChunker(SemanticChunker):
                     embeddings.pop(0)
 
                 # Add merged group back at the start
-                groups.insert(0, merged)
-                embeddings.insert(0, self._compute_group_embedding(merged))
+                groups.insert(0, merged)  # type: ignore[arg-type]
+                embeddings.insert(0, self._compute_group_embedding(merged))  # type: ignore[arg-type]
             else:
                 # No merge possible, move first group to results
                 merged_groups.append(groups.pop(0))
@@ -232,7 +232,7 @@ class SDPMChunker(SemanticChunker):
         # Prepare sentences with precomputed information
         sentences = self._prepare_sentences(text)
         if len(sentences) <= self.min_sentences:
-            return [self._create_chunk(sentences)]
+            return [self._create_chunk(sentences)]  # type: ignore[list-item]
 
         # Calculate similarity threshold
         self.similarity_threshold = self._calculate_similarity_threshold(sentences)
@@ -241,12 +241,12 @@ class SDPMChunker(SemanticChunker):
         sentence_groups = self._group_sentences(sentences)
 
         # Second pass: Skip and Merge by semantic similarity
-        merged_groups = self._skip_and_merge(sentence_groups, self.similarity_threshold)
+        merged_groups = self._skip_and_merge(sentence_groups, self.similarity_threshold)  # type: ignore[arg-type]
 
         # Second pass: Split groups into size-appropriate chunks
-        chunks = self._split_chunks(merged_groups)
+        chunks = self._split_chunks(merged_groups)  # type: ignore[arg-type]
 
-        return chunks
+        return chunks  # type: ignore[return-value]
 
     def __repr__(self) -> str:
         """Return a string representation of the SDPMChunker object."""

@@ -112,7 +112,7 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> Union[Sequence[Chunk], Sequence[str]]:
         """Split text into overlapping chunks of specified token size.
 
         Args:
@@ -179,7 +179,7 @@ class TokenChunker(BaseChunker):
 
         return result
 
-    def chunk_batch(
+    def chunk_batch(  # type: ignore[override]
         self,
         texts: List[str],
         batch_size: int = 1,
@@ -211,12 +211,12 @@ class TokenChunker(BaseChunker):
             chunks.extend(self._process_batch(batch_texts))
         return chunks
 
-    def __call__(
+    def __call__(  # type: ignore[override]
         self,
         text: Union[str, List[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
+    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]], Sequence[str], Sequence[Sequence[str]]]:
         """Make the TokenChunker callable directly.
 
         Args:
