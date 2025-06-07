@@ -93,6 +93,7 @@ def test_pgvector_handshake_is_available():
 def test_pgvector_handshake_init_with_individual_params(mock_dependencies):
     """Test PgvectorHandshake initialization with individual connection parameters."""
     mock_create_client = mock_dependencies['create_client']
+    mock_client = mock_dependencies['client']
     
     # Create a mock vecs module
     mock_vecs = Mock()
