@@ -70,8 +70,8 @@ class EmbeddingsRegistry:
         if not issubclass(embeddings_cls, BaseEmbeddings):
             raise ValueError(f"{embeddings_cls} must be a subclass of BaseEmbeddings")
 
-        pattern = re.compile(pattern)
-        cls.pattern_registry[pattern] = embeddings_cls
+        compiled_pattern = re.compile(pattern)
+        cls.pattern_registry[compiled_pattern] = embeddings_cls
 
     @classmethod
     def register_types(
@@ -155,12 +155,14 @@ class EmbeddingsRegistry:
             return object
         elif isinstance(object, str):
             embeddings_cls = cls.match(object)
-            return embeddings_cls(object, **kwargs)
+            if embeddings_cls is None:
+                raise ValueError(f"No matching embeddings implementation found for: {object}")
+            return embeddings_cls(object, **kwargs)  # type: ignore[call-arg]
         else:
             # Loop through all the registered embeddings and check if the object is an instance of any of them
             for type_alias, embeddings_cls in cls.type_registry.items():
                 if type_alias in str(type(object)):
-                    return embeddings_cls(object, **kwargs)
+                    return embeddings_cls(object, **kwargs)  # type: ignore[call-arg]
         raise ValueError(f"Unsupported object type for embeddings: {object}")
 
 

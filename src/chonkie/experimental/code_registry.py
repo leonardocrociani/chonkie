@@ -3,6 +3,7 @@
 This module provides a CodeRegistry class for managing code chunks.
 """
 
+from collections.abc import KeysView
 from typing import Dict
 
 from chonkie.types.code import LanguageConfig, MergeRule, SplitRule
@@ -31,7 +32,7 @@ class _CodeLanguageRegistry:
     """Get a language configuration."""
     return self.language_configs[language]
   
-  def keys(self):
+  def keys(self) -> KeysView[str]:
     """Get all registered language keys."""
     return self.language_configs.keys()
 

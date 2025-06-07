@@ -25,7 +25,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
         max_retries: The maximum number of retries to use.
         timeout: The timeout to use.
         batch_size: The batch size to use.
-        show_warnings: Whether to show warnings about token usage.
 
     """
 
@@ -47,7 +46,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        show_warnings: bool = True,
         **kwargs: Dict[str, Any],
     ):
         """Initialize OpenAI embeddings.
@@ -61,7 +59,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
             max_retries: Maximum number of retries for failed requests
             timeout: Timeout in seconds for API requests
             batch_size: Maximum number of texts to embed in one API call
-            show_warnings: Whether to show warnings about token usage
             **kwargs: Additional keyword arguments to pass to the OpenAI client.
 
         """
@@ -74,7 +71,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
         self.model = model
         self.base_url = base_url
         self._batch_size = batch_size
-        self._show_warnings = show_warnings
 
         # Do something for the tokenizer
         if tokenizer is not None: 
@@ -106,13 +102,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> "np.ndarray":
         """Get embeddings for a single text."""
-        token_count = self.count_tokens(text)
-        if token_count > 8191 and self._show_warnings:  # OpenAI's token limit
-            warnings.warn(
-                f"Text has {token_count} tokens which exceeds the model's limit of 8191. "
-                "It will be truncated."
-            )
-
         response = self.client.embeddings.create(
             model=self.model,
             input=text,
@@ -130,17 +119,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
         # Process in batches
         for i in range(0, len(texts), self._batch_size):
             batch = texts[i : i + self._batch_size]
-
-            # Check token counts and warn if necessary
-            token_counts = self.count_tokens_batch(batch)
-            if self._show_warnings:
-                for text, count in zip(batch, token_counts):
-                    if count > 8191:
-                        warnings.warn(
-                            f"Text has {count} tokens which exceeds the model's limit of 8191. "
-                            "It will be truncated."
-                        )
-
             try:
                 response = self.client.embeddings.create(
                     model=self.model,
@@ -166,15 +144,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         return all_embeddings
 
-    def count_tokens(self, text: str) -> int:
-        """Count tokens in text using the model's tokenizer."""
-        return len(self._tokenizer.encode(text))
-
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
-        """Count tokens in multiple texts."""
-        tokens = self._tokenizer.encode_batch(texts)
-        return [len(t) for t in tokens]
-
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings."""
         return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
@@ -186,7 +155,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer
+        return self._tokenizer  # type: ignore[return-value]
 
     def _is_available(self) -> bool:
         """Check if the OpenAI package is available."""

@@ -58,7 +58,7 @@ class OpenAIGenie(BaseGenie):
         response = self.client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema
+            response_format=schema  # type: ignore[arg-type]
         )
         content = response.choices[0].message.parsed
         if content is None:

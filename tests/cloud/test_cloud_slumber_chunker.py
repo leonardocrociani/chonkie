@@ -313,17 +313,21 @@ def test_cloud_slumber_chunker_long_text(mock_requests_get, mock_requests_post, 
         assert "token_count" in chunk
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set - Skipping real API test",
-)
-def test_cloud_slumber_chunker_real_api() -> None:
-    """Test with real API if CHONKIE_API_KEY is available."""
+def test_cloud_slumber_chunker_real_api(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+    """Test with mocked API calls."""
+    text = "This is a test sentence for the real API."
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(text)
+    mock_requests_post.return_value = mock_response
+    
     slumber_chunker = SlumberChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
+        api_key="test_key"
     )
-    text = "This is a test sentence for the real API."
     result = slumber_chunker(text)
 
     assert isinstance(result, list)

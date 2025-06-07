@@ -3,7 +3,6 @@
 This module provides an experimental CodeChunker class that uses tree-sitter
 for advanced code analysis and language-specific chunking strategies.
 """
-import importlib.util as importutil
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -90,9 +89,9 @@ class CodeChunker(BaseChunker):
     """Import the dependencies from the node."""
     try:
         global Node, get_parser, Magika
+        from magika import Magika
         from tree_sitter import Node
         from tree_sitter_language_pack import get_parser
-        from magika import Magika
     except ImportError:
         raise ImportError("One or more of the following dependencies are not installed: " +
                          "[ tree-sitter, tree-sitter-language-pack, magika ]" +
@@ -217,7 +216,7 @@ class CodeChunker(BaseChunker):
   def _handle_target_node_with_recursion(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
     """Handle target node with appropriate splitting strategy based on recursive flag."""
     if rule.recursive and self.chunk_size is not None:
-      target_text = str(target_node.text.decode()) 
+      target_text = str(target_node.text.decode()) if target_node.text else "" 
       target_token_count = self.tokenizer.count_tokens(target_text)
       
       if target_token_count > self.chunk_size:
@@ -338,7 +337,7 @@ class CodeChunker(BaseChunker):
     for node in nodes:
       # Check if node matches a split rule
       is_split = False
-      for rule in self.language_config.split_rules:
+      for rule in (self.language_config.split_rules if self.language_config else []):
           if node.type == rule.node_type:
             split_nodes = self._split_node(node, rule, text_bytes)
             if split_nodes:

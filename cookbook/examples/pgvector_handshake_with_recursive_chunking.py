@@ -240,7 +240,7 @@ if __name__ == "__main__":
         print("   Set CHONKIE_CLEANUP=true to automatically delete the collection")
         print(f"   Collection '{info['name']}' will persist for future runs")
     
-    print(f"\n🎉 Example completed successfully!")
+    print("\n🎉 Example completed successfully!")
     print("=" * 55)
     print("💡 Next steps:")
     print("   - Try with your own documents")

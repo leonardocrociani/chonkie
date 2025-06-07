@@ -70,32 +70,6 @@ def test_embed_batch_texts(
     )
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_count_tokens_single_text(
-    embedding_model: OpenAIEmbeddings, sample_text: str
-) -> None:
-    """Test that OpenAIEmbeddings correctly counts tokens for a single text."""
-    token_count = embedding_model.count_tokens(sample_text)
-    assert isinstance(token_count, int)
-    assert token_count > 0
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_count_tokens_batch_texts(
-    embedding_model: OpenAIEmbeddings, sample_texts: List[str]
-) -> None:
-    """Test that OpenAIEmbeddings correctly counts tokens for a batch of texts."""
-    token_counts = embedding_model.count_tokens_batch(sample_texts)
-    assert isinstance(token_counts, list)
-    assert len(token_counts) == len(sample_texts)
-    assert all(isinstance(count, int) for count in token_counts)
-    assert all(count > 0 for count in token_counts)
 
 
 @pytest.mark.skipif(

@@ -22,6 +22,13 @@ from .utils import generate_random_collection_name
 if TYPE_CHECKING:
     import qdrant_client
     from qdrant_client.http.models import PointStruct
+    try:
+        from qdrant_client.http.models import Distance, VectorParams
+    except ImportError:
+        class VectorParams:  # type: ignore
+            pass
+        class Distance:  # type: ignore
+            pass
 
 class QdrantHandshake(BaseHandshake):
     """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection.
@@ -67,14 +74,14 @@ class QdrantHandshake(BaseHandshake):
         # Initialize the Qdrant client
         if client is None:
             if url is not None and api_key is not None:
-                self.client = qdrant_client.QdrantClient(url=url, api_key=api_key, **kwargs)
+                self.client = qdrant_client.QdrantClient(url=url, api_key=api_key, **kwargs)  # type: ignore[arg-type]
             elif url is not None:
-                self.client = qdrant_client.QdrantClient(url=url, **kwargs)
+                self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=path, **kwargs)
+                self.client = qdrant_client.QdrantClient(path=path, **kwargs)  # type: ignore[arg-type]
             else:
                 # If no client is provided, create an ephemeral collection
-                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)
+                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]
         else:
             self.client = client
 
@@ -141,11 +148,15 @@ class QdrantHandshake(BaseHandshake):
 
     def _get_points(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List["PointStruct"]:
         """Get the points from the chunks."""
+        # Normalize input to always be a sequence
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
+        
         points = []
         for index, chunk in enumerate(chunks):
             points.append(PointStruct(
                 id=self._generate_id(index, chunk),
-                vector=self.embedding_model.embed(chunk.text).tolist(), # Since this passes a numpy array, we need to convert it to a list
+                vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
                 payload=self._generate_payload(chunk),
             ))
         return points

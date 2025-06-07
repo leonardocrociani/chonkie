@@ -1,7 +1,7 @@
 """Semantic types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional, cast
 
 from chonkie.types.sentence import Sentence, SentenceChunk
 
@@ -28,7 +28,7 @@ class SemanticSentence(Sentence):
 
     def to_dict(self) -> dict:
         """Return the SemanticSentence as a dictionary."""
-        result = super().to_dict()
+        result = cast(dict[str, Any], super().to_dict())
         result["embedding"] = (
             self.embedding.tolist() if self.embedding is not None else None
         )
@@ -37,7 +37,7 @@ class SemanticSentence(Sentence):
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticSentence":
         """Create a SemanticSentence object from a dictionary."""
-        embedding_list = data.pop("embedding")
+        embedding_list = data.pop("embedding", None)
         # NOTE: We can't use np.array() here because we don't import numpy in this file,
         # and we don't want add 50MiB to the package size.
         embedding = embedding_list if embedding_list is not None else None
@@ -65,7 +65,7 @@ class SemanticChunk(SentenceChunk):
 
     """
 
-    sentences: List[SemanticSentence] = field(default_factory=list)
+    sentences: List[SemanticSentence] = field(default_factory=list)  # type: ignore[assignment]
 
     def to_dict(self) -> dict:
         """Return the SemanticChunk as a dictionary."""

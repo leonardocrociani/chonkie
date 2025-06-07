@@ -496,18 +496,22 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         assert all("text" in chunk for chunk in result)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set - Skipping real API test",
-)
-def test_cloud_code_chunker_real_api() -> None:
-    """Test with real API if CHONKIE_API_KEY is available."""
+def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
+    """Test with mocked API calls."""
+    simple_code = "def hello():\n    print('Hello, world!')"
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(simple_code)
+    mock_requests_post.return_value = mock_response
+    
     code_chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
         language="python",
+        api_key="test_key",  # Use a test key to avoid env dependency
     )
-    simple_code = "def hello():\n    print('Hello, world!')"
     result = code_chunker(simple_code)
 
     # Check the result

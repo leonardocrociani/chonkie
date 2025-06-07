@@ -66,7 +66,7 @@ class BaseChunker(ABC):
         self, texts: Sequence[str], show_progress: bool = True
     ) -> Union[Sequence[Sequence[Chunk]], Sequence[Sequence[str]]]:
         """Process a batch of texts sequentially."""
-        return [
+        results = [
             self.chunk(t)
             for t in tqdm(
                 texts,
@@ -77,6 +77,7 @@ class BaseChunker(ABC):
                 ascii=" o",
             )
         ]
+        return results  # type: ignore[return-value]
 
     def _parallel_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
@@ -99,7 +100,7 @@ class BaseChunker(ABC):
                 for result in pool.imap(self.chunk, texts, chunksize=chunk_size):
                     results.append(result)
                     progress_bar.update()
-            return results
+            return results  # type: ignore[return-value]
 
     @abstractmethod
     def chunk(self, text: str) -> Union[Sequence[Chunk], Sequence[str]]:

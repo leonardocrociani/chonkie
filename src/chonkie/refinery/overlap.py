@@ -88,7 +88,7 @@ class OverlapRefinery(BaseRefinery):
 
     def _get_tokens_impl(self, text: str) -> list:
         """Get tokens from text."""
-        return self.tokenizer.encode(text)
+        return list(self.tokenizer.encode(text))
 
     def _count_tokens_impl(self, text: str) -> int:
         """Count tokens in text."""

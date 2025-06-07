@@ -1,7 +1,7 @@
 """SentenceTransformer embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
 from .base import BaseEmbeddings
 
@@ -26,7 +26,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     def __init__(
         self, 
         model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2",
-        **kwargs
+        **kwargs: Any
     ) -> None:
         """Initialize SentenceTransformerEmbeddings with a sentence-transformers model.
 
@@ -49,7 +49,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
             self.model = SentenceTransformer(self.model_name_or_path, **kwargs)
         elif isinstance(model, SentenceTransformer):
             self.model = model
-            self.model_name_or_path = self.model.model_card_data.base_model
+            self.model_name_or_path = getattr(self.model.model_card_data, 'base_model', None) or "unknown"
         else:
             raise ValueError("model must be a string or SentenceTransformer instance")
 
@@ -127,9 +127,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         encodings = self.model.tokenizer(texts)
         return [len(enc) for enc in encodings["input_ids"]]
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> float:
+    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings."""
-        return self.model.similarity(u, v).item()
+        return float(self.model.similarity(u, v).item())  # type: ignore[return-value]
 
     def get_tokenizer_or_token_counter(self) -> "Tokenizer":
         """Return the tokenizer or token counter object."""

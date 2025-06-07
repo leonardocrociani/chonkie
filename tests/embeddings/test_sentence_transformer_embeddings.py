@@ -45,7 +45,9 @@ def test_initialization_with_model_instance(
     """Test the initialization with a model instance."""
     model = SentenceTransformer("all-MiniLM-L6-v2")
     embeddings = SentenceTransformerEmbeddings(model)
-    assert embeddings.model_name_or_path == model.model_card_data.base_model
+    # When base_model is None, the implementation falls back to "unknown"
+    expected_name = model.model_card_data.base_model or "unknown"
+    assert embeddings.model_name_or_path == expected_name
     assert embeddings.model is model
 
 

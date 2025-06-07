@@ -12,6 +12,9 @@ from .base import BaseHandshake
 if TYPE_CHECKING:
     import vecs
 
+# Module-level variable that will be set by _import_dependencies
+vecs = None
+
 
 class PgvectorHandshake(BaseHandshake):
     """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs.
