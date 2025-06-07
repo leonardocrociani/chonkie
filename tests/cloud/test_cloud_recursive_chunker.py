@@ -160,17 +160,22 @@ def test_cloud_recursive_chunker_empty_text(mock_requests_get, mock_requests_pos
     assert len(result) == 0
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_recursive_chunker_real_api() -> None:
-    """Test with real API if CHONKIE_API_KEY is available."""
+def test_cloud_recursive_chunker_real_api(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+    """Test with mocked API calls."""
+    text = "Hello, world!"
+    
+    # Mock the post request response
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = mock_api_response(text)
+    mock_requests_post.return_value = mock_response
+    
     recursive_chunker = RecursiveChunker(
         tokenizer_or_token_counter="gpt2",
         chunk_size=512,
+        api_key="test_key"
     )
 
-    result = recursive_chunker("Hello, world!")
+    result = recursive_chunker(text)
     assert len(result) >= 1
     assert result[0]["text"] == "Hello, world!"
