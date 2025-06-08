@@ -41,7 +41,7 @@ class EmbeddingsRefinery(BaseRefinery):
             ValueError: If all chunks are not of the same type.
         """
         # Define the payload for the request
-        if all(type(chunk) != type(chunks[0]) for chunk in chunks):
+        if any(type(chunk) != type(chunks[0]) for chunk in chunks):
             raise ValueError("All chunks must be of the same type.")
         og_type = type(chunks[0])
         payload = {
