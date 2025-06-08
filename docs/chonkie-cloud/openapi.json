@@ -1078,7 +1078,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import Auth\n\nvalidated = Auth.validate(api_key=\"{api_key}\")\n\nif validated: \n    print(\"API key is valid and active\")\nelse: \n    print(\"API key is invalid or expired\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/token": {
@@ -1147,7 +1154,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import TokenChunker \n\nchunker = TokenChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text='YOUR_TEXT')"
+                    }
+                ]
             }
         },
         "/v1/chunk/sentence": {
@@ -1272,7 +1286,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SentenceChunker \n\nchunker = SentenceChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/recursive": {
@@ -1353,7 +1374,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import RecursiveChunker \n\nchunker = RecursiveChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/semantic": {
@@ -1501,7 +1529,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SemanticChunker \n\nchunker = SemanticChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/sdpm": {
@@ -1649,7 +1684,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SDPMChunker \n\nchunker = SDPMChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/late": {
@@ -1720,7 +1762,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import LateChunker \n\nchunker = LateChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/code": {
@@ -1797,7 +1846,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import CodeChunker \n\nchunker = CodeChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/neural": {
@@ -1860,7 +1916,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import NeuralChunker \n\nchunker = NeuralChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/chunk/slumber": {
@@ -1935,7 +1998,14 @@
                             }
                         }
                     }
-                }
+                }, 
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SlumberChunker \n\nchunker = SlumberChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    }
+                ]
             }
         },
         "/v1/refine/embeddings": {
@@ -1979,12 +2049,19 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import EmbeddingsRefinery \n\nrefinery = EmbeddingsRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    }
+                ]
             }
         },
         "/v1/refine/overlap": {
             "post": {
-                "summary": "Overlap Refinery",
+                "summary": "Overlap Refinery",  
                 "description": "Adds overlapping context (prefix or suffix) to a list of provided chunks based on specified arguments.",
                 "operationId": "refine_overlap_v1_refine_overlap_post",
                 "requestBody": {
@@ -2023,7 +2100,14 @@
                             }
                         }
                     }
-                }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import OverlapRefinery \n\nrefinery = OverlapRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    }
+                ]
             }
         }
     }
