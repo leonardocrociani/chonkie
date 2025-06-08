@@ -37,11 +37,22 @@ class SemanticSentence(Sentence):
 
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticSentence":
-        """Create a SemanticSentence object from a dictionary."""
-        embedding_list = data.pop("embedding", None)
-        # NOTE: We can't use np.array() here because we don't import numpy in this file,
-        # and we don't want add 50MiB to the package size.
-        embedding = embedding_list if embedding_list is not None else None
+        """Create a SemanticSentence object from a dictionary.
+
+        NOTE: If numpy is available, `.embedding` will be a numpy array.
+        If not, it will be a list.
+        """
+        embedding_list = data.pop("embedding")
+        # If numpy is available, we will use it.
+        # If not, skip and keep it as a list.
+        try:
+            import numpy as np
+            if isinstance(embedding_list, list):
+                embedding = np.array(embedding_list)
+            else:
+                embedding = embedding_list
+        except ImportError:
+            embedding = embedding_list
         return cls(**data, embedding=embedding)
 
     def __repr__(self) -> str:
