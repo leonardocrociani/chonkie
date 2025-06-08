@@ -1,4 +1,4 @@
-"""Module for Chonkie Cloud Chunkers."""
+"""Module for Chonkie Cloud Authentication."""
 
 from .auth import Auth
 
