@@ -24,7 +24,7 @@ class EmbeddingsRefinery(BaseRefinery):
         self.embedding_model = embedding_model
         if not self.api_key:
             raise ValueError(
-                "No API key provided. Please set the CHONKIE_API_KEY environment variable"
+                "No API key provided. Please set the CHONKIE_API_KEY environment variable "
                 + "or pass an API key to the EmbeddingsRefinery constructor."
             )
 
