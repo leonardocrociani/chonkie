@@ -32,7 +32,7 @@ class RecursiveChunker(CloudChunker):
             chunk_size: The target maximum size of each chunk (in tokens, as defined by the tokenizer).
             min_characters_per_chunk: The minimum number of characters a chunk should have.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
-            lang: The language of the recipe. Please make sure a valide recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
+            lang: The language of the recipe. Please make sure a valid recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
             api_key: The Chonkie API key. If None, it's read from the CHONKIE_API_KEY environment variable.
         """
         # If no API key is provided, use the environment variable
