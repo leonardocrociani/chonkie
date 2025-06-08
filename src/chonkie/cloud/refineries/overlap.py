@@ -1,5 +1,5 @@
 """
-Embeddings Refinery for Chonkie Cloud
+Overlap Refinery for Chonkie Cloud
 """
 from .base import BaseRefinery
 import os
