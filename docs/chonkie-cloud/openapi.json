@@ -1160,6 +1160,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import TokenChunker \n\nchunker = TokenChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text='YOUR_TEXT')"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { TokenChunker } from 'chonkie/cloud';\n\nconst chunker = new TokenChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1292,6 +1297,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import SentenceChunker \n\nchunker = SentenceChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SentenceChunker } from 'chonkie/cloud';\n\nconst chunker = new SentenceChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1380,6 +1390,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import RecursiveChunker \n\nchunker = RecursiveChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { RecursiveChunker } from 'chonkie/cloud';\n\nconst chunker = new RecursiveChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1535,6 +1550,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import SemanticChunker \n\nchunker = SemanticChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SemanticChunker } from 'chonkie/cloud';\n\nconst chunker = new SemanticChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1690,6 +1710,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import SDPMChunker \n\nchunker = SDPMChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SDPMChunker } from 'chonkie/cloud';\n\nconst chunker = new SDPMChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1768,6 +1793,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import LateChunker \n\nchunker = LateChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { LateChunker } from 'chonkie/cloud';\n\nconst chunker = new LateChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1852,6 +1882,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import CodeChunker \n\nchunker = CodeChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { CodeChunker } from 'chonkie/cloud';\n\nconst chunker = new CodeChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1922,6 +1957,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import NeuralChunker \n\nchunker = NeuralChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { NeuralChunker } from 'chonkie/cloud';\n\nconst chunker = new NeuralChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -1998,12 +2038,17 @@
                             }
                         }
                     }
-                }, 
+                },
                 "x-codeSamples": [
                     {
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import SlumberChunker \n\nchunker = SlumberChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SlumberChunker } from 'chonkie/cloud';\n\nconst chunker = new SlumberChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
                     }
                 ]
             }
@@ -2055,13 +2100,18 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import EmbeddingsRefinery \n\nrefinery = EmbeddingsRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { EmbeddingsRefinery } from 'chonkie/cloud';\n\nconst refinery = new EmbeddingsRefinery(apiKey);\n\nconst refinedChunks = await refinery.refine([YOUR_CHUNKS]);"
                     }
                 ]
             }
         },
         "/v1/refine/overlap": {
             "post": {
-                "summary": "Overlap Refinery",  
+                "summary": "Overlap Refinery",
                 "description": "Adds overlapping context (prefix or suffix) to a list of provided chunks based on specified arguments.",
                 "operationId": "refine_overlap_v1_refine_overlap_post",
                 "requestBody": {
@@ -2106,6 +2156,11 @@
                         "lang": "python",
                         "label": "Python",
                         "source": "from chonkie.cloud import OverlapRefinery \n\nrefinery = OverlapRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { OverlapRefinery } from 'chonkie/cloud';\n\nconst refinery = new OverlapRefinery(apiKey);\n\nconst refinedChunks = await refinery.refine([YOUR_CHUNKS]);"
                     }
                 ]
             }
