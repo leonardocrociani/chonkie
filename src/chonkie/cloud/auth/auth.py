@@ -20,8 +20,8 @@ class Auth:
             api_key = os.getenv("CHONKIE_API_KEY")
         if api_key is None:
             raise ValueError(
-                "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the Auth constructor."
+                "No API key provided. Please set the CHONKIE_API_KEY environment variable "
+                + "or pass an API key to the 'validate' method."
             )
         # Make the request to the Chonkie API
         response = requests.post(
