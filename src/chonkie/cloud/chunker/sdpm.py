@@ -4,7 +4,7 @@ import os
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import requests
-
+from chonkie.types import SemanticChunk
 from .base import CloudChunker
 
 
@@ -45,7 +45,6 @@ class SDPMChunker(CloudChunker):
                  delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
                  include_delim: Optional[Literal["prev", "next"]] = "prev",
                  skip_window: int = 1,
-                 return_type: Literal["chunks", "texts"] = "chunks",
                  api_key: Optional[str] = None, 
                  **kwargs: Dict[str, Any]) -> None:
         """Initialize the SemanticDoublePassMerger.
@@ -63,7 +62,6 @@ class SDPMChunker(CloudChunker):
             delim: The delimiters to use.
             include_delim: Whether to include delimiters in chunks.
             skip_window: The skip window to use.
-            return_type: The return type to use.
             api_key: The API key to use.
             **kwargs: Additional keyword arguments.
 
@@ -118,10 +116,6 @@ class SDPMChunker(CloudChunker):
         # Check if the skip_window is valid
         if skip_window <= 0:
             raise ValueError("Skip window must be greater than 0.")
-        
-        # Check if the return_type is valid
-        if return_type not in ["chunks", "texts"]:
-            raise ValueError("Return type must be either 'chunks' or 'texts'.")
 
         # Check if the embedding model is a string
         if not isinstance(embedding_model, str):
@@ -140,10 +134,9 @@ class SDPMChunker(CloudChunker):
         self.delim = delim
         self.include_delim = include_delim
         self.skip_window = skip_window
-        self.return_type = return_type
 
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> List[SemanticChunk]:
         """Chunk the text into a list of chunks.
         
         Args:
@@ -168,7 +161,6 @@ class SDPMChunker(CloudChunker):
             "delim": self.delim,
             "include_delim": self.include_delim,
             "skip_window": self.skip_window,
-            "return_type": self.return_type,
         }
 
         # Make the request to the Chonkie API
@@ -180,17 +172,26 @@ class SDPMChunker(CloudChunker):
 
         # Try to parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
+            if isinstance(text, list):
+                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                result_chunks = []
+                for chunk_list in result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(SemanticChunk.from_dict(chunk))
+                    result_chunks.append(curr_chunks)
+            else:
+                result: List[Dict] = cast(List[Dict], response.json())
+                result_chunks = [SemanticChunk.from_dict(chunk) for chunk in result]
+            return result_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai." 
             ) from error
 
-        return result
-
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> List[SemanticChunk]:
         """Call the chunker.
         
         Args:
