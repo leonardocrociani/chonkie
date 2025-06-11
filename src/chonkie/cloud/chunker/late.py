@@ -76,8 +76,17 @@ class LateChunker(RecursiveChunker):
         # Try to parse the response
         try:
             response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
-            result: List[Dict] = cast(List[Dict], response.json())
-            result_chunks = [LateChunk.from_dict(chunk) for chunk in result]
+            if isinstance(text, list):
+                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                result_chunks = []
+                for chunk_list in result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(LateChunk.from_dict(chunk))
+                    result_chunks.append(curr_chunks)
+            else:
+                result: List[Dict] = cast(List[Dict], response.json())
+                result_chunks = [LateChunk.from_dict(chunk) for chunk in result]
             return result_chunks
         except requests.exceptions.HTTPError as http_error:
             # Attempt to get more detailed error from API response if possible

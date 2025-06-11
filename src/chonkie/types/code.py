@@ -67,6 +67,6 @@ class CodeChunk(Chunk):
   @classmethod
   def from_dict(cls, data: dict) -> "CodeChunk":
     """Create a Chunk object from a dictionary."""
-    if "language" not in data:
-      data["language"] = data["lang"] # Compatibility with old versions
+    if "language" not in data and "lang" in data:
+      data["language"] = data.pop("lang") # Compatibility with old versions
     return cls(**data)

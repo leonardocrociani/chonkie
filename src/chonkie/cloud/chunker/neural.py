@@ -31,6 +31,7 @@ class NeuralChunker(CloudChunker):
         self,
         model: str = DEFAULT_MODEL,
         min_characters_per_chunk: int = 10,
+        stride: Optional[int] = None,
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the NeuralChunker."""
@@ -50,6 +51,7 @@ class NeuralChunker(CloudChunker):
 
         self.model = model
         self.min_characters_per_chunk = min_characters_per_chunk
+        self.stride = stride
 
         # Check if the Chonkie API is reachable
         try:
@@ -72,6 +74,7 @@ class NeuralChunker(CloudChunker):
             "text": text,
             "model": self.model,
             "min_characters_per_chunk": self.min_characters_per_chunk,
+            "stride": self.stride,
         }
         
         # Send the request to the Chonkie API
@@ -81,8 +84,17 @@ class NeuralChunker(CloudChunker):
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
             )
-            result: List[Dict] = cast(List[Dict], response.json())
-            result_chunks = [Chunk.from_dict(chunk) for chunk in result]
+            if isinstance(text, list):
+                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                result_chunks = []
+                for chunk_list in result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(Chunk.from_dict(chunk))
+                    result_chunks.append(curr_chunks)
+            else:
+                result: List[Dict] = cast(List[Dict], response.json())
+                result_chunks = [Chunk.from_dict(chunk) for chunk in result]
             return result_chunks
         except Exception as error:
             raise ValueError(

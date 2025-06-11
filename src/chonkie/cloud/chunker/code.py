@@ -79,6 +79,7 @@ class CodeChunker(CloudChunker):
             "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
             "chunk_size": self.chunk_size,
             "language": self.language,
+            "lang": self.language, # For backward compatibility
             "include_nodes": False,  # API doesn't support tree-sitter nodes
         }
         
@@ -97,8 +98,17 @@ class CodeChunker(CloudChunker):
 
         # Parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
-            result_chunks = [CodeChunk.from_dict(chunk) for chunk in result]
+            if isinstance(text, list):
+                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                result_chunks = []
+                for chunk_list in result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(CodeChunk.from_dict(chunk))
+                    result_chunks.append(curr_chunks)
+            else:
+                result: List[Dict] = cast(List[Dict], response.json())
+                result_chunks = [CodeChunk.from_dict(chunk) for chunk in result]
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 

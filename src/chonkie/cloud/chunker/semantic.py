@@ -130,8 +130,17 @@ class SemanticChunker(CloudChunker):
 
         # Try to parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
-            result_chunks = [SemanticChunk.from_dict(chunk) for chunk in result]
+            if isinstance(text, list):
+                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                result_chunks = []
+                for chunk_list in result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(SemanticChunk.from_dict(chunk))
+                    result_chunks.append(curr_chunks)
+            else:
+                result: List[Dict] = cast(List[Dict], response.json())
+                result_chunks = [SemanticChunk.from_dict(chunk) for chunk in result]
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
