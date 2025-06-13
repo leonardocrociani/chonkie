@@ -29,14 +29,16 @@ class LateChunk(RecursiveChunk):
 
     def to_dict(self) -> dict:
         """Return the LateChunk as a dictionary."""
+        try:
+            embedding_list = self.embedding.tolist()
+        except AttributeError:
+            embedding_list = self.embedding
         return {
             "text": self.text,
             "start_index": self.start_index,
             "end_index": self.end_index,
             "token_count": self.token_count,
-            "embedding": self.embedding.tolist()
-            if self.embedding is not None
-            else None,
+            "embedding": embedding_list,
         }
 
     @classmethod

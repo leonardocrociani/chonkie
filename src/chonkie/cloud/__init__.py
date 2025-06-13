@@ -12,6 +12,8 @@ from .chunker import (
     SlumberChunker,
     TokenChunker,
 )
+from .auth import Auth
+from .refineries import EmbeddingsRefinery, OverlapRefinery
 
 __all__ = [
     "CloudChunker",
@@ -24,4 +26,7 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "Auth",
+    "EmbeddingsRefinery",
+    "OverlapRefinery",
 ]
