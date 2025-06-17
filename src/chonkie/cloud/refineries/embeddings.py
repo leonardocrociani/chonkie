@@ -1,11 +1,13 @@
+"""Embeddings Refinery for Chonkie Cloud
 """
-Embeddings Refinery for Chonkie Cloud
-"""
-from .base import BaseRefinery
 import os
-from typing import Dict, List, Optional, cast
-import requests
+from typing import Any, Dict, List, Optional, cast
+
 import numpy as np
+import requests
+
+from .base import BaseRefinery
+
 
 class EmbeddingsRefinery(BaseRefinery):
     """Embeddings Refinery for Chonkie Cloud."""
@@ -16,6 +18,7 @@ class EmbeddingsRefinery(BaseRefinery):
         Args:
             embedding_model: The embedding model to use.
             api_key: Your Chonkie Cloud API Key.
+
         """
         super().__init__()
 
@@ -28,7 +31,7 @@ class EmbeddingsRefinery(BaseRefinery):
                 + "or pass an API key to the EmbeddingsRefinery constructor."
             )
 
-    def refine(self, chunks):
+    def refine(self, chunks: List[Any]) -> List[Any]:
         """Refine the chunks.
         
         Args:
@@ -39,6 +42,7 @@ class EmbeddingsRefinery(BaseRefinery):
 
         Raises:
             ValueError: If all chunks are not of the same type.
+
         """
         # Define the payload for the request
         if any(type(chunk) != type(chunks[0]) for chunk in chunks):
@@ -67,6 +71,6 @@ class EmbeddingsRefinery(BaseRefinery):
             chunk.embedding = np.array(embedding)
         return result_chunks
 
-    def __call__(self, chunks):
+    def __call__(self, chunks: List[Any]) -> List[Any]:
         """Call the EmbeddingsRefinery."""
         return self.refine(chunks)
