@@ -190,7 +190,11 @@ class GeminiEmbeddings(BaseEmbeddings):
                 contents=text
             )
             # CountTokensResponse has a total_tokens attribute
-            return int(response.total_tokens)
+            if response.total_tokens is not None:
+                return int(response.total_tokens)
+            else:
+                # Fallback if total_tokens is None
+                return int(len(text) / self._chars_per_token)
         except Exception:
             # Fallback to character-based estimation if API call fails
             return int(len(text) / self._chars_per_token)
