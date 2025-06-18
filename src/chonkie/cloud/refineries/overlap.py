@@ -1,7 +1,6 @@
-"""Overlap Refinery for Chonkie Cloud
-"""
+"""Overlap Refinery for Chonkie Cloud."""
 import os
-from typing import Any, Dict, List, Literal, Optional, Type, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import requests
 

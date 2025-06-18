@@ -185,11 +185,12 @@ class GeminiEmbeddings(BaseEmbeddings):
     def count_tokens(self, text: str) -> int:
         """Count tokens in text using Google's token counting API."""
         try:
-            token_count = self.client.models.count_tokens(
+            response = self.client.models.count_tokens(
                 model=self.model,
                 contents=text
             )
-            return int(token_count)
+            # CountTokensResponse has a total_tokens attribute
+            return int(response.total_tokens)
         except Exception:
             # Fallback to character-based estimation if API call fails
             return int(len(text) / self._chars_per_token)

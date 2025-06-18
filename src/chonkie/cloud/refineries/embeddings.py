@@ -1,5 +1,4 @@
-"""Embeddings Refinery for Chonkie Cloud
-"""
+"""Embeddings Refinery for Chonkie Cloud."""
 import os
 from typing import Any, Dict, List, Optional, cast
 
