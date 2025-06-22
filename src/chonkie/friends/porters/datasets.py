@@ -1,8 +1,7 @@
 """DatasetsPorter to convert Chunks into datasets format for storage."""
 
+import importlib
 from typing import Any, Dict, Union
-
-from datasets import Dataset, DatasetDict
 
 from chonkie.types import Chunk
 
@@ -16,13 +15,17 @@ class DatasetsPorter(BasePorter):
         """Initialize the DatasetsPorter."""
         super().__init__()
 
+    def _get_datasets_classes(self):
+        datasets_module = importlib.import_module("datasets")
+        return datasets_module.Dataset, datasets_module.DatasetDict
+
     def export(
         self,
         chunks: list[Chunk],
         return_ds: bool = False,
         dataset_path: str = "chuncked_data",
         **kwargs: Dict[str, Any],
-    ) -> Union[DatasetDict, None]:
+    ) -> Union[Any, None]:
         """Export a list of Chunk objects into a Hugging Face Dataset and optionally save it to disk.
 
         Args:
@@ -35,6 +38,7 @@ class DatasetsPorter(BasePorter):
             Union[DatasetDict, None]: Returns the Dataset object if return_ds is True, otherwise saves the dataset to disk and returns None.
 
         """
+        Dataset, DatasetDict = self._get_datasets_classes()
         dataset = Dataset.from_list([chunk.to_dict() for chunk in chunks])
         if return_ds:
             return dataset
@@ -47,7 +51,7 @@ class DatasetsPorter(BasePorter):
         return_ds: bool = False,
         dataset_path: str = "chuncked_data",
         **kwargs: Dict[str, Any],
-    ) -> Union[DatasetDict, None]:
+    ) -> Union[Any, None]:
         """Export a list of Chunk objects into a Hugging Face Dataset and optionally save it to disk.
 
         Args:
