@@ -45,23 +45,5 @@ class DatasetsPorter(BasePorter):
         else:
             dataset.save_to_disk(dataset_path)
 
-    def __call__(
-        self,
-        chunks: list[Chunk],
-        return_ds: bool = False,
-        dataset_path: str = "chuncked_data",
-        **kwargs: Dict[str, Any],
-    ) -> Union[Any, None]:
-        """Export a list of Chunk objects into a Hugging Face Dataset and optionally save it to disk.
 
-        Args:
-            chunks (list[Chunk]): The list of Chunk objects to export.
-            return_ds (bool, optional): If True, returns the Dataset object instead of saving it to disk. Defaults to False.
-            dataset_path (str, optional): The path where the dataset will be saved if return_ds is False. Defaults to "chuncked_data".
-            **kwargs (Dict[str, Any]): Additional keyword arguments.
-
-        Returns:
-            Union[DatasetDict, None]: Returns the Dataset object if return_ds is True, otherwise saves the dataset to disk and returns None.
-
-        """
-        return self.export(chunks, return_ds, dataset_path, **kwargs)
+DatasetsPorter.__call__ = DatasetsPorter.export
