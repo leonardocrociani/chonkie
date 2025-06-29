@@ -53,7 +53,7 @@ class SentenceChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -68,7 +68,7 @@ class SentenceChunker(BaseChunker):
         SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
         Args:
-            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "gpt2")
+            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "character")
             chunk_size: Maximum number of tokens per chunk (defaults to 512)
             chunk_overlap: Number of tokens to overlap between chunks (defaults to 0)
             min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)

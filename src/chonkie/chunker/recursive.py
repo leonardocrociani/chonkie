@@ -44,7 +44,7 @@ class RecursiveChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
         chunk_size: int = 512,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,

@@ -37,7 +37,7 @@ class CodeChunker(BaseChunker):
     """
 
     def __init__(self,
-                 tokenizer_or_token_counter: Union[str, List, Any] = "gpt2",
+                 tokenizer_or_token_counter: Union[str, List, Any] = "character",
                  chunk_size: int = 512,
                  language: Union[Literal["auto"], Any] = "auto",
                  include_nodes: bool = False,
