@@ -549,7 +549,7 @@ class TestSlumberChunkerRepresentation:
         
         repr_str = repr(chunker)
         
-        assert "chunk_size=1024" in repr_str
+        assert "chunk_size=2048" in repr_str
         assert "candidate_size=128" in repr_str
         assert "min_characters_per_chunk=24" in repr_str
         assert "return_type=chunks" in repr_str
