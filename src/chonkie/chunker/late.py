@@ -34,7 +34,7 @@ class LateChunker(RecursiveChunker):
         embedding_model: Union[
             str, SentenceTransformerEmbeddings, Any
         ] = "sentence-transformers/all-MiniLM-L6-v2",
-        chunk_size: int = 512,
+        chunk_size: int = 2048,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
         **kwargs: Any,
@@ -84,7 +84,7 @@ class LateChunker(RecursiveChunker):
                     lang: Optional[str] = "en", 
                     path: Optional[str] = None, 
                     embedding_model: Union[str, SentenceTransformerEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
-                    chunk_size: int = 512,
+                    chunk_size: int = 2048,
                     min_characters_per_chunk: int = 24,
                     **kwargs: Any) -> "LateChunker":
         """Create a LateChunker from a recipe.

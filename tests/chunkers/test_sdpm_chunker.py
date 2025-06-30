@@ -55,7 +55,7 @@ class TestSDPMChunkerInitialization:
         """Test initialization with default parameters."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         
-        assert chunker.chunk_size == 512
+        assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
         assert chunker.similarity_window == 1
         assert chunker.min_sentences == 1
@@ -85,7 +85,7 @@ class TestSDPMChunkerInitialization:
         """Test initialization with string embedding model."""
         chunker = SDPMChunker(embedding_model="minishlab/potion-base-8M")
         
-        assert chunker.chunk_size == 512
+        assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
         assert hasattr(chunker, 'embedding_model')
 
@@ -311,7 +311,7 @@ class TestSDPMChunkerRepresentation:
         
         repr_str = repr(chunker)
         assert "SDPMChunker" in repr_str
-        assert "chunk_size=512" in repr_str
+        assert "chunk_size=2048" in repr_str
         assert "mode=window" in repr_str
         assert "threshold=auto" in repr_str
         assert "skip_window=1" in repr_str
@@ -472,7 +472,7 @@ class TestSDPMChunkerRecipeFeature:
                 embedding_model=embedding_model
             )
             assert isinstance(chunker, SDPMChunker)
-            assert chunker.chunk_size == 512
+            assert chunker.chunk_size == 2048
         except Exception:
             # Skip if recipe system is not available or configured
             pytest.skip("Recipe system not available")
