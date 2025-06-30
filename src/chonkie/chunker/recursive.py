@@ -88,11 +88,11 @@ class RecursiveChunker(BaseChunker):
         self._CHARS_PER_TOKEN = 6.5
 
     @classmethod
-    def from_recipe(cls, 
-                    name: Optional[str] = 'default', 
+    def from_recipe(cls,
+                    name: Optional[str] = 'default',
                     lang: Optional[str] = 'en',
                     path: Optional[str] = None,
-                    tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+                    tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
                     chunk_size: int = 2048,
                     min_characters_per_chunk: int = 24,
                     return_type: Literal["texts", "chunks"] = "chunks",
@@ -100,7 +100,7 @@ class RecursiveChunker(BaseChunker):
         """Create a RecursiveChunker object from a recipe.
 
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
-        
+
         Args:
             name (Optional[str]): The name of the recipe.
             lang (Optional[str]): The language that the recursive chunker should support.
@@ -202,16 +202,16 @@ class RecursiveChunker(BaseChunker):
         start_offset: int
     ) -> RecursiveChunk:
         """Create a RecursiveChunk object with indices based on the current offset.
-        
+
         This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
         avoiding a slower full-text search for efficiency.
-        
+
         Args:
             text (str): The text content of the chunk.
             token_count (int): The number of tokens in the chunk.
             level (int): The recursion level of the chunk.
             start_offset (int): The starting offset in the original text.
-            
+
         Returns:
             RecursiveChunk: A chunk object with calculated start and end indices, text, token count and level.
 
@@ -231,21 +231,21 @@ class RecursiveChunker(BaseChunker):
         combine_whitespace: bool = False,
     ) -> Tuple[List[str], List[int]]:
         """Merge short splits into larger chunks.
-        
+
         Uses optimized Cython implementation when available, with Python fallback.
         """
         if MERGE_CYTHON_AVAILABLE:
             # Use optimized Cython implementation
             return _merge_splits_cython(
-                splits, 
-                token_counts, 
-                self.chunk_size, 
+                splits,
+                token_counts,
+                self.chunk_size,
                 combine_whitespace
             )
         else:
             # Fallback to original Python implementation
             return self._merge_splits_fallback(splits, token_counts, combine_whitespace)
-    
+
     def _merge_splits_fallback(
         self,
         splits: list[str],
@@ -338,7 +338,7 @@ class RecursiveChunker(BaseChunker):
                 return [
                     self._make_chunks(text, self._estimate_token_count(text), level, start_offset)
                 ]
-        
+
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 

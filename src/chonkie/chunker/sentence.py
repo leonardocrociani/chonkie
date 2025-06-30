@@ -111,13 +111,13 @@ class SentenceChunker(BaseChunker):
         self.include_delim = include_delim
         self.sep = "✄"
         self.return_type = return_type
-    
+
     @classmethod
-    def from_recipe(cls, 
-        name: Optional[str] = "default", 
-        lang: Optional[str] = "en", 
-        path: Optional[str] = None, 
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+    def from_recipe(cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -130,10 +130,10 @@ class SentenceChunker(BaseChunker):
         Takes the `delim` and `include_delim` from the recipe and passes the rest of the parameters to the constructor.
 
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
-        
+
         Args:
             name: The name of the recipe to use.
-            lang: The language that the recipe should support. 
+            lang: The language that the recipe should support.
             path: The path to the recipe to use.
             tokenizer_or_token_counter: The tokenizer or token counter to use.
             chunk_size: The chunk size to use.
@@ -142,7 +142,7 @@ class SentenceChunker(BaseChunker):
             min_characters_per_sentence: The minimum number of characters per sentence to use.
             approximate: Whether to use approximate token counting.
             return_type: Whether to return chunks or texts.
-            
+
         Returns:
             SentenceChunker: The created SentenceChunker.
 
@@ -281,9 +281,9 @@ class SentenceChunker(BaseChunker):
         else:
 
             # We calculate the token count here, as sum of the token counts of the sentences
-            # does not match the token count of the chunk as a whole for some reason. That's to 
+            # does not match the token count of the chunk as a whole for some reason. That's to
             # say that the tokenizer encodes the text differently when the text is joined together.
-            # This is where time savings can be made when getting only the texts. 
+            # This is where time savings can be made when getting only the texts.
             token_count = self.tokenizer.count_tokens(chunk_text)
 
             return SentenceChunk(
@@ -364,7 +364,7 @@ class SentenceChunker(BaseChunker):
             chunk_sentences = sentences[pos:split_idx]
             chunks.append(self._create_chunk(chunk_sentences))
 
-            # TODO: This would also get deprecated when we have OverlapRefinery in the future. 
+            # TODO: This would also get deprecated when we have OverlapRefinery in the future.
             # Calculate next position with overlap
             if self.chunk_overlap > 0 and split_idx < len(sentences):
                 # Calculate how many sentences we need for overlap
