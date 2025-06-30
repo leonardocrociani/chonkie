@@ -38,7 +38,7 @@ class SDPMChunker(SemanticChunker):
     def __init__(
         self,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-        chunk_size: int = 512,
+        chunk_size: int = 2048,
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         similarity_window: int = 1,
@@ -101,7 +101,7 @@ class SDPMChunker(SemanticChunker):
                     embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
                     mode: str = "window",
                     threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 512,
+                    chunk_size: int = 2048,
                     similarity_window: int = 1,
                     min_sentences: int = 1,
                     min_chunk_size: int = 2,

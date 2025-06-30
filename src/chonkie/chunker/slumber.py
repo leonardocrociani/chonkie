@@ -58,8 +58,8 @@ class SlumberChunker(BaseChunker):
 
     def __init__(self,
                  genie: Optional[BaseGenie] = None, 
-                 tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-                 chunk_size: int = 1024,
+                 tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                 chunk_size: int = 2048,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
                  min_characters_per_chunk: int = 24,

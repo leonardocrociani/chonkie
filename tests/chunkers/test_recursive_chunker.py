@@ -167,12 +167,12 @@ def test_recursive_chunker_token_count_paragraph_rules(
 ) -> None:
     """Test that the RecursiveChunker can chunk a sample text with paragraph rules."""
     chunker = RecursiveChunker(
-        rules=paragraph_rules, chunk_size=512, min_characters_per_chunk=12
+        rules=paragraph_rules, chunk_size=2048, min_characters_per_chunk=12
     )
     chunks = chunker.chunk(sample_text)
     assert len(chunks) > 0
     assert all(isinstance(chunk, Chunk) for chunk in chunks)
-    assert all(chunk.token_count <= 512 for chunk in chunks)
+    assert all(chunk.token_count <= 2048 for chunk in chunks)
     assert all(len(chunk.text) >= 12 for chunk in chunks)
 
 
@@ -422,7 +422,7 @@ def test_recursive_chunker_from_recipe_default() -> None:
 
     assert chunker is not None
     assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
-    assert chunker.chunk_size == 512
+    assert chunker.chunk_size == 2048
     assert chunker.min_characters_per_chunk == 24
     assert chunker.return_type == "chunks"
 
