@@ -38,7 +38,7 @@ class CodeChunker(BaseChunker):
 
     def __init__(self,
                  tokenizer_or_token_counter: Union[str, List, Any] = "character",
-                 chunk_size: int = 512,
+                 chunk_size: int = 2048,
                  language: Union[Literal["auto"], Any] = "auto",
                  include_nodes: bool = False,
                  return_type: Literal["chunks", "texts"] = "chunks") -> None:

@@ -422,7 +422,7 @@ def test_recursive_chunker_from_recipe_default() -> None:
 
     assert chunker is not None
     assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
-    assert chunker.chunk_size == 512
+    assert chunker.chunk_size == 2048
     assert chunker.min_characters_per_chunk == 24
     assert chunker.return_type == "chunks"
 

@@ -26,7 +26,7 @@ class TokenChunker(BaseChunker):
     def __init__(
         self,
         tokenizer: Union[str, Any] = "character",
-        chunk_size: int = 512,
+        chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
         return_type: Literal["chunks", "texts"] = "chunks",
     ) -> None:
