@@ -90,7 +90,7 @@ class TestSlumberChunkerInitialization:
         chunker = SlumberChunker(genie=mock_genie)
         
         assert chunker.genie == mock_genie
-        assert chunker.chunk_size == 1024
+        assert chunker.chunk_size == 2048
         assert chunker.candidate_size == 128
         assert chunker.min_characters_per_chunk == 24
         assert chunker.return_type == "chunks"
