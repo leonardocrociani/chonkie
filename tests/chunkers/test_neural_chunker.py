@@ -3,7 +3,6 @@
 import pytest
 
 from chonkie import NeuralChunker
-from chonkie.types.base import Chunk
 
 
 @pytest.fixture
@@ -206,19 +205,6 @@ class TestNeuralChunkerInternalMethods:
 
 class TestNeuralChunkerChunking:
     """Test the main chunking functionality."""
-
-    def test_chunk_returns_chunks(self, neural_chunker, sample_text):
-        """Test chunking returns Chunk objects."""
-        neural_chunker.return_type = "chunks"
-        result = neural_chunker.chunk(sample_text)
-        
-        assert isinstance(result, list)
-        assert len(result) > 0
-        assert all(isinstance(chunk, Chunk) for chunk in result)
-        
-        # Verify chunks reconstruct the original text
-        reconstructed = "".join(chunk.text for chunk in result)
-        assert reconstructed == sample_text
 
     def test_chunk_returns_chunks(self, neural_chunker, sample_text):
         """Test chunking returns chunk objects by default."""
