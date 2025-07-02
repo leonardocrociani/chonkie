@@ -268,18 +268,16 @@ def verify_chunk_indices(chunks: List[Chunk], original_text: str):
         )
 
 
-def test_token_chunker_indices(tiktokenizer: Encoding, sample_text: str) -> None:
+def test_token_chunker_indices(sample_text: str) -> None:
     """Test that TokenChunker's indices correctly map to original text."""
-    tokenizer = Tokenizer.from_pretrained("gpt2")
-    chunker = TokenChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
+    chunker = TokenChunker(tokenizer="character", chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_text)
     verify_chunk_indices(chunks, sample_text)
 
 
 def test_token_chunker_indices_complex_md(sample_complex_markdown_text: str) -> None:
     """Test that TokenChunker's indices correctly map to original text."""
-    tokenizer = Tokenizer.from_pretrained("gpt2")
-    chunker = TokenChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
+    chunker = TokenChunker(tokenizer="character", chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_complex_markdown_text)
     verify_chunk_indices(chunks, sample_complex_markdown_text)
 
