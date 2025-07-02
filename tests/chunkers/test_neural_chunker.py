@@ -59,11 +59,10 @@ class TestNeuralChunkerInitialization:
             chunker = NeuralChunker(
                 model="mirth/chonky_distilbert_base_uncased_1",
                 min_characters_per_chunk=20,
-                stride=128,
-                return_type="texts"
+                stride=128
             )
             assert chunker.min_characters_per_chunk == 20
-            assert chunker.return_type == "texts"
+            assert chunker.return_type == "chunks"
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
@@ -221,17 +220,16 @@ class TestNeuralChunkerChunking:
         reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == sample_text
 
-    def test_chunk_returns_texts(self, neural_chunker, sample_text):
-        """Test chunking returns text strings."""
-        neural_chunker.return_type = "texts"
+    def test_chunk_returns_chunks(self, neural_chunker, sample_text):
+        """Test chunking returns chunk objects by default."""
         result = neural_chunker.chunk(sample_text)
         
         assert isinstance(result, list)
         assert len(result) > 0
-        assert all(isinstance(text, str) for text in result)
+        assert all(hasattr(chunk, 'text') for chunk in result)
         
-        # Verify texts reconstruct the original text
-        reconstructed = "".join(result)
+        # Verify chunk texts reconstruct the original text
+        reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == sample_text
 
     def test_chunk_consistency(self, neural_chunker, sample_text):
@@ -325,19 +323,17 @@ class TestNeuralChunkerRepresentation:
         
         assert "NeuralChunker" in repr_str
         assert "min_characters_per_chunk" in repr_str
-        assert "return_type" in repr_str
 
     def test_repr_with_custom_params(self):
         """Test __repr__ with custom parameters."""
         try:
             chunker = NeuralChunker(
-                min_characters_per_chunk=20, 
-                return_type="texts"
+                min_characters_per_chunk=20
             )
             repr_str = repr(chunker)
             
             assert "min_characters_per_chunk=20" in repr_str
-            assert "return_type=texts" in repr_str
+            assert "return_type=chunks" in repr_str
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
