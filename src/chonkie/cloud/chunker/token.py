@@ -1,7 +1,7 @@
 """Cloud Token Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 
 import requests
 
