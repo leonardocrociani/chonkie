@@ -125,7 +125,7 @@ Choose from supported tokenizers or provide your own custom token counting funct
 
 | Name           | Description                                                    | Optional Install   |
 |----------------|----------------------------------------------------------------|--------------------|
-| `character`    | Basic character-level tokenizer.                               | `default`          |
+| `character`    | Basic character-level tokenizer. **Default tokenizer.**       | `default`          |
 | `word`         | Basic word-level tokenizer.                                    | `default`          | 
 | `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `default`          |
 | `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`|
