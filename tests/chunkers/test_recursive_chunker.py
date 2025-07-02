@@ -424,7 +424,6 @@ def test_recursive_chunker_from_recipe_default() -> None:
     assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
     assert chunker.chunk_size == 2048
     assert chunker.min_characters_per_chunk == 24
-    assert chunker.return_type == "chunks"
 
 def test_recursive_chunker_from_recipe_custom_params() -> None:
     """Test that RecursiveChunker.from_recipe works with custom parameters."""
@@ -432,15 +431,13 @@ def test_recursive_chunker_from_recipe_custom_params() -> None:
         name="default",
         lang="en",
         chunk_size=256,
-        min_characters_per_chunk=32,
-        return_type="texts"
+        min_characters_per_chunk=32
     )
 
     assert chunker is not None
     assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
     assert chunker.chunk_size == 256
     assert chunker.min_characters_per_chunk == 32
-    assert chunker.return_type == "texts"
 
 def test_recursive_chunker_from_recipe_custom_lang() -> None:
     """Test that RecursiveChunker.from_recipe works with custom language."""
@@ -449,15 +446,13 @@ def test_recursive_chunker_from_recipe_custom_lang() -> None:
         lang="en",
         tokenizer_or_token_counter="character",
         chunk_size=256,
-        min_characters_per_chunk=32,
-        return_type="texts"
+        min_characters_per_chunk=32
     )
     
     assert chunker is not None
     assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
     assert chunker.chunk_size == 256
     assert chunker.min_characters_per_chunk == 32
-    assert chunker.return_type == "texts"
 
 def test_recursive_chunker_from_recipe_nonexistent() -> None:
     """Test that RecursiveChunker.from_recipe raises an error for nonexistent recipes."""

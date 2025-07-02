@@ -72,7 +72,6 @@ class LateChunker(RecursiveChunker):
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
-            return_type="chunks",
         )
 
         # Disable multiprocessing for this chunker
@@ -139,7 +138,7 @@ class LateChunker(RecursiveChunker):
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
-        # Note: LateChunker always uses return_type="chunks", so chunks are always RecursiveChunk objects
+        # Note: LateChunker always returns chunks, so chunks are always RecursiveChunk objects
         token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
 
         # Validate the token_counts with the actual count
@@ -167,7 +166,7 @@ class LateChunker(RecursiveChunker):
         # Wrap it all up in LateChunks
         result = []
         for chunk, token_count, embedding in zip(chunks, token_counts, late_embds):
-            # Note: LateChunker always uses return_type="chunks", so chunk is always a RecursiveChunk
+            # Note: LateChunker always returns chunks, so chunk is always a RecursiveChunk
             result.append(
                 LateChunk(
                     text=chunk.text,  # type: ignore[attr-defined]
