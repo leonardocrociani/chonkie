@@ -51,6 +51,7 @@ class DatasetsPorter(BasePorter):
 
         Returns:
             Dataset: The Dataset object.
+
         """
         dataset = self.Dataset.from_list([chunk.to_dict() for chunk in chunks])
         if save_to_disk:
@@ -78,6 +79,7 @@ class DatasetsPorter(BasePorter):
 
         Returns:
             Dataset: The Dataset object.
+
         """
         return self.export(
             chunks, save_to_disk=save_to_disk, path=path, **kwargs
