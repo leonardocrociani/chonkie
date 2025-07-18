@@ -34,12 +34,12 @@ porter = DatasetsPorter()
   The list of `Chunk` objects to be exported.
 </ParamField>
 
-<ParamField path="save_to_disk" type="bool" default="False">
+<ParamField path="save_to_disk" type="bool" default="True">
   If `True`, the dataset will be saved to the location specified in the `path`
   parameter.
 </ParamField>
 
-<ParamField path="path" type="str" default="chunked_data">
+<ParamField path="path" type="str" default="chunks">
   The local directory path where the dataset should be saved. This is only used
   if `save_to_disk` is `True`.
 </ParamField>
