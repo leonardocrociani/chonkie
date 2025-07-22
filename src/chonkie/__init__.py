@@ -45,6 +45,18 @@ from .genie import (
     GeminiGenie,
     OpenAIGenie,
 )
+from .pipeline import (
+    ComponentRegistry,
+    ComponentType,
+    Pipeline,
+    chef,
+    chunker,
+    fetcher,
+    handshake,
+    pipeline_component,
+    porter,
+    refinery,
+)
 from .refinery import (
     BaseRefinery,
     EmbeddingsRefinery,
@@ -181,4 +193,18 @@ __all__ += [
 __all__ += [
     "BaseFetcher",
     "FileFetcher",
+]
+
+# Add all the Pipeline components to __all__
+__all__ += [
+    "Pipeline",
+    "ComponentRegistry",
+    "ComponentType",
+    "pipeline_component",
+    "chef",
+    "chunker",
+    "fetcher",
+    "handshake",
+    "porter",
+    "refinery",
 ]

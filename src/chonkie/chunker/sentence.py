@@ -11,6 +11,7 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, Callable, List, Literal, Optional, Sequence, Union
 
+from chonkie.pipeline.registry import chunker
 from chonkie.types.sentence import Sentence, SentenceChunk
 from chonkie.utils import Hubbie
 
@@ -31,6 +32,7 @@ except ImportError:
     SPLIT_AVAILABLE = False
 
 
+@chunker("sentence")
 class SentenceChunker(BaseChunker):
     """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 

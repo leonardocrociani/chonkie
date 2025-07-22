@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, 
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
+from chonkie.pipeline.registry import chunker
 from chonkie.types.semantic import SemanticChunk, SemanticSentence
 from chonkie.utils import Hubbie
 
@@ -20,6 +21,7 @@ except ImportError:
     SPLIT_AVAILABLE = False
 
 
+@chunker("semantic")
 class SemanticChunker(BaseChunker):
     """Chunker that splits text into semantically coherent chunks using embeddings.
 

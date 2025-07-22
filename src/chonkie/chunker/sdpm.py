@@ -8,10 +8,12 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.chunker.semantic import SemanticChunker
 from chonkie.embeddings import BaseEmbeddings
+from chonkie.pipeline.registry import chunker
 from chonkie.types import SemanticChunk, Sentence
 from chonkie.utils import Hubbie
 
 
+@chunker("sdpm")
 class SDPMChunker(SemanticChunker):
     """Chunker using the Semantic Double-Pass Merging algorithm.
 

@@ -14,6 +14,7 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.pipeline.registry import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
 
             pass
 
+@handshake("qdrant")
 class QdrantHandshake(BaseHandshake):
     """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection.
     

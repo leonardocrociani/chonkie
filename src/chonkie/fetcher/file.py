@@ -3,9 +3,11 @@
 from pathlib import Path
 from typing import List, Optional
 
+from chonkie.pipeline.registry import fetcher
 from .base import BaseFetcher
 
 
+@fetcher("file")
 class FileFetcher(BaseFetcher):
     """FileFetcher is a fetcher that fetches paths of files from local directories."""
 
@@ -43,15 +45,37 @@ class FileFetcher(BaseFetcher):
                 return file
         raise FileNotFoundError(f"File {name} not found in directory {dir}")
 
-    def __call__(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:  # type: ignore[override]
-        """Fetch files from a directory.
+    def __call__(self, path: Optional[str] = None, dir: Optional[str] = None, ext: Optional[List[str]] = None) -> List[Path]:  # type: ignore[override]
+        """Fetch files from a directory or a single file path.
 
         Args:
-            dir (str): The directory to fetch files from.
-            ext (Optional[List[str]]): The file extensions to fetch.
+            path (Optional[str]): Path to a single file to fetch.
+            dir (Optional[str]): The directory to fetch files from.
+            ext (Optional[List[str]]): The file extensions to fetch (only used with dir).
 
         Returns:
-            List[Path]: The list of files fetched from the directory.
+            List[Path]: The list of files fetched.
+
+        Raises:
+            ValueError: If neither path nor dir is provided, or if both are provided.
+            FileNotFoundError: If the specified path or directory doesn't exist.
 
         """
-        return self.fetch(dir, ext)
+        if path is not None and dir is not None:
+            raise ValueError("Cannot specify both 'path' and 'dir'. Use 'path' for single file or 'dir' for directory.")
+        
+        if path is None and dir is None:
+            raise ValueError("Must specify either 'path' for single file or 'dir' for directory.")
+        
+        if path is not None:
+            # Single file mode
+            file_path = Path(path)
+            if not file_path.exists():
+                raise FileNotFoundError(f"File not found: {path}")
+            if not file_path.is_file():
+                raise ValueError(f"Path is not a file: {path}")
+            return [file_path]
+        
+        else:
+            # Directory mode (existing behavior)
+            return self.fetch(dir, ext)

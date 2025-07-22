@@ -3,9 +3,12 @@
 from pathlib import Path
 from typing import List, Union
 
+from chonkie.pipeline.registry import chef
+
 from .base import BaseChef
 
 
+@chef("text")
 class TextChef(BaseChef):
     """TextChef is a chef that processes text data."""
 
