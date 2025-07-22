@@ -13,7 +13,7 @@ class FileFetcher(BaseFetcher):
         """Initialize the FileFetcher."""
         super().__init__()
 
-    def fetch(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:  # type: ignore[override]
+    def fetch(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:
         """Fetch files from a directory.
 
         Args:
