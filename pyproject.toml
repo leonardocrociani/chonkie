@@ -148,6 +148,8 @@ packages = [
     "chonkie.cloud",
     "chonkie.cloud.chunker",
     "chonkie.experimental",
+    "chonkie.fetcher",
+    "chonkie.chef",
 ]
 
 [tool.setuptools.package-data]
