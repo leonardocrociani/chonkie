@@ -13,7 +13,7 @@ class FileFetcher(BaseFetcher):
         """Initialize the FileFetcher."""
         super().__init__()
 
-    def fetch(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:
+    def fetch(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:  # type: ignore[override]
         """Fetch files from a directory.
 
         Args:
@@ -31,7 +31,7 @@ class FileFetcher(BaseFetcher):
             if file.is_file() and (ext is None or file.suffix in ext)
         ]
 
-    def fetch_file(self, dir: str, name: str) -> Path:
+    def fetch_file(self, dir: str, name: str) -> Path:  # type: ignore[override]
         """Given a directory and a file name, return the path to the file.
 
         NOTE: This method is mostly for uniformity across fetchers since one may require to
@@ -43,7 +43,7 @@ class FileFetcher(BaseFetcher):
                 return file
         raise FileNotFoundError(f"File {name} not found in directory {dir}")
 
-    def __call__(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:
+    def __call__(self, dir: str, ext: Optional[List[str]] = None) -> List[Path]:  # type: ignore[override]
         """Fetch files from a directory.
 
         Args:
