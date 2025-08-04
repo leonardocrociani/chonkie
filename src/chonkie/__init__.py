@@ -1,5 +1,9 @@
 """Main package for Chonkie."""
 
+from .chef import (
+    BaseChef,
+    TextChef,
+)
 from .chunker import (
     BaseChunker,
     CodeChunker,
@@ -22,6 +26,10 @@ from .embeddings import (
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     VoyageAIEmbeddings,
+)
+from .fetcher import (
+    BaseFetcher,
+    FileFetcher,
 )
 from .friends import (
     BaseHandshake,
@@ -163,4 +171,16 @@ __all__ += [
     "QdrantHandshake",
     "WeaviateHandshake",
     "TurbopufferHandshake",
+]
+
+# Add all the chefs to __all__
+__all__ += [
+    "BaseChef",
+    "TextChef",
+]
+
+# Add all the fetchers to __all__
+__all__ += [
+    "BaseFetcher",
+    "FileFetcher",
 ]
