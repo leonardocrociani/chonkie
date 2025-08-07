@@ -16,6 +16,11 @@ from .chunker import (
     SlumberChunker,
     TokenChunker,
 )
+from .cloud import (
+    auth,
+    chunker,
+    refineries,
+)
 from .embeddings import (
     AutoEmbeddings,
     BaseEmbeddings,
@@ -78,9 +83,10 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
+
 
 # Add basic package metadata to __all__
 __all__ = [
@@ -126,6 +132,13 @@ __all__ += [
     "CodeChunker",
     "SlumberChunker",
     "NeuralChunker",
+]
+
+# Add all cloud classes to __all__
+__all__ += [
+    "auth",
+    "chunker",
+    "refineries",
 ]
 
 # Add all embeddings classes to __all__
