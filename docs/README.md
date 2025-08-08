@@ -25,4 +25,23 @@ For pull requests, please:
 - Follow the existing documentation style
 - Test any code examples you modify
 
+## Contributing
+To checkout the documentation in development mode, you can use the following command:
+
+```bash
+npm i -g mint
+```
+point your terminal in the docs directory:
+```
+cd docs
+```
+then run the documentation server:
+```
+mint dev
+```
+And Voila! 
+You can now access the documentation at `http://localhost:3000`.
+
+
+
 We appreciate your help in keeping our documentation accurate and up-to-date!
