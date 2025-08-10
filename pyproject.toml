@@ -2,13 +2,14 @@
 requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
 name = "chonkie"
-version = "1.0.10"
+version = "1.1.2"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9,<4.0"
-license = "MIT"
+license = { file = "LICENSE" }
 keywords = [
     "chunking",
     "rag",
@@ -45,7 +46,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
+dependencies = ["tqdm>=4.64.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
@@ -57,19 +58,32 @@ Documentation = "https://docs.chonkie.ai"
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 
+# Optional dependencies for tokenizers
+tokenizers = ["tokenizers>=0.16.0"]
+tiktoken = ["tiktoken>=0.5.0"]
+
 # Optional dependencies for the chunkers
-code = ["tree-sitter>=0.20.0", "tree-sitter-language-pack>=0.7.0", "magika>=0.6.0, <0.7.0"]
+code = [
+    "tree-sitter>=0.20.0",
+    "tree-sitter-language-pack>=0.7.0",
+    "magika>=0.6.0, <0.7.0",
+]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
+model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
 voyageai = ["voyageai>=0.3.2; python_version < '3.13'", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
+cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
+jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+azure-openai = ["azure-identity>=1.23.0", "tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
 
 # optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -77,12 +91,15 @@ qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.0"]
+datasets = ["datasets>=4.0.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # All dependencies
 all = [
+    "tokenizers>=0.16.0",
+    "tiktoken>=0.5.0",
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
     "tree-sitter-language-pack>=0.7.0",
@@ -90,7 +107,6 @@ all = [
     "sentence-transformers>=3.0.0",
     "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
-    "tiktoken>=0.5.0",
     "model2vec>=0.3.0",
     "cohere>=5.13.0",
     "accelerate>=1.6.0",
@@ -104,6 +120,7 @@ all = [
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
     "weaviate-client>=4.16.0"
+    "azure-identity>=1.23.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -137,8 +154,12 @@ packages = [
     "chonkie.friends.porters",
     "chonkie.friends.handshakes",
     "chonkie.cloud",
+    "chonkie.cloud.auth",
     "chonkie.cloud.chunker",
+    "chonkie.cloud.refineries",
     "chonkie.experimental",
+    "chonkie.fetcher",
+    "chonkie.chef",
 ]
 
 [tool.setuptools.package-data]
@@ -151,9 +172,6 @@ sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
 [[tool.setuptools.ext-modules]]
 name = "chonkie.chunker.c_extensions.merge"
 sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
-
-[tool.setuptools.dynamic]
-version = {attr = "chonkie.__version__"}
 
 
 [tool.ruff]

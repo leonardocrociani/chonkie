@@ -90,10 +90,9 @@ class TestSlumberChunkerInitialization:
         chunker = SlumberChunker(genie=mock_genie)
         
         assert chunker.genie == mock_genie
-        assert chunker.chunk_size == 1024
+        assert chunker.chunk_size == 2048
         assert chunker.candidate_size == 128
         assert chunker.min_characters_per_chunk == 24
-        assert chunker.return_type == "chunks"
         assert chunker.verbose is True
         assert isinstance(chunker.rules, RecursiveRules)
         assert chunker.template is not None
@@ -115,7 +114,6 @@ class TestSlumberChunkerInitialization:
             rules=custom_rules,
             candidate_size=256,
             min_characters_per_chunk=50,
-            return_type="texts",
             verbose=False
         )
         
@@ -123,13 +121,24 @@ class TestSlumberChunkerInitialization:
         assert chunker.chunk_size == 2048
         assert chunker.candidate_size == 256
         assert chunker.min_characters_per_chunk == 50
-        assert chunker.return_type == "texts"
         assert chunker.verbose is False
         assert chunker.rules == custom_rules
     
     def test_default_genie_initialization(self) -> None:
         """Test that default GeminiGenie is created when none provided."""
-        with patch('chonkie.chunker.slumber.GeminiGenie') as mock_gemini:
+        # Import the specific local slumber module
+        import os
+        import sys
+        sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
+        
+        # Clear any cached imports
+        if 'chonkie.chunker.slumber' in sys.modules:
+            del sys.modules['chonkie.chunker.slumber']
+        
+        # Import the local slumber module directly
+        from chonkie.chunker import slumber as slumber_module
+        
+        with patch.object(slumber_module, 'GeminiGenie') as mock_gemini:
             mock_gemini.return_value = Mock()
             SlumberChunker()  # Create chunker to trigger genie initialization
             assert mock_gemini.called
@@ -322,7 +331,16 @@ class TestSlumberChunkerChunking:
         mock_genie = MockGenie([1])
         chunker = SlumberChunker(genie=mock_genie, verbose=True)
         
-        with patch('chonkie.chunker.slumber.tqdm') as mock_tqdm:
+        # Import the specific local slumber module
+        import os
+        import sys
+        sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
+        
+        # Import the local slumber module directly
+        from chonkie.chunker import slumber as slumber_module
+        
+        # Patch tqdm from the local slumber module
+        with patch.object(slumber_module, 'tqdm') as mock_tqdm:
             mock_progress = Mock()
             mock_progress.n = 0  # Set the n attribute that's used in the update calculation
             mock_tqdm.return_value = mock_progress
@@ -530,8 +548,7 @@ class TestSlumberChunkerRepresentation:
             genie=mock_genie,
             chunk_size=2048,
             candidate_size=256,
-            min_characters_per_chunk=50,
-            return_type="texts"
+            min_characters_per_chunk=50
         )
         
         repr_str = repr(chunker)
@@ -541,7 +558,6 @@ class TestSlumberChunkerRepresentation:
         assert "chunk_size=2048" in repr_str
         assert "candidate_size=256" in repr_str
         assert "min_characters_per_chunk=50" in repr_str
-        assert "return_type=texts" in repr_str
     
     def test_repr_default_values(self, mock_genie: MockGenie) -> None:
         """Test __repr__ with default values."""
@@ -549,10 +565,9 @@ class TestSlumberChunkerRepresentation:
         
         repr_str = repr(chunker)
         
-        assert "chunk_size=1024" in repr_str
+        assert "chunk_size=2048" in repr_str
         assert "candidate_size=128" in repr_str
         assert "min_characters_per_chunk=24" in repr_str
-        assert "return_type=chunks" in repr_str
 
 
 class TestSlumberChunkerIntegration:
