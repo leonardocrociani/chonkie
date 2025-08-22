@@ -43,7 +43,7 @@ class SemanticChunker(BaseChunker):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         chunk_size: int = 2048,
