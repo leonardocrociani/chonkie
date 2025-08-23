@@ -92,6 +92,12 @@
               "python-sdk/experimental/overview",
               "python-sdk/experimental/code-chunker"
             ]
+          },
+          {
+            "group": "Changelog",
+            "pages": [
+              "python-sdk/changelog"
+            ]
           }
         ]
       },
@@ -124,12 +130,6 @@
         "tab": "Chonkie Cloud",
         "icon": "cloud",
         "openapi": "chonkie-cloud/openapi.json"
-      },
-      {
-        "tab": "Changelog",
-        "pages": [
-          "changelog/changelog"
-        ]
       }
     ],
     "global": {
