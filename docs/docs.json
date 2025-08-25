@@ -67,7 +67,8 @@
               "python-sdk/handshakes/weaviate-handshake",
               "python-sdk/handshakes/tubropuffer-handshake",
               "python-sdk/handshakes/pinecone-handshake",
-              "python-sdk/handshakes/pgvector-handshake"
+              "python-sdk/handshakes/pgvector-handshake",
+              "python-sdk/handshakes/mongodb-handshake"
             ]
           },
           {
@@ -80,13 +81,22 @@
           },
           {
             "group": "Utils",
-            "pages": ["python-sdk/utils/visualizer", "python-sdk/utils/hubbie"]
+            "pages": [
+              "python-sdk/utils/visualizer",
+              "python-sdk/utils/hubbie"
+            ]
           },
           {
             "group": "Experimental",
             "pages": [
               "python-sdk/experimental/overview",
               "python-sdk/experimental/code-chunker"
+            ]
+          },
+          {
+            "group": "Changelog",
+            "pages": [
+              "python-sdk/changelog"
             ]
           }
         ]
@@ -120,10 +130,6 @@
         "tab": "Chonkie Cloud",
         "icon": "cloud",
         "openapi": "chonkie-cloud/openapi.json"
-      },
-      {
-        "tab": "Changelog",
-        "pages": ["changelog/changelog"]
       }
     ],
     "global": {
