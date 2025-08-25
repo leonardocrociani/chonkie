@@ -98,9 +98,9 @@ class SemanticChunker(BaseChunker):
             raise ValueError("delim must be a string or list of strings")
         elif type(threshold) == str and threshold not in ["auto"]:
             raise ValueError("threshold must be 'auto', 'smart', or 'percentile'")
-        elif type(threshold) == float and (threshold < 0 or threshold > 1):
+        elif isinstance(threshold, float) and (threshold < 0 or threshold > 1):
             raise ValueError("threshold (float) must be between 0 and 1")
-        elif type(threshold) == int and (threshold < 1 or threshold > 100):
+        elif isinstance(threshold, int) and (threshold < 1 or threshold > 100):
             raise ValueError("threshold (int) must be between 1 and 100")
 
         # Lazy import dependencies to avoid importing them when not needed
