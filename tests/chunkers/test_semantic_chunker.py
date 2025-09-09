@@ -19,7 +19,7 @@ def sample_text() -> str:
 @pytest.fixture
 def embedding_model() -> BaseEmbeddings:
     """Fixture that returns a Model2Vec embedding model for testing."""
-    return Model2VecEmbeddings("minishlab/potion-base-8M")
+    return Model2VecEmbeddings("minishlab/potion-base-32M")
 
 
 @pytest.fixture
