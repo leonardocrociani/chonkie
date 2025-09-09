@@ -106,7 +106,6 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | `SentenceChunker`| `sentence` | Splits text into chunks based on sentences.                                                                |
 | `RecursiveChunker`| `recursive`| Splits text hierarchically using customizable rules to create semantically meaningful chunks.              |
 | `SemanticChunker`| `semantic` | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt).                                                        |
-| `SDPMChunker`    | `sdpm`     | Splits text using a Semantic Double-Pass Merge approach.                                                   |
 | `LateChunker`    | `late`     | Embeds text and then splits it to have better chunk embeddings.                                            |
 | `CodeChunker`    | `code`     | Splits code into structurally meaningful chunks.                                                           |
 | `NeuralChunker`  | `neural`   | Splits text using a neural model.                                                                          |
@@ -222,6 +221,9 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 | `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
 | `pgvector`     | `PgvectorHandshake`   | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]`   |
 | `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[tpuf]`           |
+| `pinecone`     | `PineconeHandshake`   | Ingest chunks into Pinecone.            | `chonkie[pinecone]`        |
+| `weaviate`     | `WeaviateHandshake`   | Ingest chunks into Weaviate.            | `chonkie[weaviate]`        |
+| `mongodb`      | `MongoDBHandshake`    | Ingest chunks into MongoDB.             | `chonkie[mongodb]`         |
 
 </details>
 
