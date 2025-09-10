@@ -109,7 +109,7 @@ pinecone = ["pinecone"]
 mongodb = ["pymongo"]
 
 # Optional dependencies for the genie
-genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+genie = ["pydantic>=2.0.0", "google-genai>=1.0.0", "mistralai>=1.9.10", "numpy>=2.0.0, <3.0"]
 
 # All dependencies
 all = [
