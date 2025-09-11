@@ -45,7 +45,7 @@ class MistralGenie(BaseGenie):
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
         messages = [{"role": "user", "content": prompt}]
-        response = self.client.chat(model=self.model, messages=messages)
+        response = self.client.chat.complete(model=self.model, messages=messages)
         return str(response.choices[0].message.content)
 
     def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
