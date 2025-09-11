@@ -67,7 +67,7 @@ class MistralGenie(BaseGenie):
         try:
             content = response.choices[0].message.content
             return dict(json.loads(content))
-        except Exception as e:
+        except json.JSONDecodeError as e:
             raise ValueError(f"Failed to parse JSON response: {e}")
 
     def _is_available(self) -> bool:
