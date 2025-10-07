@@ -58,7 +58,7 @@ class MistralGenie(BaseGenie):
         )
         messages = [{"role": "user", "content": full_prompt}]
 
-        response = self.client.chat(
+        response = self.client.chat.complete(
             model=self.model,
             messages=messages,
             response_format={"type": "json_object"},
